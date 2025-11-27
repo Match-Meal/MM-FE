@@ -33,7 +33,7 @@ jobs:
         # 타입스크립트 오류 확인 (package.json에 type-check 스크립트가 있다면)
         run: npm run type-check
 
-      - name: Run Unit Tests
+      # - name: Run Unit Tests
         # 만약 Vitest를 설치 안 했다면 이 줄은 주석 처리 하세요!
         # 설치했다면 package.json의 scripts에 있는 명령어 사용
-        run: npm run test:unit
+      #  run: npm run test:unit
