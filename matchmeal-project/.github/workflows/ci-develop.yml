@@ -1,10 +1,15 @@
-name: Develop Branch CI (Lint & Unit Test)
+name: Develop Branch CI (Frontend)
 
 on:
   push:
     branches: [ "develop" ]
+    # (효율성) 프론트엔드 폴더 내의 파일이 변경될 때만 이 CI가 동작합니다.
+    paths:
+      - 'MM-FE/matchmeal-project/**'
   pull_request:
     branches: [ "develop" ]
+    paths:
+      - 'MM-FE/matchmeal-project/**'
 
 permissions:
   contents: read
@@ -12,28 +17,35 @@ permissions:
 jobs:
   frontend-ci:
     runs-on: ubuntu-latest
+
+    # ★ [핵심 설정] 이 Job의 모든 터미널 명령어는 이 경로에서 실행됩니다.
+    defaults:
+      run:
+        working-directory: ./MM-FE/matchmeal-project
+
     steps:
       - uses: actions/checkout@v4
       
-      - name: Set up Node.js 24
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '22' # Node 버전 (LTS 권장)
           cache: 'npm'
+          # ★ [핵심] 캐시를 위해 package-lock.json의 정확한 위치를 알려줍니다.
+          # working-directory 설정과는 별개로 전체 경로를 적어줘야 합니다.
+          cache-dependency-path: './MM-FE/matchmeal-project/package-lock.json'
 
       - name: Install Dependencies
-        # npm install 대신 ci를 쓰면 lock 파일 기준으로 엄격하게 설치합니다 (속도도 빠름)
+        # 위에서 working-directory를 설정했으므로, 알아서 해당 폴더에서 실행됩니다.
         run: npm ci 
 
       - name: Lint Check (Syntax & Style)
-        # 오타나 문법 오류가 있으면 여기서 실패 뜸
+        # package.json에 "lint" 스크립트가 있어야 합니다.
         run: npm run lint 
 
       - name: Type Check (TypeScript)
-        # 타입스크립트 오류 확인 (package.json에 type-check 스크립트가 있다면)
+        # package.json에 "type-check" 스크립트가 있어야 합니다.
         run: npm run type-check
 
       # - name: Run Unit Tests
-        # 만약 Vitest를 설치 안 했다면 이 줄은 주석 처리 하세요!
-        # 설치했다면 package.json의 scripts에 있는 명령어 사용
-      #  run: npm run test:unit
+      #   run: npm run test:unit
