@@ -5,11 +5,11 @@ on:
     branches: [ "develop" ]
     # (효율성) 프론트엔드 폴더 내의 파일이 변경될 때만 이 CI가 동작합니다.
     paths:
-      - 'MM-FE/matchmeal-project/**'
+      - 'matchmeal-project/**'
   pull_request:
     branches: [ "develop" ]
     paths:
-      - 'MM-FE/matchmeal-project/**'
+      - 'matchmeal-project/**'
 
 permissions:
   contents: read
@@ -21,7 +21,7 @@ jobs:
     # ★ [핵심 설정] 이 Job의 모든 터미널 명령어는 이 경로에서 실행됩니다.
     defaults:
       run:
-        working-directory: ./MM-FE/matchmeal-project
+        working-directory: ./matchmeal-project
 
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +33,7 @@ jobs:
           cache: 'npm'
           # ★ [핵심] 캐시를 위해 package-lock.json의 정확한 위치를 알려줍니다.
           # working-directory 설정과는 별개로 전체 경로를 적어줘야 합니다.
-          cache-dependency-path: './MM-FE/matchmeal-project/package-lock.json'
+          cache-dependency-path: './matchmeal-project/package-lock.json'
 
       - name: Install Dependencies
         # 위에서 working-directory를 설정했으므로, 알아서 해당 폴더에서 실행됩니다.
