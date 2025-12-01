@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // 구글 로그인 시작 URL (백엔드 SecurityConfig 설정과 일치)
-const GOOGLE_LOGIN_URL = 'http://localhost:8080/oauth2/authorize/google'
+const GOOGLE_LOGIN_URL = 'http://localhost:8080/oauth2/authorization/google'
 
 const handleGoogleLogin = () => {
     window.location.href = GOOGLE_LOGIN_URL
