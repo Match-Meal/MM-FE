@@ -1,14 +1,4 @@
-import { ref, computed } from 'vue'
-import { defineStore } from 'pinia'
-improt axios from 'axios'
 
-interface User {
-  id: number
-  email: string
-  userName: string
-  role: string
-  picture?: string
-}
 
 <template>
   <RouterView />
