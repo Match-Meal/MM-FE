@@ -1,21 +1,21 @@
-version: '3.8'
+# version: '3.8'
 
-services:
-  # 1. Spring Boot Backend
-  backend:
-    container_name: matchmeal-backend
-    # 백엔드 이미지는 이미 ECR에 있다고 가정 (없으면 에러 날 수 있으니 백엔드 먼저 배포 추천)
-    image: 026012384026.dkr.ecr.ap-northeast-2.amazonaws.com/matchmeal-backend:latest
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
+# services:
+#   # 1. Spring Boot Backend
+#   backend:
+#     container_name: matchmeal-backend
+#     # 백엔드 이미지는 이미 ECR에 있다고 가정 (없으면 에러 날 수 있으니 백엔드 먼저 배포 추천)
+#     image: 026012384026.dkr.ecr.ap-northeast-2.amazonaws.com/matchmeal-backend:latest
+#     ports:
+#       - "8080:8080"
+#     environment:
+#       - SPRING_PROFILES_ACTIVE=prod
 
-  # 2. Vue Frontend
-  frontend:
-    container_name: matchmeal-frontend
-    image: 026012384026.dkr.ecr.ap-northeast-2.amazonaws.com/matchmeal-frontend:latest
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
+#   # 2. Vue Frontend
+#   frontend:
+#     container_name: matchmeal-frontend
+#     image: 026012384026.dkr.ecr.ap-northeast-2.amazonaws.com/matchmeal-frontend:latest
+#     ports:
+#       - "80:80"
+#     depends_on:
+#       - backend

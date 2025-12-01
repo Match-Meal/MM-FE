@@ -30,36 +30,36 @@ jobs:
 
       # --- 여기부터 배포(CD) 시작 ---
       
-      - name: AWS 자격 증명 설정
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
+      # - name: AWS 자격 증명 설정
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ap-northeast-2
 
-      - name: ECR 로그인
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+      # - name: ECR 로그인
+      #   id: login-ecr
+      #   uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Docker Build & Push
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: matchmeal-frontend
-          IMAGE_TAG: latest # 혹은 ${{ github.sha }} 로 버전 관리 가능
-        run: |
-          # Dockerfile이 있는 위치에서 빌드
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      # - name: Docker Build & Push
+      #   env:
+      #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      #     ECR_REPOSITORY: matchmeal-frontend
+      #     IMAGE_TAG: latest # 혹은 ${{ github.sha }} 로 버전 관리 가능
+      #   run: |
+      #     # Dockerfile이 있는 위치에서 빌드
+      #     docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: Zip Deploy Files
-        # 배포에 필요한 설정 파일들만 압축
-        run: zip -r deploy.zip appspec.yml scripts docker-compose.yml nginx
+      # - name: Zip Deploy Files
+      #   # 배포에 필요한 설정 파일들만 압축
+      #   run: zip -r deploy.zip appspec.yml scripts docker-compose.yml nginx
 
-      - name: S3 Upload & Deploy Trigger
-        run: |
-          aws s3 cp deploy.zip s3://matchmeal-deploy/frontend/deploy.zip
+      # - name: S3 Upload & Deploy Trigger
+      #   run: |
+      #     aws s3 cp deploy.zip s3://matchmeal-deploy/frontend/deploy.zip
 
-          echo ">>> AWS 승인 대기중이라 CodeDeploy 요청은 건너뜁니다."
+      #     echo ">>> AWS 승인 대기중이라 CodeDeploy 요청은 건너뜁니다."
           
         # aws deploy create-deployment \
         #   --application-name MatchMeal-App \
