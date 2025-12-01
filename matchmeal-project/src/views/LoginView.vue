@@ -15,7 +15,7 @@ const handleGoogleLogin = () => {
       <div id="screen-login" class="screen flex flex-col h-full p-8 justify-center bg-white">
         <div class="flex flex-col items-center mb-10">
            <div class="w-24 h-24 bg-blue-600 text-white rounded-3xl mb-6 flex items-center justify-center text-5xl shadow-lg transform rotate-3">🥗</div>
-           <h1 class="text-3xl font-bold text-gray-800 mb-2">건강마스터</h1>
+           <h1 class="text-3xl font-bold text-gray-800 mb-2">MatchMeal</h1>
            <p class="text-gray-500">AI 식단 분석부터 챌린지까지</p>
         </div>
 
