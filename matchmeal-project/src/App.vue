@@ -1,13 +1,17 @@
+
+
 <template>
-  <main>
-    <CiTest title="안녕! 나는 테스트 컴포넌트야" />
-  </main>
+  <RouterView />
 </template>
 
 <script setup lang="ts">
-  import CiTest from './components/CiTest.vue'
+  import { RouterView } from 'vue-router'
 </script>
 
-<style scoped>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+}
 
 </style>
