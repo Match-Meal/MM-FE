@@ -5,9 +5,19 @@ import axios from 'axios'
 interface User {
   id: number
   socialId: string
+  email: string
   userName: string
   role: string
   createdAt: string
+
+  statusMessage?: string
+  gender?: 'MALE' | 'FEMAIL'
+  birthDate?: string
+  heightCm?: number
+  weightKg?: number
+
+  allergies: string[]
+  diseases: string[]
 }
 
 export const useAuthStore = defineStore('auth', () => {
