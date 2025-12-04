@@ -117,7 +117,7 @@ onMounted(() => {
             <router-link
               v-for="food in foods"
               :key="food.foodId"
-              :to="'/food/' + food.foodId"
+              :to="'/food-db/' + food.foodId"
               class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-100 bg-white"
             >
               <div class="flex-1">

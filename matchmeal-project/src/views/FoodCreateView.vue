@@ -31,8 +31,10 @@ const handleSubmit = async () => {
   error.value = null
 
   try {
-    // 숫자 필드가 비어있으면 undefined로 전송 (API 명세에 따라 선택적 필드)
-    const payload: CreateFoodPayload = { ...foodData.value }
+    // 1. Create a mutable copy of the form data.
+    const payload: Partial<CreateFoodPayload> = { ...foodData.value }
+
+    // 2. Convert empty strings in numeric fields to undefined.
     const numericKeys: (keyof CreateFoodPayload)[] = [
       'servingSize',
       'calories',
@@ -40,16 +42,14 @@ const handleSubmit = async () => {
       'protein',
       'fat',
     ]
-
     numericKeys.forEach((key) => {
-      const value = payload[key]
-      // 값이 null이거나 빈 문자열일 경우 undefined로 설정
-      if (value === null || value === '') {
-        ;(payload as any)[key] = undefined
+      if (payload[key] === '') {
+        payload[key] = undefined
       }
     })
 
-    await createFood(payload)
+    // 3. Call the API with a type assertion, as we've already validated the required fields.
+    await createFood(payload as CreateFoodPayload)
     // 성공 시 음식 목록 페이지로 이동 (history stack에 쌓이지 않도록 replace 사용)
     router.replace('/food-db')
   } catch (err) {

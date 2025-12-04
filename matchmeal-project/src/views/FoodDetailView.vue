@@ -19,7 +19,9 @@ const fetchFood = async () => {
     isLoading.value = true
     error.value = null
     // API 응답에 isMine 대신 mine이 포함될 수 있으므로 변환합니다.
-    const responseData = (await getFoodDetail(foodId)) as any
+    const responseData = (await getFoodDetail(foodId)) as FoodDetail & {
+      mine?: boolean
+    }
     if (responseData && typeof responseData.mine !== 'undefined') {
       responseData.isMine = responseData.mine
       delete responseData.mine

@@ -40,7 +40,9 @@ onMounted(async () => {
   }
   try {
     // API 응답에 isMine 대신 mine이 포함될 수 있으므로 변환합니다.
-    const existingFood = (await getFoodDetail(foodId)) as any
+    const existingFood = (await getFoodDetail(foodId)) as FoodDetail & {
+      mine?: boolean
+    }
     if (existingFood && typeof existingFood.mine !== 'undefined') {
       existingFood.isMine = existingFood.mine
       delete existingFood.mine
@@ -118,8 +120,7 @@ const handleSubmit = async () => {
       'protein',
       'fat',
     ]
-    const payload: UpdateFoodPayload = {}
-    updateKeys.forEach((key) => {
+    const payload = updateKeys.reduce<Partial<UpdateFoodPayload>>((acc, key) => {
       const originalValue = originalFoodDetail.value![key]
       const processedValue = processedData[key]
 
@@ -127,9 +128,10 @@ const handleSubmit = async () => {
       if (
         !(originalValue === processedValue || (originalValue == null && processedValue == null))
       ) {
-        ;(payload as any)[key] = processedData[key]
+        ;(acc as Record<typeof key, typeof processedValue>)[key] = processedValue
       }
-    })
+      return acc
+    }, {} as Partial<UpdateFoodPayload>)
 
     // Do not submit if there are no changes
     if (Object.keys(payload).length === 0) {
@@ -139,7 +141,7 @@ const handleSubmit = async () => {
       return
     }
 
-    await updateFood(foodId, payload)
+    await updateFood(foodId, payload as Partial<UpdateFoodPayload>)
     // 성공 시 상세 페이지로 이동
     router.replace(`/food-db/${foodId}`)
   } catch (err) {
@@ -171,6 +173,9 @@ const goBack = () => {
       <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
         <div v-if="isLoading" class="text-center text-gray-500 py-20">
           <p>데이터를 불러오는 중입니다...</p>
+        </div>
+        <div v-else-if="error" class="text-center text-red-500 py-20">
+          <p>{{ error }}</p>
         </div>
         <form v-else @submit.prevent="handleSubmit" class="space-y-4">
           <div>
