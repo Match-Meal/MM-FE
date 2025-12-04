@@ -114,3 +114,35 @@ export const getFoodDetail = async (foodId: number): Promise<FoodDetail> => {
 };
 
 // ... (수정, 삭제 함수들이 여기에 추가될 수 있습니다.)
+
+// 음식 수정(PATCH /foods/{foodId})을 위한 요청 Body 인터페이스
+export type UpdateFoodPayload = Partial<CreateFoodPayload>;
+
+/**
+ * 특정 음식 정보를 수정합니다. (부분 업데이트)
+ * @param foodId 수정할 음식의 ID
+ * @param payload 수정할 데이터
+ * @returns 수정된 음식의 ID
+ */
+export const updateFood = async (foodId: number, payload: UpdateFoodPayload): Promise<number> => {
+    try {
+        const response = await apiClient.patch(`/foods/${foodId}`, payload);
+        return response.data.data;
+    } catch (error) {
+        console.error(`Error updating food for id ${foodId}:`, error);
+        throw error;
+    }
+};
+
+/**
+ * 특정 음식을 삭제합니다.
+ * @param foodId 삭제할 음식의 ID
+ */
+export const deleteFood = async (foodId: number): Promise<void> => {
+    try {
+        await apiClient.delete(`/foods/${foodId}`);
+    } catch (error) {
+        console.error(`Error deleting food for id ${foodId}:`, error);
+        throw error;
+    }
+};

@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { createFood, type CreateFoodPayload } from '@/services/foodService'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import {
+  getFoodDetail,
+  updateFood,
+  type FoodDetail,
+  type UpdateFoodPayload,
+} from '@/services/foodService'
 
+const route = useRoute()
 const router = useRouter()
+const foodId = Number(route.params.id)
 
 // 폼 입력을 위한 반응형 객체
-const foodData = ref<CreateFoodPayload>({
+const foodData = ref<UpdateFoodPayload>({
   foodName: '',
   category: '',
   servingSize: undefined,
@@ -17,8 +24,55 @@ const foodData = ref<CreateFoodPayload>({
   fat: undefined,
 })
 
+// 원본 FoodDetail 데이터 저장을 위한 ref
+const originalFoodDetail = ref<FoodDetail | null>(null)
+
 const error = ref<string | null>(null)
+const isLoading = ref(true)
 const isSubmitting = ref(false)
+
+// 기존 음식 데이터 불러오기
+onMounted(async () => {
+  if (isNaN(foodId)) {
+    error.value = '유효하지 않은 음식 ID입니다.'
+    isLoading.value = false
+    return
+  }
+  try {
+    // API 응답에 isMine 대신 mine이 포함될 수 있으므로 변환합니다.
+    const existingFood = (await getFoodDetail(foodId)) as any
+    if (existingFood && typeof existingFood.mine !== 'undefined') {
+      existingFood.isMine = existingFood.mine
+      delete existingFood.mine
+    }
+
+    // isMine이 false이면 수정 권한이 없으므로 되돌려 보냄
+    if (!existingFood.isMine) {
+      alert('수정 권한이 없습니다.')
+      router.back()
+      return
+    }
+    // 원본 데이터 전체를 저장
+    originalFoodDetail.value = existingFood
+
+    // 폼 데이터(foodData)에는 UpdateFoodPayload에 해당하는 필드만 매핑
+    foodData.value = {
+      foodName: existingFood.foodName,
+      category: existingFood.category,
+      servingSize: existingFood.servingSize,
+      unit: existingFood.unit,
+      calories: existingFood.calories,
+      carbohydrate: existingFood.carbohydrate,
+      protein: existingFood.protein,
+      fat: existingFood.fat,
+    }
+  } catch (err) {
+    error.value = '음식 정보를 불러오는 데 실패했습니다.'
+    console.error(err)
+  } finally {
+    isLoading.value = false
+  }
+})
 
 // 폼 제출 핸들러
 const handleSubmit = async () => {
@@ -31,29 +85,65 @@ const handleSubmit = async () => {
   error.value = null
 
   try {
-    // 숫자 필드가 비어있으면 undefined로 전송 (API 명세에 따라 선택적 필드)
-    const payload: CreateFoodPayload = { ...foodData.value }
-    const numericKeys: (keyof CreateFoodPayload)[] = [
+    if (!originalFoodDetail.value) {
+      throw new Error('원본 데이터가 없습니다.')
+    }
+
+    // Create a mutable copy for processing
+    const processedData = { ...foodData.value }
+
+    // 1. Convert empty strings in numeric fields to undefined for consistency
+    const numericKeys: (keyof UpdateFoodPayload)[] = [
       'servingSize',
       'calories',
       'carbohydrate',
       'protein',
       'fat',
     ]
-
     numericKeys.forEach((key) => {
-      const value = payload[key]
-      // 값이 null이거나 빈 문자열일 경우 undefined로 설정
-      if (value === null || value === '') {
-        ;(payload as any)[key] = undefined
+      if (processedData[key] === '') {
+        processedData[key] = undefined
       }
     })
 
-    await createFood(payload)
-    // 성공 시 음식 목록 페이지로 이동 (history stack에 쌓이지 않도록 replace 사용)
-    router.replace('/food-db')
+    // 2. Compare with original data to build the final payload
+    // Define keys that are part of the update payload to ensure type safety.
+    const updateKeys: (keyof UpdateFoodPayload)[] = [
+      'foodName',
+      'category',
+      'servingSize',
+      'unit',
+      'calories',
+      'carbohydrate',
+      'protein',
+      'fat',
+    ]
+    const payload: UpdateFoodPayload = {}
+    updateKeys.forEach((key) => {
+      const originalValue = originalFoodDetail.value![key]
+      const processedValue = processedData[key]
+
+      // Treat null and undefined as the same to avoid unnecessary updates.
+      if (
+        !(originalValue === processedValue || (originalValue == null && processedValue == null))
+      ) {
+        ;(payload as any)[key] = processedData[key]
+      }
+    })
+
+    // Do not submit if there are no changes
+    if (Object.keys(payload).length === 0) {
+      // Optionally, inform the user that no changes were made.
+      // alert('변경된 내용이 없습니다.');
+      router.replace(`/food-db/${foodId}`) // Go back to detail page
+      return
+    }
+
+    await updateFood(foodId, payload)
+    // 성공 시 상세 페이지로 이동
+    router.replace(`/food-db/${foodId}`)
   } catch (err) {
-    error.value = '음식 등록에 실패했습니다. 다시 시도해주세요.'
+    error.value = '음식 수정에 실패했습니다. 다시 시도해주세요.'
     console.error(err)
   } finally {
     isSubmitting.value = false
@@ -67,20 +157,22 @@ const goBack = () => {
 
 <template>
   <div class="bg-gray-200 min-h-screen flex items-center justify-center font-sans text-gray-800">
-    <!-- 모바일 프레임 -->
     <div
       class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-800 flex flex-col"
     >
       <!-- Header -->
       <header class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 shrink-0">
         <button @click="goBack" class="text-2xl w-8">←</button>
-        <h1 class="font-bold text-lg truncate">새로운 음식 등록</h1>
+        <h1 class="font-bold text-lg truncate">음식 정보 수정</h1>
         <div class="w-8"></div>
       </header>
 
       <!-- Main Form Content -->
       <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
-        <form @submit.prevent="handleSubmit" class="space-y-4">
+        <div v-if="isLoading" class="text-center text-gray-500 py-20">
+          <p>데이터를 불러오는 중입니다...</p>
+        </div>
+        <form v-else @submit.prevent="handleSubmit" class="space-y-4">
           <div>
             <label for="foodName" class="block text-sm font-bold text-gray-600 mb-1"
               >음식 이름 <span class="text-red-500">*</span></label
@@ -188,11 +280,11 @@ const goBack = () => {
           <div class="pt-4">
             <button
               type="submit"
-              :disabled="isSubmitting"
+              :disabled="isSubmitting || isLoading"
               class="w-full h-12 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition flex items-center justify-center disabled:bg-gray-400"
             >
-              <span v-if="isSubmitting">저장 중...</span>
-              <span v-else>저장하기</span>
+              <span v-if="isSubmitting">수정 중...</span>
+              <span v-else>수정하기</span>
             </button>
           </div>
         </form>
