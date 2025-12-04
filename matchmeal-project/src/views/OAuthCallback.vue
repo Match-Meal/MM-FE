@@ -20,10 +20,10 @@ onMounted(async () => {
     await authStore.fetchUser()
 
     if (isNew) {
+      router.replace('/profile-intro')
+    } else {
+      router.replace('/home')
     }
-
-    // 홈 화면으로 이동
-    router.replace('/home')
   } else {
     alert('로그인에 실패했습니다. 다시 시도해주세요.')
     router.replace('/login')
