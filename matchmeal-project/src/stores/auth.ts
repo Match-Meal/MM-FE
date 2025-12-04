@@ -4,10 +4,10 @@ import axios from 'axios'
 
 interface User {
   id: number
-  email: string
+  socialId: string
   userName: string
   role: string
-  picture?: string
+  createdAt: string
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -37,14 +37,14 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return
 
     try {
-        // 백엔드 UserController (/user/me) 호출
-        const response = await axios.get('http://localhost:8080/user/me', {
-            headers: { Authorization: `Bearer ${token.value}`}
-        })
-        user.value = response.data
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
+
+      // 백엔드 UserController (/user/me) 호출
+      const response = await axios.get<User>('http://localhost:8080/user/me')
+      user.value = response.data
     } catch (error) {
-        console.error('Failed to fetch user', error)
-        logout() // 토큰 만료 시 로그아웃
+      console.error('Failed to fetch user', error)
+      logout() // 토큰 만료 시 로그아웃
     }
   }
 
