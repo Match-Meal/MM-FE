@@ -2,6 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import HomeView from '../views/HomeView.vue'
 import OAuthCallback from '../views/OAuthCallback.vue'
+import FoodDBView from '../views/FoodDBView.vue'
+import FoodCreateView from '../views/FoodCreateView.vue'
+import FoodDetailView from '../views/FoodDetailView.vue' // FoodDetailView 추가
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -26,6 +29,24 @@ const router = createRouter({
             path: '/home',
             name: 'home',
             component: HomeView,
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/food-db',
+            name: 'food-db',
+            component: FoodDBView,
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/food-create',
+            name: 'food-create',
+            component: FoodCreateView,
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/food/:id',
+            name: 'food-detail',
+            component: FoodDetailView,
             meta: { requiresAuth: true }
         }
     ]
