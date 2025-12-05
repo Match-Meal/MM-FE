@@ -1,30 +1,33 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
+import { onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
-const router = useRouter();
-const route = useRoute();
-const authStore = useAuthStore();
+const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
 
 onMounted(async () => {
-    // URL 쿼리 파라미터에서 토큰 추출
-    const accessToken = route.query.accessToken as string;
+  // URL 쿼리 파라미터에서 토큰 추출
+  const accessToken = route.query.accessToken as string
+  const isNew = route.query.isNew === 'true'
 
-    if (accessToken) {
-        // pinia 스토어에 토큰 저장
-        authStore.setToken(accessToken)
+  if (accessToken) {
+    // pinia 스토어에 토큰 저장
+    authStore.setToken(accessToken)
 
-        // 사용자 정보 가져오기 (비동기)
-        await authStore.fetchUser();
+    // 사용자 정보 가져오기 (비동기)
+    await authStore.fetchUser()
 
-        // 홈 화면으로 이동
-        router.replace('/home');
-    } else {
-        alert('로그인에 실패했습니다. 다시 시도해주세요.');
-        router.replace('/login');
+    if (isNew) {
     }
 
+    // 홈 화면으로 이동
+    router.replace('/home')
+  } else {
+    alert('로그인에 실패했습니다. 다시 시도해주세요.')
+    router.replace('/login')
+  }
 })
 </script>
 
