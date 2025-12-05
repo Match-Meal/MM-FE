@@ -11,10 +11,11 @@ interface User {
   createdAt: string
 
   statusMessage?: string
-  gender?: 'MALE' | 'FEMAIL'
+  gender?: 'M' | 'F'
   birthDate?: string
   heightCm?: number
   weightKg?: number
+  isPublic?: boolean
 
   allergies: string[]
   diseases: string[]

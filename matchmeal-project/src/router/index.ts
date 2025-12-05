@@ -6,6 +6,10 @@ import FoodDBView from '../views/FoodDBView.vue'
 import FoodCreateView from '../views/FoodCreateView.vue'
 import FoodDetailView from '../views/FoodDetailView.vue'
 import FoodEditView from '../views/FoodEditView.vue'
+import ProfileIntroView from '../views/ProfileIntroView.vue'
+import ProfileFormView from '../views/ProfileFormView.vue'
+import ProfileView from '@/views/ProfileView.vue'
+import SettingsView from '@/views/SettingsView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -14,49 +18,73 @@ const router = createRouter({
     {
       path: '/',
       name: 'landing',
-      component: () => import('../views/LoginView.vue') // 편의상 랜딩/로그인을 통합
+      component: () => import('../views/LoginView.vue'), // 편의상 랜딩/로그인을 통합
     },
     {
       path: '/login',
       name: 'login',
-      component: LoginView
+      component: LoginView,
     },
     {
       path: '/oauth/callback',
       name: 'oauth-callback',
-      component: OAuthCallback
+      component: OAuthCallback,
+    },
+    {
+      path: '/profile-intro',
+      name: 'profile-intro',
+      component: ProfileIntroView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/profile-form',
+      name: 'profile-form',
+      component: ProfileFormView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/home',
       name: 'home',
       component: HomeView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/food-db',
       name: 'food-db',
       component: FoodDBView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/food-create',
       name: 'food-create',
       component: FoodCreateView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/food-db/:id',
       name: 'food-detail',
       component: FoodDetailView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/food-db/edit/:id',
       name: 'food-edit',
       component: FoodEditView,
-      meta: { requiresAuth: true }
-    }
-  ]
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: ProfileView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: SettingsView,
+      meta: { requiresAuth: true },
+    },
+  ],
 })
 
 // 네비게이션 가드(로그인 안된 사용자는 홈 접근 불가)
