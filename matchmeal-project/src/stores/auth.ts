@@ -15,6 +15,7 @@ interface User {
   birthDate?: string
   heightCm?: number
   weightKg?: number
+  isPublic?: boolean
 
   allergies: string[]
   diseases: string[]
