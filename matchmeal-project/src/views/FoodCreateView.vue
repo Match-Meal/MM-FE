@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { createFood, type CreateFoodPayload } from '@/services/foodService'
+import { createFood, type CreateFoodPayload, getFoodCategories } from '@/services/foodService'
 
 const router = useRouter()
 
@@ -14,8 +14,52 @@ const foodData = ref<CreateFoodPayload>({
   calories: undefined,
   carbohydrate: undefined,
   protein: undefined,
-  fat: undefined,
+  fat: undefined
 })
+
+// --- 카테고리 드롭다운 상태 ---
+const categories = ref<string[]>([])
+const categorySearch = ref('') // 사용자가 입력하는 검색어 또는 선택된 카테고리
+const isCategoryDropdownOpen = ref(false)
+const categoryWrapper = ref<HTMLElement | null>(null)
+
+// 사용자가 카테고리 입력창에 직접 타이핑하는 경우, 해당 값을 foodData에 반영
+watch(categorySearch, (newValue) => {
+  if (foodData.value.category !== newValue) {
+    foodData.value.category = newValue
+  }
+})
+
+// 컴포넌트 마운트 시 카테고리 목록 불러오기
+onMounted(async () => {
+  try {
+    categories.value = await getFoodCategories()
+  } catch (err) {
+    console.error('카테고리 목록을 불러오는 데 실패했습니다.', err)
+  }
+})
+
+// 입력된 검색어에 따라 카테고리 목록 필터링
+const filteredCategories = computed(() => {
+  if (!categorySearch.value) {
+    return categories.value
+  }
+  return categories.value.filter((c) => c.toLowerCase().includes(categorySearch.value.toLowerCase()))
+})
+
+// 드롭다운에서 카테고리 선택 시
+const selectCategory = (category: string) => {
+  foodData.value.category = category
+  categorySearch.value = category // 입력창에도 선택된 값 표시
+  isCategoryDropdownOpen.value = false
+}
+
+// 드롭다운 외부 클릭 시 드롭다운 닫기
+const handleCategoryBlur = (event: FocusEvent) => {
+  if (categoryWrapper.value && !categoryWrapper.value.contains(event.relatedTarget as Node)) {
+    isCategoryDropdownOpen.value = false
+  }
+}
 
 const error = ref<string | null>(null)
 const isSubmitting = ref(false)
@@ -24,6 +68,12 @@ const isSubmitting = ref(false)
 const handleSubmit = async () => {
   if (!foodData.value.foodName) {
     error.value = '음식 이름은 필수입니다.'
+    return
+  }
+
+  // 카테고리 유효성 검사
+  if (foodData.value.category && !categories.value.includes(foodData.value.category)) {
+    error.value = '선택할 수 없는 카테고리입니다. 목록에 있는 카테고리를 선택해주세요.'
     return
   }
 
@@ -94,16 +144,35 @@ const goBack = () => {
             />
           </div>
 
-          <div>
+          <div class="relative" ref="categoryWrapper" @focusout="handleCategoryBlur">
             <label for="category" class="block text-sm font-bold text-gray-600 mb-1"
               >카테고리</label
             >
             <input
-              v-model="foodData.category"
+              v-model="categorySearch"
               type="text"
               id="category"
+              placeholder="카테고리 검색 또는 선택"
+              autocomplete="off"
               class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+              @focus="isCategoryDropdownOpen = true"
             />
+            <div
+              v-if="isCategoryDropdownOpen"
+              class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+            >
+              <div
+                v-for="cat in filteredCategories"
+                :key="cat"
+                @mousedown="selectCategory(cat)"
+                class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+              >
+                {{ cat }}
+              </div>
+              <div v-if="filteredCategories.length === 0" class="px-4 py-2 text-sm text-gray-400">
+                일치하는 카테고리가 없습니다.
+              </div>
+            </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
