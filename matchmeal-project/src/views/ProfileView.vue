@@ -53,13 +53,22 @@ const bmiPercent = computed(() => {
         <div class="bg-white pb-8 rounded-b-[2.5rem] shadow-sm mb-4">
           <div class="flex flex-col items-center pt-8">
             <div class="w-32 h-32 relative mb-4">
+              <!-- [수정] 프로필 이미지 표시 -->
               <div
-                class="w-full h-full bg-gray-100 rounded-full flex items-center justify-center text-5xl border-4 border-white shadow-inner cursor-pointer overflow-hidden"
+                class="w-full h-full bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-inner cursor-pointer"
                 @click="goToEditProfile"
               >
-                😎
+                <!-- 이미지가 있으면 이미지 표시, 없으면 이모지 -->
+                <img
+                  v-if="authStore.user?.profileImage"
+                  :src="authStore.user.profileImage"
+                  class="w-full h-full object-cover"
+                  alt="Profile"
+                />
+                <span v-else class="text-5xl">😎</span>
               </div>
 
+              <!-- 설정 버튼 -->
               <button
                 @click.stop="goToSettings"
                 class="absolute bottom-0 left-0 w-10 h-10 bg-white text-gray-600 rounded-full flex items-center justify-center shadow-md border border-gray-100 hover:bg-gray-50 transition active:scale-90"
@@ -67,6 +76,7 @@ const bmiPercent = computed(() => {
                 ⚙️
               </button>
 
+              <!-- 수정 버튼 -->
               <button
                 @click.stop="goToEditProfile"
                 class="absolute bottom-0 right-0 w-10 h-10 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-md border border-white hover:bg-black transition active:scale-90"

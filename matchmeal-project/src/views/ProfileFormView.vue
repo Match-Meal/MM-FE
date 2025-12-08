@@ -8,6 +8,10 @@ const router = useRouter()
 const authStore = useAuthStore()
 const isLoading = ref(false)
 
+const fileInput = ref<HTMLInputElement | null>(null)
+const selectedFile = ref<File | null>(null)
+const previewImage = ref('')
+
 const commonAllergies = ['달걀', '우유', '땅콩', '대두', '밀', '새우', '게', '복숭아', '토마토']
 const commonDiseases = ['당뇨', '고혈압', '고지혈증', '위염', '다이어트', '근성장']
 
@@ -46,8 +50,28 @@ onMounted(async () => {
     // 배열은 참조 복사가 아닌 값 복사를 위해 spread(...) 사용 권장
     form.value.allergies = [...(u.allergies || [])]
     form.value.diseases = [...(u.diseases || [])]
+
+    // 프로필 이미지 설정
+    if (u.profileImage) {
+      previewImage.value = u.profileImage
+    }
   }
 })
+
+// 이미지 선택창
+const triggerFileUpload = () => {
+  fileInput.value?.click()
+}
+
+// 파일 선택시 미리보기
+const handleFileChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    const file = target.files[0]
+    selectedFile.value = file
+    previewImage.value = URL.createObjectURL(file)
+  }
+}
 
 const toggleItem = (list: string[], item: string) => {
   const index = list.indexOf(item)
@@ -73,10 +97,26 @@ const submitProfile = async () => {
 
   try {
     isLoading.value = true
-    await axios.put('http://localhost:8080/user/profile', {
+    const profileDto = {
       ...form.value,
       heightCm: Number(form.value.heightCm),
       weightKg: Number(form.value.weightKg),
+    }
+
+    const formData = new FormData()
+
+    // json 데이터
+    const jsonBlob = new Blob([JSON.stringify(profileDto)], { type: 'application/json' })
+    formData.append('data', jsonBlob)
+
+    if (selectedFile.value) {
+      formData.append('file', selectedFile.value)
+    }
+
+    await axios.put('http://localhost:8080/user/profile', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     })
 
     // 수정 후 최신 정보 다시 가져오기
@@ -110,6 +150,42 @@ const submitProfile = async () => {
 
       <main class="flex-1 overflow-y-auto p-6 pb-10 scrollbar-hide bg-white">
         <form @submit.prevent="submitProfile" class="space-y-8">
+          <div class="flex justify-center mb-6">
+            <div class="w-28 h-28 relative">
+              <div
+                class="w-full h-full bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-gray-50 shadow-inner cursor-pointer"
+                @click="triggerFileUpload"
+              >
+                <!-- 이미지 미리보기 -->
+                <img
+                  v-if="previewImage"
+                  :src="previewImage"
+                  class="w-full h-full object-cover"
+                  alt="Profile Preview"
+                />
+                <span v-else class="text-4xl">😎</span>
+              </div>
+
+              <!-- 카메라 아이콘 -->
+              <button
+                type="button"
+                @click="triggerFileUpload"
+                class="absolute bottom-0 right-0 w-9 h-9 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white hover:bg-black transition"
+              >
+                📷
+              </button>
+
+              <!-- 숨겨진 File Input -->
+              <input
+                type="file"
+                ref="fileInput"
+                class="hidden"
+                accept="image/*"
+                @change="handleFileChange"
+              />
+            </div>
+          </div>
+
           <section>
             <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
               <span class="w-1 h-5 bg-blue-600 rounded-full"></span>
