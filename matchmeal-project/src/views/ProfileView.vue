@@ -1,10 +1,17 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
+import FollowListModal, { type FollowUser } from '@/components/FollowListModal.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
+
+// 모달 관련
+const isModalOpen = ref(false)
+const modalTitle = ref('')
+const modalList = ref<FollowUser[]>([])
 
 onMounted(async () => {
   if (!authStore.user && authStore.token) {
@@ -15,6 +22,53 @@ onMounted(async () => {
 const goToEditProfile = () => router.push('/profile-form')
 const goToSettings = () => router.push('/settings')
 const navigateTo = (path: string) => router.push(path)
+
+// 팔로우 모달
+const openFollowModal = async (type: 'follower' | 'following') => {
+  if (!authStore.user) return
+
+  modalTitle.value = type === 'follower' ? '팔로워 목록' : '팔로잉 목록'
+  const endpoint = type === 'follower' ? 'followers' : 'followings'
+
+  try {
+    // 목록 조회 API
+    const response = await axios.get(`http://localhost:8080/user/${authStore.user.id}/${endpoint}`)
+    modalList.value = response.data
+    isModalOpen.value = true
+  } catch (e) {
+    console.error('팔로우 목록 조회 실패:', e)
+    alert('목록을 불러오지 못했습니다.')
+  }
+}
+
+// 리스트 내 팔로우 토글 핸들러
+const handleModalFollowToggle = async (targetUser: FollowUser) => {
+  // 낙관적 업데이트 (UI 먼저 변경)
+  const originalState = targetUser.isFollowing
+  targetUser.isFollowing = !originalState
+
+  try {
+    // 백엔드 api 호출 (post / user/{targetId}/follow)
+    // 응답값: FollowResponseDto { isFollowing, followerCount, followingCount }
+    const response = await axios.post(`http://localhost:8080/user/${targetUser.userId}/follow`)
+
+    // 서버 응답값으로 UI 정합성 맞추기
+    if (response.data) {
+      // 팔로잉 숫자 갱신
+      if (authStore.user && typeof response.data.myFollowingCount === 'number') {
+        authStore.user.followingCount = response.data.myFollowingCount
+      }
+
+      // 대상 유저의 상태 업데이트
+      targetUser.isFollowing = response.data.isFollowing
+    }
+  } catch (e) {
+    console.error('Follow toggle error:', e)
+    // 실패 시 롤백
+    targetUser.isFollowing = originalState
+    alert('요청 처리에 실패했습니다.')
+  }
+}
 
 // BMI 계산 로직
 const bmi = computed(() => {
@@ -53,7 +107,7 @@ const bmiPercent = computed(() => {
         <div class="bg-white pb-8 rounded-b-[2.5rem] shadow-sm mb-4">
           <div class="flex flex-col items-center pt-8">
             <div class="w-32 h-32 relative mb-4">
-              <!-- [수정] 프로필 이미지 표시 -->
+              <!-- 프로필 이미지 표시 -->
               <div
                 class="w-full h-full bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-inner cursor-pointer"
                 @click="goToEditProfile"
@@ -92,20 +146,36 @@ const bmiPercent = computed(() => {
               {{ authStore.user?.statusMessage || '오늘도 건강한 하루 되세요! 🌱' }}
             </p>
 
+            <!-- 통계 및 클릭 이벤트 -->
             <div class="flex gap-8 text-center w-full justify-center">
               <div>
-                <span class="block font-bold text-xl text-gray-800">15</span
-                ><span class="text-xs text-gray-400">게시글</span>
+                <span class="block font-bold text-xl text-gray-800">0</span>
+                <span class="text-xs text-gray-400">게시글</span>
               </div>
               <div class="w-[1px] h-8 bg-gray-200"></div>
-              <div>
-                <span class="block font-bold text-xl text-gray-800">240</span
-                ><span class="text-xs text-gray-400">팔로워</span>
+
+              <!-- 팔로워 (클릭 시 모달 오픈) -->
+              <div
+                class="cursor-pointer hover:opacity-60 transition"
+                @click="openFollowModal('follower')"
+              >
+                <span class="block font-bold text-xl text-gray-800">
+                  {{ authStore.user?.followerCount || 0 }}
+                </span>
+                <span class="text-xs text-gray-400">팔로워</span>
               </div>
+
               <div class="w-[1px] h-8 bg-gray-200"></div>
-              <div>
-                <span class="block font-bold text-xl text-gray-800">180</span
-                ><span class="text-xs text-gray-400">팔로잉</span>
+
+              <!-- 팔로잉 (클릭 시 모달 오픈) -->
+              <div
+                class="cursor-pointer hover:opacity-60 transition"
+                @click="openFollowModal('following')"
+              >
+                <span class="block font-bold text-xl text-gray-800">
+                  {{ authStore.user?.followingCount || 0 }}
+                </span>
+                <span class="text-xs text-gray-400">팔로잉</span>
               </div>
             </div>
           </div>
@@ -211,6 +281,15 @@ const bmiPercent = computed(() => {
           <span class="text-2xl mb-1">👤</span>MY
         </div>
       </nav>
+
+      <!-- 모달 컴포넌트 사용 -->
+      <FollowListModal
+        :is-open="isModalOpen"
+        :title="modalTitle"
+        :user-list="modalList"
+        @close="isModalOpen = false"
+        @toggle="handleModalFollowToggle"
+      />
     </div>
   </div>
 </template>

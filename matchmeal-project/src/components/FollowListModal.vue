@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { defineProps, defineEmits } from 'vue'
-
 export interface FollowUser {
   userId: number
   userName: string
@@ -8,13 +6,16 @@ export interface FollowUser {
   isFollowing: boolean
 }
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean
   title: string
   userList: FollowUser[]
 }>()
 
-const emit = defineEmits(['close', 'toggle'])
+const emit = defineEmits<{
+  (e: 'close'): void
+  (e: 'toggle', user: FollowUser): void
+}>()
 
 // 배경 클릭 시 닫기
 const close = () => {
