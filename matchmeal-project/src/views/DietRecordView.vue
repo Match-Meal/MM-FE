@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useDietStore } from '@/stores/dietStore';
+import { useDietStore, type DietFoodItem } from '@/stores/dietStore';
 import { createDiet, getDietDetail, updateDiet, deleteDiet, type DietDetailItem } from '@/services/dietService';
 import { createFood, type CreateFoodPayload } from '@/services/foodService';
 import { storeToRefs } from 'pinia';
@@ -127,7 +127,7 @@ const deleteResult = async () => {
 
 // 총 칼로리 계산
 const totalCalories = computed(() => {
-    return currentDiet.value.foods.reduce((acc: number, cur: any) => acc + cur.calories, 0);
+    return currentDiet.value.foods.reduce((acc: number, cur: DietFoodItem) => acc + cur.calories, 0);
 });
 
 const updateQuantity = (index: number, newQty: number) => {
