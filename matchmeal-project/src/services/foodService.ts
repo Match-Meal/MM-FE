@@ -146,3 +146,12 @@ export const deleteFood = async (foodId: number): Promise<void> => {
         throw error;
     }
 };
+
+/**
+ * 모든 음식 카테고리 목록을 가져옵니다.
+ * @returns 카테고리 이름의 문자열 배열
+ */
+export const getFoodCategories = async (): Promise<string[]> => {
+  const response = await apiClient.get('/foods/categories')
+  return response.data.data
+}
