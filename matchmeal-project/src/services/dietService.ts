@@ -56,7 +56,7 @@ export const getDailyDiets = async (date: string): Promise<DailyDietListResult> 
 };
 
 // 식단 상세 조회
-export const getDietDetail = async (dietId: number) => {
+export const getDietDetail = async (dietId: number): Promise<{ data: DailyDietResponseItem }> => {
     try {
         const response = await apiClient.get(`/diet/${dietId}`);
         return response.data; // data.data 가 아니라 data 전체를 리턴하는 경우도 확인 필요하지만, 보통 apiClient에서 처리하거나 여기서 처리. 

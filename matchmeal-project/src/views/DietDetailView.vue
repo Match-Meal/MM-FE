@@ -25,7 +25,7 @@ const initData = async () => {
         dietData.value = response.data
     } else {
         // 혹시 response 자체가 데이터라면? (드물지만)
-        dietData.value = response as any
+        dietData.value = response as unknown as DailyDietResponseItem
     }
   } catch (e) {
     console.error(e)
