@@ -11,6 +11,7 @@ interface User {
   createdAt: string
 
   statusMessage?: string
+  profileImage?: string
   gender?: 'M' | 'F'
   birthDate?: string
   heightCm?: number
