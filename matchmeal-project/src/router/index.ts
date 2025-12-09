@@ -10,6 +10,9 @@ import ProfileIntroView from '../views/ProfileIntroView.vue'
 import ProfileFormView from '../views/ProfileFormView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import SettingsView from '@/views/SettingsView.vue'
+import DietMainView from '@/views/DietMainView.vue'
+import DietRecordView from '@/views/DietRecordView.vue'
+import DietDetailView from '@/views/DietDetailView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -82,6 +85,30 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: SettingsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/diet',
+      name: 'diet-main',
+      component: DietMainView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/diet/record',
+      name: 'diet-create',
+      component: DietRecordView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/diet/record/:id',
+      name: 'diet-edit',
+      component: DietRecordView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/diet/detail/:id',
+      name: 'diet-detail',
+      component: DietDetailView,
       meta: { requiresAuth: true },
     },
   ],

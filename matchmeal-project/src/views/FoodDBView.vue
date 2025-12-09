@@ -12,12 +12,15 @@ import {
   type FoodListItem,
   type PageInfo,
 } from '@/services/foodService'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
+
+const isSelectMode = computed(() => route.query.mode === 'select')
 
 const goBack = () => {
-  router.push('/home')
+  router.back()
 }
 
 const foods = ref<FoodListItem[]>([])
@@ -42,6 +45,18 @@ const categoryWrapper = ref<HTMLElement | null>(null)
 const handleCategoryBlur = (event: FocusEvent) => {
   if (categoryWrapper.value && !categoryWrapper.value.contains(event.relatedTarget as Node)) {
     isCategoryDropdownOpen.value = false
+  }
+}
+
+const selectFood = async (food: FoodListItem) => {
+  // 선택 모드여도 상세 페이지로 이동해서 확인 후 추가하도록 변경
+  if (isSelectMode.value) {
+    router.push({
+      path: `/food-db/${food.foodId}`,
+      query: { mode: 'select' }
+    })
+  } else {
+    router.push('/food-db/' + food.foodId)
   }
 }
 
@@ -239,11 +254,11 @@ onActivated(() => {
             <span v-else>전체 음식 목록</span>
           </h3>
           <div v-if="foods.length > 0" class="space-y-3">
-            <router-link
+            <div
               v-for="food in foods"
               :key="food.foodId"
-              :to="'/food-db/' + food.foodId"
-              class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-100 bg-white"
+              @click="selectFood(food)"
+              class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-100 bg-white cursor-pointer"
             >
               <div class="flex-1">
                 <h4 class="font-bold text-sm text-gray-800">
@@ -254,7 +269,7 @@ onActivated(() => {
               <span class="text-sm font-bold text-gray-700 pl-4"
                 >{{ Math.round(food.calories) }} kcal</span
               >
-            </router-link>
+            </div>
           </div>
           <div v-else class="text-center text-gray-500 py-10">
             <p>검색 결과가 없습니다.</p>
