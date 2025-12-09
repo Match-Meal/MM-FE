@@ -18,6 +18,10 @@ interface User {
   weightKg?: number
   isPublic?: boolean
 
+  // 팔로우 통계
+  followerCount?: number
+  followingCount?: number
+
   allergies: string[]
   diseases: string[]
 }
