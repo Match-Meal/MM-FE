@@ -127,7 +127,7 @@ const deleteResult = async () => {
 
 // 총 칼로리 계산
 const totalCalories = computed(() => {
-    return currentDiet.value.foods.reduce((acc, cur) => acc + cur.calories, 0);
+    return currentDiet.value.foods.reduce((acc: number, cur: any) => acc + cur.calories, 0);
 });
 
 const updateQuantity = (index: number, newQty: number) => {
