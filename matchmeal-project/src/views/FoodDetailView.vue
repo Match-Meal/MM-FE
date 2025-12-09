@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getFoodDetail, deleteFood, type FoodDetail } from '@/services/foodService'
+import { useDietStore } from '@/stores/dietStore'
 
 const route = useRoute()
 const router = useRouter()
+const dietStore = useDietStore()
+
+const isSelectMode = computed(() => route.query.mode === 'select')
 
 const food = ref<FoodDetail | null>(null)
 const isLoading = ref(true)
@@ -58,6 +62,23 @@ const handleDelete = async () => {
       console.error(err)
     }
   }
+}
+
+const addToDiet = () => {
+    if (!food.value) return
+
+    dietStore.addFoodToDiet({
+        foodId: food.value.foodId,
+        foodName: food.value.foodName,
+        quantity: food.value.servingSize,
+        unit: food.value.unit,
+        calories: food.value.calories,
+        carbohydrate: food.value.carbohydrate,
+        protein: food.value.protein,
+        fat: food.value.fat
+    })
+    
+    router.push('/diet/record')
 }
 </script>
 
@@ -127,21 +148,34 @@ const handleDelete = async () => {
               </div>
             </div>
 
-            <!-- 수정/삭제 버튼 (isMine이 true일 때만 보임) -->
-            <div v-if="food.isMine" class="flex gap-3 mt-10">
-              <button
-                @click="handleDelete"
-                class="flex-1 h-12 border-2 border-red-200 text-red-500 font-bold rounded-xl hover:bg-red-50 transition"
-              >
-                삭제
-              </button>
-              <button
-                @click="handleEdit"
-                class="flex-[2] h-12 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition"
-              >
-                수정하기
-              </button>
+            <!-- 하단 버튼 영역 -->
+            <div class="mt-10">
+                <!-- 선택 모드일 때: 식단에 추가 버튼 -->
+                <button
+                    v-if="isSelectMode"
+                    @click="addToDiet"
+                    class="w-full h-12 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                >
+                    <span>🍽️</span> 이 음식을 식단에 추가하기
+                </button>
+
+                <!-- 일반 모드이고 내 음식일 때: 수정/삭제 -->
+                <div v-else-if="food.isMine" class="flex gap-3">
+                    <button
+                        @click="handleDelete"
+                        class="flex-1 h-12 border-2 border-red-200 text-red-500 font-bold rounded-xl hover:bg-red-50 transition"
+                    >
+                        삭제
+                    </button>
+                    <button
+                        @click="handleEdit"
+                        class="flex-[2] h-12 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition"
+                    >
+                        수정하기
+                    </button>
+                </div>
             </div>
+
           </div>
         </div>
       </main>
