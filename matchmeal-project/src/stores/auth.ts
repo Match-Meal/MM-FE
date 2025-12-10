@@ -32,11 +32,23 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!token.value)
 
+  axios.interceptors.request.use(
+    (config) => {
+      const currentToken = localStorage.getItem('accessToken')
+      if (currentToken) {
+        config.headers.Authorization = `Bearer ${token.value}`
+      }
+      return config
+    },
+    (error) => {
+      return Promise.reject(error)
+    },
+  )
+
   // 1. 토큰 저장 액션
   function setToken(newToken: string) {
     token.value = newToken
     localStorage.setItem('accessToken', newToken)
-    axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
   }
 
   // 2. 로그아웃 액션
@@ -44,17 +56,12 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null
     user.value = null
     localStorage.removeItem('accessToken')
-    delete axios.defaults.headers.common['Authorization']
     window.location.href = '/login'
   }
 
   // 내 정보 가져오기 (백엔드 API)
   async function fetchUser() {
-    if (!token.value) return
-
     try {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
-
       // 백엔드 UserController (/user/me) 호출
       const response = await axios.get<User>('http://localhost:8080/user/me')
       user.value = response.data

@@ -31,9 +31,16 @@ const openFollowModal = async (type: 'follower' | 'following') => {
   const endpoint = type === 'follower' ? 'followers' : 'followings'
 
   try {
-    // 목록 조회 API
-    const response = await axios.get(`http://localhost:8080/user/${authStore.user.id}/${endpoint}`)
-    modalList.value = response.data
+    // 1. axios.get에 제네릭 <FollowUser[]>을 사용하여 리턴 타입을 명시합니다.
+    const response = await axios.get<FollowUser[]>(
+      `http://localhost:8080/user/${authStore.user.id}/${endpoint}`,
+    )
+
+    modalList.value = response.data.map((user) => ({
+      ...user,
+      isFollowing: type === 'following' ? true : user.isFollowing,
+    }))
+
     isModalOpen.value = true
   } catch (e) {
     console.error('팔로우 목록 조회 실패:', e)
@@ -43,29 +50,55 @@ const openFollowModal = async (type: 'follower' | 'following') => {
 
 // 리스트 내 팔로우 토글 핸들러
 const handleModalFollowToggle = async (targetUser: FollowUser) => {
-  // 낙관적 업데이트 (UI 먼저 변경)
-  const originalState = targetUser.isFollowing
-  targetUser.isFollowing = !originalState
+  // 인덱스 찾기
+  const index = modalList.value.findIndex((u) => u.userId === targetUser.userId)
+
+  // 인덱스가 없으면 중단
+  if (index === -1) return
+
+  // 이렇게 하면 TypeScript는 userItem이 undefined가 아님을 확신합니다.
+  const userItem = modalList.value[index]
+  if (!userItem) return
+
+  // 현재 상태 파악
+  const originalState = userItem.isFollowing
+  const originalFollowingCount = authStore.user?.followingCount || 0
+
+  // 버튼 상태 반전
+  userItem.isFollowing = !originalState
+
+  if (authStore.user) {
+    if (userItem.isFollowing) {
+      // 팔로우 + 1
+      authStore.user.followingCount = (authStore.user.followingCount || 0) + 1
+    } else {
+      // 언팔 -1
+      authStore.user.followingCount = Math.max(0, (authStore.user.followingCount || 0) - 1)
+    }
+  }
 
   try {
-    // 백엔드 api 호출 (post / user/{targetId}/follow)
-    // 응답값: FollowResponseDto { isFollowing, followerCount, followingCount }
+    // 백엔드 API 호출
     const response = await axios.post(`http://localhost:8080/user/${targetUser.userId}/follow`)
 
-    // 서버 응답값으로 UI 정합성 맞추기
-    if (response.data) {
-      // 팔로잉 숫자 갱신
-      if (authStore.user && typeof response.data.myFollowingCount === 'number') {
+    // 내 정보(팔로잉 숫자) 갱신
+    if (response.data && authStore.user) {
+      if (typeof response.data.myFollowingCount === 'number') {
         authStore.user.followingCount = response.data.myFollowingCount
       }
 
-      // 대상 유저의 상태 업데이트
-      targetUser.isFollowing = response.data.isFollowing
+      // 서버 데이터로 덮어쓰기
+      if (response.data.isFollowing !== undefined) {
+        userItem.isFollowing = response.data.isFollowing
+      }
     }
   } catch (e) {
     console.error('Follow toggle error:', e)
     // 실패 시 롤백
-    targetUser.isFollowing = originalState
+    userItem.isFollowing = originalState
+    if (authStore.user) {
+      authStore.user.followingCount = originalFollowingCount
+    }
     alert('요청 처리에 실패했습니다.')
   }
 }
