@@ -14,8 +14,91 @@ const { currentDiet } = storeToRefs(dietStore);
 const isEditMode = computed(() => !!route.params.id);
 const isLoading = ref(false);
 
-const showAlert = (message: string) => {
-  alert(message)
+const fileInput = ref<HTMLInputElement | null>(null)
+
+const triggerFileInput = () => {
+    fileInput.value?.click()
+}
+
+// 이미지 압축 함수
+const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target?.result as string;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const MAX_WIDTH = 1280;
+                const MAX_HEIGHT = 1280;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        // 원본 파일명을 유지하며 파일 생성
+                        const compressedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now(),
+                        });
+                        resolve(compressedFile);
+                    } else {
+                        reject(new Error('Image compression failed'));
+                    }
+                }, 'image/jpeg', 0.7); // 품질 0.7 설정
+            };
+            img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+    });
+};
+
+const handleFileChange = async (event: Event) => {
+    const target = event.target as HTMLInputElement
+    if (target.files && target.files.length > 0) {
+        const file = target.files[0]
+        if (file) {
+            try {
+                // 이미지 압축 적용
+                const compressedFile = await compressImage(file);
+                currentDiet.value.imageFile = compressedFile
+                
+                // 이전 URL 해제 (메모리 누수 방지)
+                if (currentDiet.value.previewImageUrl && currentDiet.value.previewImageUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(currentDiet.value.previewImageUrl)
+                }
+                currentDiet.value.previewImageUrl = URL.createObjectURL(compressedFile)
+            } catch (e) {
+                console.error("Image compression failed:", e);
+                alert("이미지 처리에 실패했습니다. 원본을 사용합니다.");
+                
+                // 실패 시 원본 사용 (fallback)
+                currentDiet.value.imageFile = file
+                 if (currentDiet.value.previewImageUrl && currentDiet.value.previewImageUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(currentDiet.value.previewImageUrl)
+                }
+                currentDiet.value.previewImageUrl = URL.createObjectURL(file)
+            }
+        }
+    }
 }
 
 // 초기 데이터 로드 (수정 모드일 경우)
@@ -48,6 +131,14 @@ const initData = async () => {
                         fat: d.fat
                     }))
                 };
+                
+                // 기존 이미지가 있다면 (API 응답에 imageUrl 필드가 있다고 가정하거나, 추후 추가)
+                // 현재는 API 응답에 imageUrl이 명시되어 있지 않아 생략, 
+                // 만약 detail에 imageUrl이 있다면:
+                // detail은 이제 dietImgUrl을 포함하는 DailyDietResponseItem (API 구조 확장됨)
+                if (detail.dietImgUrl) {
+                    currentDiet.value.previewImageUrl = detail.dietImgUrl
+                }
              } catch (e) {
                  console.error(e);
                  alert('식단 정보를 불러오지 못했습니다.');
@@ -95,10 +186,10 @@ const saveDiet = async () => {
 
     try {
         if (isEditMode.value && currentDiet.value.dietId) {
-            await updateDiet(currentDiet.value.dietId, payload);
+            await updateDiet(currentDiet.value.dietId, payload, currentDiet.value.imageFile || undefined);
             window.alert('수정되었습니다.');
         } else {
-            await createDiet(payload);
+            await createDiet(payload, currentDiet.value.imageFile || undefined);
             window.alert('저장되었습니다.');
         }
         // 저장 후 리스트로 이동 -> 상세 기능이 생겼지만, 저장은 보통 리스트로 가거나 상세로 감.
@@ -241,10 +332,26 @@ const addManualFood = async () => {
             <template v-else>
                 <!-- Image Upload / Analysis Placeholder -->
                 <div class="flex justify-center">
-                    <div class="w-full h-40 bg-gray-100 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-gray-300 text-gray-400 gap-2 relative overflow-hidden cursor-pointer hover:border-blue-400 transition"
-                         @click="showAlert('AI 사진 분석 기능은 준비중입니다.')">
-                        <span class="text-3xl">📷</span>
-                        <span class="text-xs">사진을 등록하면 AI가 분석해요</span>
+                    <input 
+                        type="file" 
+                        ref="fileInput" 
+                        class="hidden" 
+                        accept="image/*"
+                        @change="handleFileChange"
+                    >
+                    <div class="w-full h-64 bg-gray-100 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-gray-300 text-gray-400 gap-2 relative overflow-hidden cursor-pointer hover:border-blue-400 transition"
+                         @click="triggerFileInput">
+                        
+                        <img v-if="currentDiet.previewImageUrl" :src="currentDiet.previewImageUrl" class="absolute inset-0 w-full h-full object-cover">
+                        
+                        <template v-else>
+                            <span class="text-3xl">📷</span>
+                            <span class="text-xs">사진을 등록하면 AI가 분석해요</span>
+                        </template>
+                        
+                        <div v-if="currentDiet.previewImageUrl" class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition">
+                            <span class="text-white font-bold bg-black/50 px-3 py-1 rounded-full text-sm">사진 변경</span>
+                        </div>
                     </div>
                 </div>
 

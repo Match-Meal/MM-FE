@@ -33,6 +33,7 @@ export interface DailyDietResponseItem {
     totalCarbohydrate: number;
     totalProtein: number;
     totalFat: number;
+    dietImgUrl?: string; // Changed from imageUrl based on API response
     details: DietDetailItem[];
 }
 
@@ -77,9 +78,22 @@ export const getDietDetail = async (dietId: number): Promise<{ data: DailyDietRe
 };
 
 // 식단 생성
-export const createDiet = async (payload: CreateDietPayload) => {
+export const createDiet = async (payload: CreateDietPayload, file?: File) => {
     try {
-        const response = await apiClient.post('/diet', payload);
+        const formData = new FormData();
+        const jsonBlob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+        formData.append('data', jsonBlob);
+        
+        if (file) {
+            formData.append('file', file);
+        }
+
+        const response = await apiClient.post('/diet', formData, {
+            headers: {
+                // headers: { 'Content-Type': 'multipart/form-data' } // explicitly might not be needed as browser sets boundary, but good to ensure apiClient doesn't override wrong
+                'Content-Type': 'multipart/form-data'
+            }
+        });
         return response.data;
     } catch (error) {
         console.error('Error creating diet:', error);
@@ -88,9 +102,21 @@ export const createDiet = async (payload: CreateDietPayload) => {
 };
 
 // 식단 수정
-export const updateDiet = async (dietId: number, payload: CreateDietPayload) => {
+export const updateDiet = async (dietId: number, payload: CreateDietPayload, file?: File) => {
     try {
-        const response = await apiClient.put(`/diet/${dietId}`, payload);
+        const formData = new FormData();
+        const jsonBlob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+        formData.append('data', jsonBlob);
+
+        if (file) {
+            formData.append('file', file);
+        }
+
+        const response = await apiClient.put(`/diet/${dietId}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
         return response.data;
     } catch (error) {
         console.error(`Error updating diet ${dietId}:`, error);

@@ -187,6 +187,7 @@ const handleLogout = () => {
         </div>
 
         <div
+          @click="router.push('/diet')"
           class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
         >
           <span class="text-2xl mb-1">🍽️</span>식단

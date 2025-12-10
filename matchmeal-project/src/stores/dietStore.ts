@@ -21,6 +21,8 @@ export interface CurrentDietState {
     mealType: string;
     memo: string;
     foods: DietFoodItem[];
+    imageFile?: File | null;
+    previewImageUrl?: string;
 }
 
 export const useDietStore = defineStore('diet', () => {
@@ -33,7 +35,9 @@ export const useDietStore = defineStore('diet', () => {
         eatTime: dayjs().format('HH:mm'),
         mealType: 'LUNCH',
         memo: '',
-        foods: []
+        foods: [],
+        imageFile: null,
+        previewImageUrl: ''
     });
 
     const setDate = (date: string) => {
@@ -46,7 +50,9 @@ export const useDietStore = defineStore('diet', () => {
             eatTime: dayjs().format('HH:mm'),
             mealType: 'LUNCH',
             memo: '',
-            foods: []
+            foods: [],
+            imageFile: null,
+            previewImageUrl: ''
         };
     };
 
