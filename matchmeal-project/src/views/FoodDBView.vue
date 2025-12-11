@@ -12,7 +12,7 @@ import {
   type FoodListItem,
   type PageInfo,
 } from '@/services/foodService'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()
@@ -102,6 +102,13 @@ const fetchCategories = async () => {
 
 // 검색 실행 함수
 const handleSearch = () => {
+  // 사용자가 카테고리를 직접 입력하고 엔터/검색을 눌렀을 경우 처리
+  if (!selectedCategory.value && categorySearch.value) {
+    const match = categories.value.find(c => c === categorySearch.value || c.toLowerCase() === categorySearch.value.toLowerCase())
+    if (match) {
+      selectedCategory.value = match
+    }
+  }
   // 검색 시 1페이지부터 결과 조회
   fetchFoods()
 }
@@ -133,6 +140,25 @@ const selectCategory = (category: string) => {
 // 컴포넌트가 마운트될 때 카테고리 목록을 가져옵니다.
 onMounted(() => {
   fetchCategories()
+})
+
+// 컴포넌트를 떠날 때 필터 초기화 여부 결정
+onBeforeRouteLeave((to, from, next) => {
+  // 상세 화면(/food-db/...)이나 음식 수정(/food-db/edit/...),
+  // 또는 음식 등록(/food-create)이 아니라면 필터를 초기화
+  // (음식 등록으로 갔다가 취소하고 오면 필터가 유지되는게 일반적이지만,
+  //  사용자 요청은 "음식 상세에 들어갔다가 나왔을 경우만 유지"이므로 상세 제외 모두 리셋 처리)
+  if (!to.path.startsWith('/food-db/')) {
+    keyword.value = ''
+    selectedCategory.value = ''
+    categorySearch.value = ''
+    // userOnly.value는 유지하는게 사용자 경험상 좋을 수 있으나, 명시적으로 초기화하려면:
+    // userOnly.value = false
+    isSearchFilterOpen.value = false
+    // 검색 결과도 초기화하려면:
+    // foods.value = []
+  }
+  next()
 })
 
 // 컴포넌트가 활성화될 때 (다시 보여질 때) 음식 목록을 가져옵니다.
@@ -205,7 +231,7 @@ onActivated(() => {
                 <div
                   v-for="cat in filteredCategories"
                   :key="cat"
-                  @click="selectCategory(cat)"
+                  @mousedown.prevent="selectCategory(cat)"
                   class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
                 >
                   {{ cat }}

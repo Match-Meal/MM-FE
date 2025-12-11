@@ -100,9 +100,14 @@ const mealLabel = (type: string) => {
         Loading...
       </main>
 
-      <main v-else-if="dietData" class="flex-1 overflow-y-auto bg-gray-50 pb-20">
+      <main v-else-if="dietData" class="flex-1 overflow-y-auto bg-gray-50 pb-20 no-scrollbar">
+        <!-- Diet Image -->
+        <div v-if="dietData.dietImgUrl" class="w-full h-64 bg-gray-100 relative">
+            <img :src="dietData.dietImgUrl" class="w-full h-full object-cover">
+        </div>
+
         <!-- Date / Time / Type Info -->
-        <div class="bg-white p-6 mb-2 rounded-b-2xl shadow-sm">
+        <div class="bg-white p-6 mb-2 rounded-b-2xl shadow-sm" :class="{ 'rounded-t-2xl': !dietData.dietImgUrl }">
             <div class="flex justify-between items-end mb-4">
                 <div>
                     <div class="text-2xl font-bold">{{ formatDate(dietData.eatDate) }}</div>
@@ -184,3 +189,16 @@ const mealLabel = (type: string) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Chrome, Safari, Edge */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+</style>

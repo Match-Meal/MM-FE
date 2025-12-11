@@ -27,9 +27,11 @@ const fetchData = async () => {
     const response = await getDailyDiets(selectedDate.value)
     
     if (Array.isArray(response)) {
+        console.log('Daily Diets Response:', response)
         dietList.value = response
         dailyTotalCalories.value = response.reduce((acc, cur) => acc + (cur.totalCalories || 0), 0)
     } else if (response && response.diets) {
+        console.log('Daily Diets Response (Object):', response)
         dietList.value = response.diets || []
         dailyTotalCalories.value = response.totalCalories || 0
     } else {
@@ -229,8 +231,14 @@ const getMealIcon = (type: string) => {
                     @click="goToDetail(item)"
                     class="bg-white p-4 rounded-xl shadow-sm flex gap-4 cursor-pointer hover:bg-gray-50 transition border border-gray-100"
                 >
-                    <div class="w-16 h-16 bg-orange-100 rounded-xl flex items-center justify-center text-2xl">
-                        {{ getMealIcon(item.mealType) }}
+                    <div class="w-16 h-16 bg-orange-100 rounded-xl flex items-center justify-center text-2xl overflow-hidden shrink-0">
+                        <img 
+                            v-if="item.dietImgUrl" 
+                            :src="item.dietImgUrl" 
+                            class="w-full h-full object-cover" 
+                            alt="식단 사진"
+                        >
+                        <span v-else>{{ getMealIcon(item.mealType) }}</span>
                     </div>
                     <div class="flex-1">
                         <div class="flex justify-between items-start">

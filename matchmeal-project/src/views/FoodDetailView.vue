@@ -78,7 +78,10 @@ const addToDiet = () => {
         fat: food.value.fat
     })
     
-    router.push('/diet/record')
+    // router.push('/diet/record') 대신, 히스토리 스택을 2단계 뒤로 이동하여
+    // (DietRecordView -> FoodDBView -> FoodDetailView) 순서를 거슬러 올라감
+    // 이렇게 하면 DietRecordView로 돌아갔을 때 '뒤로 가기'를 누르면 MainView로 정상 이동됨
+    router.go(-2)
 }
 </script>
 
