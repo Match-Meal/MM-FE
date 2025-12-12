@@ -15,6 +15,8 @@ import {
   type Comment 
 } from '@/services/communityService';
 import dayjs from 'dayjs';
+import ConfirmModal from '@/components/common/ConfirmModal.vue';
+import UserInfoModal from '@/components/UserInfoModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -90,9 +92,16 @@ const isOwner = computed(() => {
   return post.value?.user.userId === authStore.user?.id;
 });
 
-import ConfirmModal from '@/components/common/ConfirmModal.vue';
+// User Profile Modal Logic
+type PostUser = PostDetail['user']; // Define PostUser type based on PostDetail's user
+const selectedUser = ref<PostUser | null>(null);
+const isUserInfoOpen = ref(false);
 
-// ... (existing imports)
+const openUserInfo = (user: PostUser | null) => {
+    if (!user) return;
+    selectedUser.value = user;
+    isUserInfoOpen.value = true;
+};
 
 const isDeleteModalOpen = ref(false);
 
@@ -135,18 +144,18 @@ const handleSubmitComment = async () => {
   try {
     // If replyTarget exists, it's a child comment
     const parentId = replyTarget.value ? replyTarget.value.id : undefined;
-    
-    // Optimistic UI or fetch again? 
+
+    // Optimistic UI or fetch again?
     // API returns the created comment. We should probably fetch detail again or manually append.
     // Fetching again ensures correct ordering and structure.
     await createComment(postId, commentContent.value, parentId);
-    
+
     commentContent.value = '';
     replyTarget.value = null; // Reset reply target
-    
+
     // Refresh data
     await initData();
-    
+
     // Scroll to bottom? Or just let user see.
   } catch (e) {
     console.error(e);
@@ -239,7 +248,7 @@ onMounted(() => {
 <template>
   <div class="bg-gray-200 min-h-screen flex items-center justify-center font-sans text-gray-800">
     <div class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-800 flex flex-col">
-      
+
       <!-- Header -->
       <header class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 shrink-0">
         <button @click="goBack" class="text-2xl w-8">←</button>
@@ -263,12 +272,18 @@ onMounted(() => {
         <div class="p-5 border-b-8 border-gray-100">
             <!-- User Info -->
             <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 bg-gray-200 rounded-full overflow-hidden border">
+                <div
+                    class="w-10 h-10 bg-gray-200 rounded-full overflow-hidden border cursor-pointer hover:opacity-80 transition"
+                    @click="openUserInfo(post.user)"
+                >
                     <img v-if="post.user.profileImage" :src="post.user.profileImage" class="w-full h-full object-cover">
                     <span v-else class="w-full h-full flex items-center justify-center">👤</span>
                 </div>
                 <div>
-                     <p class="text-sm font-bold">{{ post.user.userName }}</p>
+                     <p
+                        class="text-sm font-bold cursor-pointer hover:underline"
+                        @click="openUserInfo(post.user)"
+                     >{{ post.user.userName }}</p>
                      <p class="text-xs text-gray-400">{{ formatTime(post.createdAt) }} • 조회 {{ post.viewCount }}</p>
                 </div>
             </div>
@@ -370,7 +385,12 @@ onMounted(() => {
                                 <!-- Display Mode -->
                                 <div v-else>
                                     <div class="flex justify-between items-start mb-1">
-                                        <span class="text-xs font-bold mr-2">{{ comment.user?.userName }}</span>
+                                        <span 
+                                            class="text-xs font-bold mr-2 cursor-pointer hover:underline"
+                                            @click="openUserInfo(comment.user)"
+                                        >
+                                            {{ comment.user?.userName }}
+                                        </span>
                                         <span class="text-[10px] text-gray-400">{{ formatTime(comment.createdAt) }}</span>
                                     </div>
                                     <p class="text-xs text-gray-700 mb-2 leading-relaxed">{{ comment.content }}</p>
@@ -495,6 +515,14 @@ onMounted(() => {
         confirmText="삭제"
         @close="isCommentDeleteModalOpen = false"
         @confirm="confirmDeleteComment"
+    />
+
+    <!-- User Info Modal -->
+    <UserInfoModal 
+        v-if="selectedUser"
+        :is-open="isUserInfoOpen"
+        :user="selectedUser"
+        @close="isUserInfoOpen = false"
     />
     </div>
   </div>
