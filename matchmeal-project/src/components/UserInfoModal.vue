@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, watch } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import type { PostUser } from '@/services/communityService'
+import type { FollowUser } from '@/components/FollowListModal.vue'
 import { useToastStore } from '@/stores/toast'
 
 const props = defineProps<{
@@ -39,11 +40,11 @@ const checkFollowStatus = async () => {
         if (!authStore.user) return
 
         // 내 팔로잉 목록을 가져와서 확인 (기존 ProfileView 로직 활용)
-        const response = await axios.get<any[]>(
+        const response = await axios.get<FollowUser[]>(
             `http://localhost:8080/user/${authStore.user.id}/followings`
         )
         const followingList = response.data
-        const found = followingList.find((u: any) => u.userId === props.user.userId)
+        const found = followingList.find((u) => u.userId === props.user.userId)
         isFollowing.value = !!found
     } catch (e) {
         console.error('Follow status check failed', e)
