@@ -1,71 +1,73 @@
 <script setup lang="ts">
 defineProps<{
-  isOpen: boolean
-  title: string
-  message: string
-  confirmText?: string
-  cancelText?: string
-}>()
+  isOpen: boolean;
+  title?: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+}>();
 
-defineEmits(['close', 'confirm'])
+const emit = defineEmits(['close', 'confirm']);
+
+const handleConfirm = () => {
+  emit('confirm');
+  emit('close');
+};
 </script>
 
 <template>
-  <div v-if="isOpen" class="absolute inset-0 z-[60] flex items-center justify-center px-6">
-    <!-- 배경 (어둡게) -->
-    <div
-      class="absolute inset-0 bg-black/60 transition-opacity animate-fade-in"
-      @click="$emit('close')"
-    ></div>
+  <Transition name="modal">
+    <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <!-- Backdrop -->
+      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="$emit('close')"></div>
 
-    <!-- 모달 박스 -->
-    <div
-      class="relative w-full max-w-sm bg-white rounded-2xl shadow-xl p-6 text-center animate-scale-up"
-    >
-      <h3 class="text-lg font-bold text-gray-800 mb-2">{{ title }}</h3>
-      <p class="text-sm text-gray-500 mb-6 whitespace-pre-wrap">{{ message }}</p>
-
-      <div class="flex gap-3">
-        <button
-          @click="$emit('close')"
-          class="flex-1 h-11 border border-gray-300 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition"
-        >
-          {{ cancelText || '취소' }}
-        </button>
-        <button
-          @click="$emit('confirm')"
-          class="flex-1 h-11 bg-red-500 text-white rounded-xl text-sm font-bold shadow-md hover:bg-red-600 transition"
-        >
-          {{ confirmText || '확인' }}
-        </button>
+      <!-- Modal Card -->
+      <div class="bg-white rounded-2xl w-full max-w-xs p-6 relative z-10 shadow-xl overflow-hidden animate-pop">
+        <h3 v-if="title" class="text-lg font-bold mb-2 text-center text-gray-900">{{ title }}</h3>
+        <p class="text-gray-600 text-center mb-6 whitespace-pre-wrap leading-relaxed decoration-slice">{{ message }}</p>
+        
+        <div class="flex gap-3">
+          <button 
+            @click="$emit('close')"
+            class="flex-1 py-3 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition"
+          >
+            {{ cancelText || '취소' }}
+          </button>
+          <button 
+            @click="handleConfirm"
+            class="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition"
+          >
+            {{ confirmText || '확인' }}
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+  </Transition>
 </template>
 
 <style scoped>
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.2s ease;
 }
-@keyframes scaleUp {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
 }
-.animate-fade-in {
-  animation: fadeIn 0.2s ease-out forwards;
+
+.animate-pop {
+    animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.animate-scale-up {
-  animation: scaleUp 0.2s ease-out forwards;
+
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 </style>

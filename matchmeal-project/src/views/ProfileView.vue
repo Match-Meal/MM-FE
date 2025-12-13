@@ -4,6 +4,8 @@ import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import FollowListModal, { type FollowUser } from '@/components/FollowListModal.vue'
+import PostListModal from '@/components/PostListModal.vue'
+import { getPosts, type PostListItem } from '@/services/communityService'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -13,11 +15,40 @@ const isModalOpen = ref(false)
 const modalTitle = ref('')
 const modalList = ref<FollowUser[]>([])
 
+// 내 게시글 관련
+const myPosts = ref<PostListItem[]>([])
+const myPostCount = ref(0)
+const isPostModalOpen = ref(false)
+
 onMounted(async () => {
   if (!authStore.user && authStore.token) {
     await authStore.fetchUser()
   }
+  await fetchMyPosts()
 })
+
+const fetchMyPosts = async () => {
+    if (!authStore.user?.userName) return
+    try {
+        const response = await getPosts({
+            page: 0,
+            size: 20, // 모달에서 보여줄 개수 증가
+            searchType: 'WRITER',
+            keyword: authStore.user.userName,
+            sortType: 'LATEST'
+        })
+        myPosts.value = response.content
+        myPostCount.value = response.pageInfo.totalCount
+    } catch (e) {
+        console.error('Failed to fetch my posts', e)
+    }
+}
+
+const openPostModal = () => {
+    if (myPosts.value.length > 0) {
+        isPostModalOpen.value = true
+    }
+}
 
 const goToEditProfile = () => router.push('/profile-form')
 const goToSettings = () => router.push('/settings')
@@ -181,8 +212,11 @@ const bmiPercent = computed(() => {
 
             <!-- 통계 및 클릭 이벤트 -->
             <div class="flex gap-8 text-center w-full justify-center">
-              <div>
-                <span class="block font-bold text-xl text-gray-800">0</span>
+              <div 
+                class="cursor-pointer hover:opacity-60 transition"
+                @click="openPostModal"
+              >
+                <span class="block font-bold text-xl text-gray-800">{{ myPostCount }}</span>
                 <span class="text-xs text-gray-400">게시글</span>
               </div>
               <div class="w-[1px] h-8 bg-gray-200"></div>
@@ -322,6 +356,14 @@ const bmiPercent = computed(() => {
         :user-list="modalList"
         @close="isModalOpen = false"
         @toggle="handleModalFollowToggle"
+      />
+
+      <!-- 게시글 목록 모달 -->
+      <PostListModal 
+        :is-open="isPostModalOpen"
+        title="내가 쓴 게시글"
+        :post-list="myPosts"
+        @close="isPostModalOpen = false"
       />
     </div>
   </div>

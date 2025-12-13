@@ -13,6 +13,9 @@ import SettingsView from '@/views/SettingsView.vue'
 import DietMainView from '@/views/DietMainView.vue'
 import DietRecordView from '@/views/DietRecordView.vue'
 import DietDetailView from '@/views/DietDetailView.vue'
+import CommunityMainView from '@/views/CommunityMainView.vue'
+import CommunityDetailView from '@/views/CommunityDetailView.vue'
+import CommunityWriteView from '@/views/CommunityWriteView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -109,6 +112,30 @@ const router = createRouter({
       path: '/diet/detail/:id',
       name: 'diet-detail',
       component: DietDetailView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/community',
+      name: 'community-main',
+      component: CommunityMainView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/community/write',
+      name: 'community-write',
+      component: CommunityWriteView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/community/edit/:id',
+      name: 'community-edit',
+      component: CommunityWriteView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/community/:id',
+      name: 'community-detail',
+      component: CommunityDetailView,
       meta: { requiresAuth: true },
     },
   ],
