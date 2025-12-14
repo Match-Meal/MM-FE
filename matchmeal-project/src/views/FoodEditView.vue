@@ -7,9 +7,11 @@ import {
   type FoodDetail,
   type UpdateFoodPayload,
 } from '@/services/foodService'
+import { useToastStore } from '@/stores/toast'
 
 const route = useRoute()
 const router = useRouter()
+const toastStore = useToastStore()
 const foodId = Number(route.params.id)
 
 // 폼 입력을 위한 반응형 객체
@@ -67,6 +69,8 @@ onMounted(async () => {
       carbohydrate: existingFood.carbohydrate,
       protein: existingFood.protein,
       fat: existingFood.fat,
+      sugars: existingFood.sugars,
+      sodium: existingFood.sodium,
     }
   } catch (err) {
     error.value = '음식 정보를 불러오는 데 실패했습니다.'
@@ -101,6 +105,8 @@ const handleSubmit = async () => {
       'carbohydrate',
       'protein',
       'fat',
+      'sugars',
+      'sodium',
     ]
     numericKeys.forEach((key) => {
       if (processedData[key] === '') {
@@ -119,6 +125,8 @@ const handleSubmit = async () => {
       'carbohydrate',
       'protein',
       'fat',
+      'sugars',
+      'sodium',
     ]
     const payload = updateKeys.reduce<Partial<UpdateFoodPayload>>((acc, key) => {
       const originalValue = originalFoodDetail.value![key]
@@ -142,8 +150,9 @@ const handleSubmit = async () => {
     }
 
     await updateFood(foodId, payload as Partial<UpdateFoodPayload>)
-    // 성공 시 상세 페이지로 이동
-    router.replace(`/food-db/${foodId}`)
+    // 성공 시 이전 페이지(상세 페이지)로 이동
+    toastStore.show('음식이 수정되었습니다.')
+    router.back()
   } catch (err) {
     error.value = '음식 수정에 실패했습니다. 다시 시도해주세요.'
     console.error(err)
@@ -273,6 +282,32 @@ const goBack = () => {
                 type="number"
                 step="0.1"
                 id="fat"
+                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mt-4">
+            <div>
+              <label for="sugars" class="block text-sm font-bold text-gray-600 mb-1"
+                >총 당류 (g)</label
+              >
+              <input
+                v-model.number="foodData.sugars"
+                type="number"
+                step="0.1"
+                id="sugars"
+                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label for="sodium" class="block text-sm font-bold text-gray-600 mb-1"
+                >나트륨 (mg)</label
+              >
+              <input
+                v-model.number="foodData.sodium"
+                type="number"
+                step="0.1"
+                id="sodium"
                 class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
               />
             </div>
