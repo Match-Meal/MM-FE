@@ -11,6 +11,8 @@ export interface DietFoodItem {
     carbohydrate: number;
     protein: number;
     fat: number;
+    sugars?: number;
+    sodium?: number;
     saveToMyFoods?: boolean; // UI에서 "내 음식에 추가" 체크박스용 (API엔 안보낼 수도 있음)
 }
 

@@ -9,6 +9,8 @@ export interface DietFoodItem {
     carbohydrate: number;
     protein: number;
     fat: number;
+    sugars?: number;
+    sodium?: number;
 }
 
 export interface CreateDietPayload {
@@ -33,6 +35,8 @@ export interface DailyDietResponseItem {
     totalCarbohydrate: number;
     totalProtein: number;
     totalFat: number;
+    totalSugars?: number;
+    totalSodium?: number;
     dietImgUrl?: string; // Changed from imageUrl based on API response
     details: DietDetailItem[];
 }
@@ -86,6 +90,8 @@ export const createDiet = async (payload: CreateDietPayload, file?: File) => {
         
         if (file) {
             formData.append('file', file);
+        } else {
+             formData.append('file', new Blob(), '');
         }
 
         const response = await apiClient.post('/diet', formData, {
@@ -110,6 +116,10 @@ export const updateDiet = async (dietId: number, payload: CreateDietPayload, fil
 
         if (file) {
             formData.append('file', file);
+        } else {
+            // 파일을 변경하지 않는 경우에도 빈 파일 파트를 보내야 함 (백엔드 요구사항: Required part 'file' is not present)
+            // 빈 Blob을 보내되, filename을 빈 문자열로 설정하여 "파일 없음" 처리 유도
+            formData.append('file', new Blob(), '');
         }
 
         const response = await apiClient.put(`/diet/${dietId}`, formData, {

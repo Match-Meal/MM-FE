@@ -87,7 +87,9 @@ const addToDiet = () => {
         calories: food.value.calories,
         carbohydrate: food.value.carbohydrate,
         protein: food.value.protein,
-        fat: food.value.fat
+        fat: food.value.fat,
+        sugars: food.value.sugars,
+        sodium: food.value.sodium
     })
     
     // router.push('/diet/record') 대신, 히스토리 스택을 2단계 뒤로 이동하여
