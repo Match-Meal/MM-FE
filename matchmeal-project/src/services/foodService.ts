@@ -45,6 +45,8 @@ export interface CreateFoodPayload {
   carbohydrate?: number;
   protein?: number;
   fat?: number;
+  sugars?: number;
+  sodium?: number;
 }
 
 /**
@@ -92,6 +94,8 @@ export interface FoodDetail {
   carbohydrate: number;
   protein: number;
   fat: number;
+  sugars?: number;
+  sodium?: number;
   userId: number | null;
   isMine: boolean;
   createdAt: string;

@@ -29,10 +29,12 @@ const files = ref<File[]>([]);
 interface FileItem {
   url: string;
   type: 'image' | 'video';
+  fileId?: number; // Added for tracking deletion
 }
 
 const previewItems = ref<FileItem[]>([]);
 const existingItems = ref<FileItem[]>([]); // For edit mode display
+const deletedFileIds = ref<number[]>([]);
 
 const categories = computed(() => {
   const list = [
@@ -173,7 +175,13 @@ const clearFiles = () => {
     if (fileInputRef.value) fileInputRef.value.value = '';
 
     if (isEditMode.value && initialExistingItems.length > 0) {
-        existingItems.value = [...initialExistingItems];
+        // "Clear All" logic: check if we need to add existing items to deletedFileIds
+        if (existingItems.value.length > 0) {
+             existingItems.value.forEach(item => {
+                 if (item.fileId) deletedFileIds.value.push(item.fileId);
+             });
+             existingItems.value = [];
+        }
     }
 };
 
@@ -191,6 +199,10 @@ const removeNewFile = (index: number) => {
 };
 
 const removeExistingFile = (index: number) => {
+    const item = existingItems.value[index];
+    if (item && item.fileId) {
+        deletedFileIds.value.push(item.fileId);
+    }
     existingItems.value.splice(index, 1);
 };
 
@@ -202,20 +214,35 @@ const initData = async () => {
             isLoading.value = true;
             const postId = Number(route.params.id);
             const data = await getPostDetail(postId);
-            
-            category.value = data.category;
             title.value = data.title;
             content.value = data.content;
             
             const combined: FileItem[] = [];
+            
+            // Prefer 'files' if available (contains fileId), otherwise fallback to images/videos (old way)
+            // Combine images and videos from response (which are now PostFile objects)
             if (data.images) {
-                data.images.forEach(url => combined.push({ url, type: 'image' }));
+                data.images.forEach(img => {
+                    combined.push({
+                        url: img.fileUrl,
+                        type: 'image',
+                        fileId: img.fileId
+                    });
+                });
             }
             if (data.videos) {
-                data.videos.forEach(url => combined.push({ url, type: 'video' }));
+                data.videos.forEach(vid => {
+                    combined.push({
+                        url: vid.fileUrl,
+                        type: 'video',
+                        fileId: vid.fileId
+                    });
+                });
             }
+            
             existingItems.value = combined;
             initialExistingItems = [...combined];
+            deletedFileIds.value = []; // Reset deleted IDs
         } catch (e) {
             console.error(e);
             toastStore.show('게시글 정보를 불러오지 못했습니다.');
@@ -237,20 +264,18 @@ const submitPost = async () => {
         const payload = {
             category: category.value,
             title: title.value,
-            content: content.value
+            content: content.value,
+            deleteFileIds: deletedFileIds.value.length > 0 ? deletedFileIds.value : undefined
         };
 
         if (isEditMode.value) {
-             // Edit logic: 
-             // If files.value has items -> Replacing.
-             // If files.value is empty -> Keeping existing.
              await updatePost(Number(route.params.id), payload, files.value);
              toastStore.show('게시글이 수정되었습니다.');
-             router.replace(`/community/${route.params.id}`);
+             router.back();
         } else {
              await createPost(payload, files.value);
              toastStore.show('게시글이 등록되었습니다.');
-             router.replace('/community');
+             router.replace('/community'); // Create goes to list (or we could go to detail)
         }
     } catch (e) {
         console.error(e);

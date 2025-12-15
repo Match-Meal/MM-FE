@@ -5,14 +5,18 @@ import { useDietStore, type DietFoodItem } from '@/stores/dietStore';
 import { createDiet, getDietDetail, updateDiet, deleteDiet, type DietDetailItem } from '@/services/dietService';
 import { createFood, type CreateFoodPayload } from '@/services/foodService';
 import { storeToRefs } from 'pinia';
+import { useToastStore } from '@/stores/toast';
+import ConfirmModal from '@/components/common/ConfirmModal.vue';
 
 const route = useRoute();
 const router = useRouter();
 const dietStore = useDietStore();
+const toastStore = useToastStore();
 const { currentDiet } = storeToRefs(dietStore);
 
 const isEditMode = computed(() => !!route.params.id);
 const isLoading = ref(false);
+const isDeleteModalOpen = ref(false);
 
 const fileInput = ref<HTMLInputElement | null>(null)
 
@@ -128,7 +132,9 @@ const initData = async () => {
                         calories: d.calories,
                         carbohydrate: d.carbohydrate,
                         protein: d.protein,
-                        fat: d.fat
+                        fat: d.fat,
+                        sugars: d.sugars,
+                        sodium: d.sodium
                     }))
                 };
                 
@@ -174,7 +180,7 @@ const removeFood = (index: number) => {
 
 const saveDiet = async () => {
     if (currentDiet.value.foods.length === 0 && !currentDiet.value.memo) {
-        window.alert('음식을 추가하거나 메모를 입력해주세요.');
+        toastStore.show('음식을 추가하거나 메모를 입력해주세요.')
         return;
     }
 
@@ -187,31 +193,35 @@ const saveDiet = async () => {
     try {
         if (isEditMode.value && currentDiet.value.dietId) {
             await updateDiet(currentDiet.value.dietId, payload, currentDiet.value.imageFile || undefined);
-            window.alert('수정되었습니다.');
+            toastStore.show('수정되었습니다.')
         } else {
             await createDiet(payload, currentDiet.value.imageFile || undefined);
-            window.alert('저장되었습니다.');
+            toastStore.show('저장되었습니다.')
         }
         // 저장 후 리스트로 이동 -> 상세 기능이 생겼지만, 저장은 보통 리스트로 가거나 상세로 감.
         // 여기선 리스트로 이동하도록 유지.
         router.replace('/diet'); 
     } catch (e) {
         console.error(e);
-        window.alert('저장에 실패했습니다.');
+        toastStore.show('저장에 실패했습니다.')
     }
 };
 
-const deleteResult = async () => {
-    if (!confirm('정말로 삭제하시겠습니까?')) return;
-    
+const handleDeleteClick = () => {
+    isDeleteModalOpen.value = true;
+};
+
+const handleConfirmDelete = async () => {
     if (currentDiet.value.dietId) {
         try {
             await deleteDiet(currentDiet.value.dietId);
-            window.alert('삭제되었습니다.');
+            toastStore.show('삭제되었습니다.')
             router.replace('/diet');
         } catch (e) {
             console.error(e);
-            window.alert('삭제에 실패했습니다.');
+            toastStore.show('삭제에 실패했습니다.')
+        } finally {
+            isDeleteModalOpen.value = false;
         }
     }
 };
@@ -231,6 +241,8 @@ const updateQuantity = (index: number, newQty: number) => {
     food.carbohydrate *= ratio;
     food.protein *= ratio;
     food.fat *= ratio;
+    if (food.sugars !== undefined) food.sugars *= ratio;
+    if (food.sodium !== undefined) food.sodium *= ratio;
 };
 
 // --- 직접 입력 모달 관련 ---
@@ -241,6 +253,8 @@ const manualFood = ref({
     carbohydrate: undefined as number | undefined,
     protein: undefined as number | undefined,
     fat: undefined as number | undefined,
+    sugars: undefined as number | undefined,
+    sodium: undefined as number | undefined,
     quantity: 1, // 기본 1인분 or 1개
     unit: '인분',
     saveToDictionary: false
@@ -253,6 +267,8 @@ const openManualInput = () => {
         carbohydrate: undefined,
         protein: undefined,
         fat: undefined,
+        sugars: undefined,
+        sodium: undefined,
         quantity: 1,
         unit: '인분',
         saveToDictionary: false
@@ -266,7 +282,7 @@ const closeManualInput = () => {
 
 const addManualFood = async () => {
     if (!manualFood.value.foodName) {
-        alert('음식 이름을 입력해주세요.');
+        toastStore.show('음식 이름을 입력해주세요.')
         return;
     }
     
@@ -274,6 +290,8 @@ const addManualFood = async () => {
     const carbs = manualFood.value.carbohydrate || 0;
     const protein = manualFood.value.protein || 0;
     const fat = manualFood.value.fat || 0;
+    const sugars = manualFood.value.sugars;
+    const sodium = manualFood.value.sodium;
     
     let foodId: number | undefined = undefined;
 
@@ -288,7 +306,9 @@ const addManualFood = async () => {
                 calories: calories,
                 carbohydrate: carbs,
                 protein: protein,
-                fat: fat
+                fat: fat,
+                sugars: sugars,
+                sodium: sodium
             };
             foodId = await createFood(payload);
         } catch (e) {
@@ -307,7 +327,9 @@ const addManualFood = async () => {
         calories: calories,
         carbohydrate: carbs,
         protein: protein,
-        fat: fat
+        fat: fat,
+        sugars: sugars,
+        sodium: sodium
     });
 
     closeManualInput();
@@ -417,6 +439,9 @@ const addManualFood = async () => {
                                      <div class="text-[10px] text-gray-400">
                                         탄{{ Math.round(food.carbohydrate || 0) }}/단{{ Math.round(food.protein || 0) }}/지{{ Math.round(food.fat || 0) }}
                                      </div>
+                                     <div class="text-[10px] text-gray-400 mt-0.5" v-if="food.sugars !== undefined || food.sodium !== undefined">
+                                        당{{ food.sugars ? Math.round(food.sugars) : '-' }}/나{{ food.sodium ? Math.round(food.sodium) : '-' }}
+                                     </div>
                                 </div>
                             </div>
                         </div>
@@ -446,7 +471,7 @@ const addManualFood = async () => {
         <div class="p-4 border-t bg-white flex gap-3">
             <button 
                 v-if="isEditMode" 
-                @click="deleteResult"
+                @click="handleDeleteClick"
                 class="flex-1 h-12 border-2 border-red-100 text-red-500 font-bold rounded-xl hover:bg-red-50"
             >
                 삭제
@@ -501,6 +526,17 @@ const addManualFood = async () => {
                         <input type="number" v-model.number="manualFood.fat" class="input-field h-10">
                     </div>
                 </div>
+                
+                <div class="grid grid-cols-2 gap-3 mt-3">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 mb-1 block">당류 (g)</label>
+                        <input type="number" v-model.number="manualFood.sugars" class="input-field h-10">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 mb-1 block">나트륨 (mg)</label>
+                        <input type="number" v-model.number="manualFood.sodium" class="input-field h-10">
+                    </div>
+                </div>
 
                 <div class="flex items-center gap-2 pt-2 cursor-pointer" @click="manualFood.saveToDictionary = !manualFood.saveToDictionary">
                     <div class="w-5 h-5 border-2 rounded flex items-center justify-center transition"
@@ -518,6 +554,16 @@ const addManualFood = async () => {
             </div>
         </div>
     </div>
+
+    <!-- Confirm Modal -->
+    <ConfirmModal
+        :is-open="isDeleteModalOpen"
+        title="식단 삭제"
+        message="정말로 삭제하시겠습니까?"
+        confirm-text="삭제"
+        @close="isDeleteModalOpen = false"
+        @confirm="handleConfirmDelete"
+    />
 </div>
 </template>
 

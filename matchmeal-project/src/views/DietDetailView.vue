@@ -3,13 +3,17 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getDietDetail, deleteDiet, type DailyDietResponseItem } from '@/services/dietService'
 import dayjs from 'dayjs'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import { useToastStore } from '@/stores/toast'
 
 const route = useRoute()
 const router = useRouter()
+const toastStore = useToastStore()
 
 const dietId = Number(route.params.id)
 const dietData = ref<DailyDietResponseItem | null>(null)
 const isLoading = ref(false)
+const isDeleteModalOpen = ref(false)
 
 const initData = async () => {
   try {
@@ -51,15 +55,20 @@ const goEdit = () => {
   router.push(`/diet/record/${dietId}`)
 }
 
-const deleteItem = async () => {
-  if (!confirm('정말로 삭제하시겠습니까?')) return
+const handleDeleteClick = () => {
+    isDeleteModalOpen.value = true
+}
+
+const handleConfirmDelete = async () => {
   try {
     await deleteDiet(dietId)
-    alert('삭제되었습니다.')
+    toastStore.show('식단이 삭제되었습니다.')
     router.replace('/diet')
   } catch (e) {
     console.error(e)
     alert('삭제에 실패했습니다.')
+  } finally {
+      isDeleteModalOpen.value = false
   }
 }
 
@@ -138,6 +147,19 @@ const mealLabel = (type: string) => {
                     <div class="font-bold">{{ Math.round(dietData.totalFat || 0) }}g</div>
                 </div>
             </div>
+            
+            <!-- Additional Macros (Sugars, Sodium) -->
+            <div class="flex bg-gray-50 rounded-xl p-3 justify-around text-center mt-2">
+                <div>
+                    <div class="text-xs text-gray-400 mb-1">당류</div>
+                    <div class="font-bold">{{ dietData.totalSugars ? Math.round(dietData.totalSugars) : '-' }}g</div>
+                </div>
+                <div class="w-px bg-gray-200"></div>
+                <div>
+                    <div class="text-xs text-gray-400 mb-1">나트륨</div>
+                    <div class="font-bold">{{ dietData.totalSodium ? Math.round(dietData.totalSodium) : '-' }}mg</div>
+                </div>
+            </div>
         </div>
 
         <!-- Food List -->
@@ -173,7 +195,7 @@ const mealLabel = (type: string) => {
       <!-- Footer Buttons -->
       <div v-if="!isLoading && dietData" class="p-4 border-t bg-white flex gap-3 z-10">
         <button 
-           @click="deleteItem" 
+           @click="handleDeleteClick" 
            class="flex-1 h-12 border border-red-200 text-red-500 font-bold rounded-xl hover:bg-red-50 transition"
         >
             삭제
@@ -188,6 +210,15 @@ const mealLabel = (type: string) => {
 
     </div>
   </div>
+
+  <ConfirmModal
+    :is-open="isDeleteModalOpen"
+    title="식단 삭제"
+    message="정말로 삭제하시겠습니까?"
+    confirm-text="삭제"
+    @close="isDeleteModalOpen = false"
+    @confirm="handleConfirmDelete"
+  />
 </template>
 
 <style scoped>

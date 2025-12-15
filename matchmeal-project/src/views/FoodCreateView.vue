@@ -2,8 +2,10 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { createFood, type CreateFoodPayload, getFoodCategories } from '@/services/foodService'
+import { useToastStore } from '@/stores/toast'
 
 const router = useRouter()
+const toastStore = useToastStore()
 
 // 폼 입력을 위한 반응형 객체
 const foodData = ref<CreateFoodPayload>({
@@ -14,7 +16,9 @@ const foodData = ref<CreateFoodPayload>({
   calories: undefined,
   carbohydrate: undefined,
   protein: undefined,
-  fat: undefined
+  fat: undefined,
+  sugars: undefined,
+  sodium: undefined
 })
 
 // --- 카테고리 드롭다운 상태 ---
@@ -91,6 +95,8 @@ const handleSubmit = async () => {
       'carbohydrate',
       'protein',
       'fat',
+      'sugars',
+      'sodium',
     ]
     numericKeys.forEach((key) => {
       if (payload[key] === '') {
@@ -100,8 +106,9 @@ const handleSubmit = async () => {
 
     // 3. Call the API with a type assertion, as we've already validated the required fields.
     await createFood(payload as CreateFoodPayload)
-    // 성공 시 음식 목록 페이지로 이동 (history stack에 쌓이지 않도록 replace 사용)
-    router.replace('/food-db')
+    // 성공 시 이전 페이지로 이동 (음식 목록 갱신을 위해)
+    toastStore.show('음식이 등록되었습니다.')
+    router.back()
   } catch (err) {
     error.value = '음식 등록에 실패했습니다. 다시 시도해주세요.'
     console.error(err)
@@ -245,6 +252,32 @@ const goBack = () => {
                 type="number"
                 step="0.1"
                 id="fat"
+                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mt-4">
+            <div>
+              <label for="sugars" class="block text-sm font-bold text-gray-600 mb-1"
+                >총 당류 (g)</label
+              >
+              <input
+                v-model.number="foodData.sugars"
+                type="number"
+                step="0.1"
+                id="sugars"
+                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label for="sodium" class="block text-sm font-bold text-gray-600 mb-1"
+                >나트륨 (mg)</label
+              >
+              <input
+                v-model.number="foodData.sodium"
+                type="number"
+                step="0.1"
+                id="sodium"
                 class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
               />
             </div>

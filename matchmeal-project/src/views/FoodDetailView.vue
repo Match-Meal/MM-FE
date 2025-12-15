@@ -3,16 +3,22 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getFoodDetail, deleteFood, type FoodDetail } from '@/services/foodService'
 import { useDietStore } from '@/stores/dietStore'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import { useToastStore } from '@/stores/toast'
 
 const route = useRoute()
 const router = useRouter()
 const dietStore = useDietStore()
+const toastStore = useToastStore()
 
 const isSelectMode = computed(() => route.query.mode === 'select')
 
 const food = ref<FoodDetail | null>(null)
 const isLoading = ref(true)
 const error = ref<string | null>(null)
+
+// Modal State
+const isDeleteModalOpen = ref(false)
 
 const fetchFood = async () => {
   try {
@@ -51,15 +57,21 @@ const handleEdit = () => {
   }
 }
 
-const handleDelete = async () => {
-  if (food.value && confirm(`'${food.value.foodName}'을(를) 정말로 삭제하시겠습니까?`)) {
+const handleDeleteClick = () => {
+    isDeleteModalOpen.value = true
+}
+
+const handleConfirmDelete = async () => {
+  if (food.value) {
     try {
       await deleteFood(food.value.foodId)
-      alert('음식이 삭제되었습니다.')
-      router.replace('/food-db')
+      toastStore.show('음식이 삭제되었습니다.')
+      router.back()
     } catch (err) {
       alert('음식 삭제에 실패했습니다.')
       console.error(err)
+    } finally {
+        isDeleteModalOpen.value = false
     }
   }
 }
@@ -75,7 +87,9 @@ const addToDiet = () => {
         calories: food.value.calories,
         carbohydrate: food.value.carbohydrate,
         protein: food.value.protein,
-        fat: food.value.fat
+        fat: food.value.fat,
+        sugars: food.value.sugars,
+        sodium: food.value.sodium
     })
     
     // router.push('/diet/record') 대신, 히스토리 스택을 2단계 뒤로 이동하여
@@ -149,6 +163,18 @@ const addToDiet = () => {
                   >{{ food.fat }} <span class="text-sm font-normal">g</span></span
                 >
               </div>
+              <div class="p-4 bg-gray-50 rounded-xl">
+                <span class="block text-xs text-gray-500 mb-1">총 당류</span>
+                <span class="font-bold text-xl text-gray-800"
+                  >{{ food.sugars ?? '-' }} <span class="text-sm font-normal">g</span></span
+                >
+              </div>
+              <div class="p-4 bg-gray-50 rounded-xl">
+                <span class="block text-xs text-gray-500 mb-1">나트륨</span>
+                <span class="font-bold text-xl text-gray-800"
+                  >{{ food.sodium ?? '-' }} <span class="text-sm font-normal">mg</span></span
+                >
+              </div>
             </div>
 
             <!-- 하단 버튼 영역 -->
@@ -165,7 +191,7 @@ const addToDiet = () => {
                 <!-- 일반 모드이고 내 음식일 때: 수정/삭제 -->
                 <div v-else-if="food.isMine" class="flex gap-3">
                     <button
-                        @click="handleDelete"
+                        @click="handleDeleteClick"
                         class="flex-1 h-12 border-2 border-red-200 text-red-500 font-bold rounded-xl hover:bg-red-50 transition"
                     >
                         삭제
@@ -184,4 +210,14 @@ const addToDiet = () => {
       </main>
     </div>
   </div>
+
+  <!-- Confirm Modal -->
+  <ConfirmModal
+    :is-open="isDeleteModalOpen"
+    title="음식 삭제"
+    :message="`'${food?.foodName}'을(를) 정말로 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.`"
+    confirm-text="삭제"
+    @close="isDeleteModalOpen = false"
+    @confirm="handleConfirmDelete"
+  />
 </template>
