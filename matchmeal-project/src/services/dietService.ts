@@ -1,5 +1,11 @@
 import apiClient from './apiClient';
 
+export interface CommonResponse<T> {
+  status: number;
+  message: string;
+  data: T;
+}
+
 export interface DietFoodItem {
     foodId?: number;
     foodName: string;
@@ -144,3 +150,61 @@ export const deleteDiet = async (dietId: number) => {
         throw error;
     }
 };
+
+// --- 식단 통계 관련 Interfaces ---
+
+export interface CpfRatioAnalysis {
+    carbRatio: number;
+    proteinRatio: number;
+    fatRatio: number;
+    recommendedCarbRatio: number;
+    recommendedProteinRatio: number;
+    recommendedFatRatio: number;
+    feedback: string;
+}
+
+export interface NutrientAnalysis {
+    nutrientName: string;
+    currentIntake: number;
+    recommendedLimit: number;
+    intakePercentage: number;
+    status: 'GOOD' | 'BAD' | 'WARNING';
+}
+
+export interface DailyStat {
+    date: string;
+    totalCalories: number;
+    carbsG: number;
+    proteinG: number;
+    fatG: number;
+    sugarG: number;
+    sodiumMg: number;
+    dietScore: number;
+}
+
+export interface DietStatsResponse {
+    periodTotalDays: number;
+    averageCalories: number;
+    cpfRatioAnalysis: CpfRatioAnalysis;
+    sodiumAnalysis: NutrientAnalysis;
+    sugarAnalysis: NutrientAnalysis;
+    dailyStats: DailyStat[];
+}
+
+// 식단 통계 조회
+export const getDietStats = async (periodType: 'WEEKLY' | 'MONTHLY' | 'CUSTOM', startDate?: string, endDate?: string) => {
+    try {
+        const params: Record<string, string> = { periodType };
+        if (periodType === 'CUSTOM' && startDate && endDate) {
+            params.startDate = startDate;
+            params.endDate = endDate;
+        }
+
+        const response = await apiClient.get<CommonResponse<DietStatsResponse>>('/diet/stats', { params });
+        return response.data.data;
+    } catch (error) {
+        console.error('Error fetching diet stats:', error);
+        throw error;
+    }
+};
+
