@@ -266,7 +266,7 @@ onBeforeRouteLeave((to, from, next) => {
                 <div v-if="post.images && post.images.length > 0" class="h-40 bg-gray-100 rounded-xl mb-3 overflow-hidden relative">
                     <img 
                         v-if="post.images[0]"
-                        :src="post.images[0]" 
+                        :src="post.images[0].fileUrl" 
                         class="w-full h-full object-cover" 
                         loading="lazy"
                     >

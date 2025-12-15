@@ -12,6 +12,7 @@ export interface PostRequest {
   category: string; // 'NOTICE' | 'DIET' | 'INFO' | 'QNA' | 'FREE'
   title: string;
   content: string;
+  deleteFileIds?: number[];
 }
 
 export interface PostFile {
@@ -49,8 +50,9 @@ export interface PostDetail {
   createdAt: string;
   updatedAt: string;
   user: PostUser;
-  images: string[] | null;
-  videos: string[] | null;
+  images: PostFile[] | null;
+  videos: PostFile[] | null;
+  // files?: PostFile[]; // Backend now segregates by type in response objects
   comments: Comment[]; // 상세 조회 시 댓글 포함
   commentCount: number;
 }

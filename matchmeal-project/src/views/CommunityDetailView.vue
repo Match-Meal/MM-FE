@@ -302,12 +302,12 @@ onMounted(() => {
                     style="scroll-behavior: smooth;"
                 >
                     <!-- Images -->
-                    <div v-for="(imgUrl, index) in post.images" :key="`img-${index}`" class="w-full flex-shrink-0 snap-center flex items-center justify-center bg-gray-100">
-                        <img :src="imgUrl" class="w-full h-full object-cover">
+                    <div v-for="(img, index) in post.images" :key="`img-${index}`" class="w-full flex-shrink-0 snap-center flex items-center justify-center bg-gray-100">
+                        <img :src="img.fileUrl" class="w-full h-full object-cover">
                     </div>
                     <!-- Videos -->
-                    <div v-for="(videoUrl, index) in post.videos" :key="`vid-${index}`" class="w-full flex-shrink-0 snap-center flex items-center justify-center bg-black">
-                        <video :src="videoUrl" controls class="w-full h-full object-contain" playsinline></video>
+                    <div v-for="(video, index) in post.videos" :key="`vid-${index}`" class="w-full flex-shrink-0 snap-center flex items-center justify-center bg-black">
+                        <video :src="video.fileUrl" controls class="w-full h-full object-contain" playsinline></video>
                     </div>
                 </div>
 
