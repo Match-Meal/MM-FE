@@ -1,7 +1,14 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import type { ChallengeCreateRequest } from '@/services/challengeService'
 
+// Props 정의
+const props = defineProps<{
+  initialData?: ChallengeCreateRequest // 수정 시 데이터 주입
+  isEditMode?: boolean // 모드 구분
+}>()
+
+// Emits 정의
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'submit', payload: ChallengeCreateRequest): void
@@ -20,14 +27,22 @@ const form = ref<ChallengeCreateRequest>({
   isPublic: true,
 })
 
-// 챌린지 타입 정의
+// 수정 모드일 때 데이터 채워넣기
+onMounted(() => {
+  if (props.initialData) {
+    // 깊은 복사로 반응성 끊기 (수정 중 취소했을 때 원본 오염 방지)
+    form.value = JSON.parse(JSON.stringify(props.initialData))
+  }
+})
+
+// 챌린지 타입 옵션
 const typeOptions = [
   { value: 'CALORIE_LIMIT', label: '🔥 칼로리 제한', desc: '목표 칼로리 이하로 섭취하기' },
   { value: 'RECORD_FREQUENCY', label: '📝 기록 습관', desc: '하루 N회 이상 식단 기록하기' },
   { value: 'TIME_RANGE', label: '⏰ 타임 어택', desc: '지정 시간(시) 이전에 아침 먹기' },
 ] as const
 
-// 타입에 따른 라벨 동적 변경
+// 타입에 따른 목표 수치 라벨 동적 변경
 const targetLabel = computed(() => {
   switch (form.value.type) {
     case 'CALORIE_LIMIT':
@@ -41,16 +56,30 @@ const targetLabel = computed(() => {
   }
 })
 
+// 제출 핸들러
 const handleSubmit = () => {
-  // 유효성 검사
-  if (!form.value.title.trim()) return alert('제목을 입력해주세요.')
-  if (!form.value.startDate || !form.value.endDate) return alert('기간을 설정해주세요.')
-  if (form.value.targetValue < 0) return alert('목표 수치는 양수여야 합니다.')
+  // 1. 제목 검증
+  if (!form.value.title.trim()) {
+    return alert('제목을 입력해주세요.')
+  }
 
+  // 2. 날짜 검증
+  if (!form.value.startDate || !form.value.endDate) {
+    return alert('시작일과 종료일을 모두 설정해주세요.')
+  }
   if (form.value.startDate > form.value.endDate) {
     return alert('종료일은 시작일보다 빠를 수 없습니다.')
   }
 
+  // 3. 수치 검증
+  if (form.value.targetValue < 0) {
+    return alert('목표 수치는 0 이상이어야 합니다.')
+  }
+  if (form.value.goalCount < 1) {
+    return alert('성공 목표일은 최소 1일 이상이어야 합니다.')
+  }
+
+  // 데이터 전송
   emit('submit', { ...form.value })
 }
 </script>
@@ -65,7 +94,9 @@ const handleSubmit = () => {
       <div
         class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white z-10"
       >
-        <h2 class="text-lg font-bold text-gray-800">✨ 챌린지 만들기</h2>
+        <h2 class="text-lg font-bold text-gray-800">
+          {{ isEditMode ? '🛠️ 챌린지 수정' : '✨ 챌린지 만들기' }}
+        </h2>
         <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600">✕</button>
       </div>
 
@@ -171,7 +202,7 @@ const handleSubmit = () => {
           @click="handleSubmit"
           class="w-full py-3.5 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-black transition shadow-lg active:scale-[0.98]"
         >
-          챌린지 생성하기 🔥
+          {{ isEditMode ? '수정 완료' : '챌린지 생성하기 🔥' }}
         </button>
       </div>
     </div>

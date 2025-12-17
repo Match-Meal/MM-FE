@@ -21,6 +21,7 @@ export interface ChallengeCreateRequest {
 // 2. 응답 데이터 타입
 export interface ChallengeResponse {
   challengeId: number
+  ownerId: number
   title: string
   description: string
   type: 'CALORIE_LIMIT' | 'RECORD_FREQUENCY' | 'TIME_RANGE'
@@ -28,6 +29,8 @@ export interface ChallengeResponse {
   startDate: string
   endDate: string
   goalCount: number
+  isPublic: boolean
+  invitationCode?: string
   isJoined: boolean
   currentHeadCount: number
   maxParticipants: number
@@ -43,6 +46,14 @@ export interface SearchCondition {
   keyword?: string
   startDate?: string
   endDate?: string
+}
+
+// 팔로잉 유저 타입
+export interface FollowerResponse {
+  userId: number
+  userName: string
+  profileImage?: string
+  isFollowing: boolean
 }
 
 // --- [API Functions] ---
@@ -79,4 +90,41 @@ export const joinByCode = async (code: string) => {
   return await apiClient.post(`${API_URL}/join/code`, null, {
     params: { code },
   })
+}
+
+// 챌린지 상세 조회 (GET /challenge/{id})
+export const getChallengeDetail = async (challengeId: number) => {
+  const response = await apiClient.get<{ data: ChallengeResponse }>(`${API_URL}/${challengeId}`)
+  return response.data.data
+}
+
+// 챌린지 수정 (PUT /challenge/{id})
+export const updateChallenge = async (challengeId: number, data: ChallengeCreateRequest) => {
+  return await apiClient.put(`${API_URL}/${challengeId}`, data)
+}
+
+// 챌린지 초대 (POST /challenge/{id}/invite)
+export const inviteUser = async (challengeId: number, targetUserId: number) => {
+  return await apiClient.post(`${API_URL}/${challengeId}/invite`, { targetUserId })
+}
+
+// 내 팔로잉 목록 조회 (초대 모달용)
+// (FollowService가 따로 없다면 임시로 여기에 작성, 있다면 해당 서비스 import)
+export const getMyFollowings = async (userId: number) => {
+  try {
+    // 1. apiClient 사용 (URL, Token 자동 처리)
+    const response = await apiClient.get(`/user/${userId}/followings`)
+
+    // 2. CommonResponse 데이터 껍질 벗기기
+    // response.data = { status: 200, data: [ ... ], ... }
+    if (response.data && response.data.data) {
+      return response.data.data
+    }
+
+    // 혹시라도 백엔드가 그냥 List를 보냈을 경우를 대비
+    return response.data
+  } catch (error) {
+    console.error('❌ 팔로잉 목록 조회 API 에러:', error)
+    return []
+  }
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import type { ChallengeResponse } from '@/services/challengeService'
 import dayjs from 'dayjs'
 
@@ -11,6 +12,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'join', id: number): void
 }>()
+
+const router = useRouter() // [추가] 라우터 인스턴스
 
 // 타입 라벨
 const typeLabel = computed(() => {
@@ -41,11 +44,17 @@ const buttonState = computed(() => {
     disabled: false,
   }
 })
+
+// 상세 페이지 이동 함수
+const goToDetail = () => {
+  router.push(`/challenge/${props.challenge.challengeId}`)
+}
 </script>
 
 <template>
   <div
-    class="bg-white p-5 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-gray-100 transition hover:-translate-y-0.5"
+    @click="goToDetail"
+    class="bg-white p-5 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-gray-100 transition hover:-translate-y-0.5 cursor-pointer"
   >
     <div class="flex justify-between items-start mb-2">
       <div>
@@ -89,12 +98,12 @@ const buttonState = computed(() => {
 
     <div v-else class="mt-3">
       <div class="flex items-center gap-2 text-[10px] text-gray-400 mb-3 font-medium">
-        <span>👥 {{ challenge.currentHeadCount }}/{{ challenge.maxParticipants }}명</span>
+        <span>👥 {{ challenge.currentHeadCount || 0 }}/{{ challenge.maxParticipants || 0 }}명</span>
         <span>📅 {{ challenge.startDate }} 시작</span>
       </div>
 
       <button
-        @click="emit('join', challenge.challengeId)"
+        @click.stop="emit('join', challenge.challengeId)"
         :disabled="buttonState.disabled"
         class="w-full py-2.5 rounded-xl font-bold text-xs transition active:scale-95"
         :class="buttonState.class"
