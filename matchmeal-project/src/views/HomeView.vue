@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { useChallengeStore } from '@/stores/challenge' // 챌린지 스토어
 import { useRouter } from 'vue-router'
 import { getDailyDiets } from '@/services/dietService'
 import dayjs from 'dayjs'
 
 const authStore = useAuthStore()
+const challengeStore = useChallengeStore()
 const router = useRouter()
 
 const todayCalories = ref(0)
@@ -16,32 +18,36 @@ const showTargetModal = ref(false)
 const editingTarget = ref(2000)
 
 onMounted(async () => {
+  // 유저 정보 로드
   if (authStore.token && !authStore.user) {
     await authStore.fetchUser()
   }
-  
+
   // 로컬 스토리지에서 목표 칼로리 불러오기
   const savedTarget = localStorage.getItem('targetCalories')
   if (savedTarget) {
     targetCalories.value = Number(savedTarget)
   }
 
-  // 오늘 섭취 칼로리 계산
-  await fetchTodayCalories()
+  // 데이터 로드 병렬 처리 (오늘 칼로리 + 내 챌린지 목록)
+  await Promise.all([
+    fetchTodayCalories(),
+    challengeStore.fetchMyChallenges(), // 내 챌린지 목록 불러오기
+  ])
 })
 
 const fetchTodayCalories = async () => {
   try {
     const today = dayjs().format('YYYY-MM-DD')
     const response = await getDailyDiets(today)
-    
-    // totalCalories 계산 (배열 또는 객체 응답 처리)
+
+    // totalCalories 계산
     if (Array.isArray(response)) {
       todayCalories.value = response.reduce((acc, cur) => acc + (cur.totalCalories || 0), 0)
     } else if (response && typeof response.totalCalories === 'number') {
-       todayCalories.value = response.totalCalories
+      todayCalories.value = response.totalCalories
     } else {
-       todayCalories.value = 0
+      todayCalories.value = 0
     }
   } catch (e) {
     console.error('Failed to fetch today calories:', e)
@@ -49,29 +55,43 @@ const fetchTodayCalories = async () => {
 }
 
 const editTargetCalories = () => {
-    editingTarget.value = targetCalories.value
-    showTargetModal.value = true
+  editingTarget.value = targetCalories.value
+  showTargetModal.value = true
 }
 
 const closeTargetModal = () => {
-    showTargetModal.value = false
+  showTargetModal.value = false
 }
 
 const saveTargetCalories = () => {
-    if (editingTarget.value > 0) {
-        targetCalories.value = editingTarget.value
-        localStorage.setItem('targetCalories', editingTarget.value.toString())
-        closeTargetModal()
-    } else {
-        alert('올바른 숫자를 입력해주세요.')
-    }
+  if (editingTarget.value > 0) {
+    targetCalories.value = editingTarget.value
+    localStorage.setItem('targetCalories', editingTarget.value.toString())
+    closeTargetModal()
+  } else {
+    alert('올바른 숫자를 입력해주세요.')
+  }
 }
 
-// 로그아웃 처리 (헤더에 있는 경우)
+// 로그아웃 처리
 const handleLogout = () => {
   if (confirm('로그아웃 하시겠습니까?')) {
     authStore.logout()
     router.replace('/login')
+  }
+}
+
+// 챌린지 타입에 따른 아이콘 반환
+const getChallengeIcon = (type: string) => {
+  switch (type) {
+    case 'CALORIE_LIMIT':
+      return '🥗'
+    case 'TIME_RANGE':
+      return '⏰'
+    case 'RECORD_FREQUENCY':
+      return '📝'
+    default:
+      return '🔥'
   }
 }
 </script>
@@ -110,15 +130,22 @@ const handleLogout = () => {
 
           <div class="bg-white/10 p-5 rounded-2xl backdrop-blur-sm border border-white/10">
             <div class="flex justify-between items-center mb-1">
-                <p class="text-sm opacity-80">오늘의 목표 칼로리</p>
-                <button @click="editTargetCalories" class="text-xs bg-white/20 px-2 py-0.5 rounded hover:bg-white/30 transition">
-                    목표 수정
-                </button>
+              <p class="text-sm opacity-80">오늘의 목표 칼로리</p>
+              <button
+                @click="editTargetCalories"
+                class="text-xs bg-white/20 px-2 py-0.5 rounded hover:bg-white/30 transition"
+              >
+                목표 수정
+              </button>
             </div>
-            
+
             <div class="flex justify-between items-end mb-2">
-              <span class="text-3xl font-bold">{{ Math.round(todayCalories).toLocaleString() }}</span>
-              <span class="text-sm opacity-80 mb-1">/ {{ targetCalories.toLocaleString() }} kcal</span>
+              <span class="text-3xl font-bold">{{
+                Math.round(todayCalories).toLocaleString()
+              }}</span>
+              <span class="text-sm opacity-80 mb-1"
+                >/ {{ targetCalories.toLocaleString() }} kcal</span
+              >
             </div>
             <div class="w-full h-2.5 bg-black/20 rounded-full overflow-hidden">
               <div
@@ -157,28 +184,69 @@ const handleLogout = () => {
         <div class="px-6">
           <div class="flex justify-between items-center mb-3">
             <h3 class="font-bold text-gray-800 text-lg">🔥 진행 중인 챌린지</h3>
-            <span class="text-xs text-gray-400 cursor-pointer hover:text-blue-500">더보기 ></span>
-          </div>
-          <div
-            class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex gap-4 items-center cursor-pointer hover:shadow-md transition"
-          >
-            <div
-              class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-2xl"
+            <span
+              @click="router.push('/challenge')"
+              class="text-xs text-gray-400 cursor-pointer hover:text-blue-500"
             >
-              🥗
-            </div>
-            <div class="flex-1">
-              <h4 class="font-bold text-sm text-gray-800">매일 샐러드 먹기</h4>
-              <div class="flex items-center gap-2 mt-2">
-                <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div class="w-[80%] h-full bg-green-500 rounded-full"></div>
+              더보기 >
+            </span>
+          </div>
+
+          <div v-if="challengeStore.myChallenges.length > 0" class="space-y-3">
+            <div
+              v-for="item in challengeStore.myChallenges.slice(0, 2)"
+              :key="item.challengeId"
+              @click="router.push('/challenge')"
+              class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-3 cursor-pointer hover:shadow-md transition group"
+            >
+              <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-lg"
+                  >
+                    {{ getChallengeIcon(item.type) }}
+                  </div>
+                  <div>
+                    <h4
+                      class="font-bold text-sm text-gray-800 group-hover:text-blue-600 transition"
+                    >
+                      {{ item.title }}
+                    </h4>
+                    <p class="text-[10px] text-gray-400">
+                      {{ item.startDate }} ~ {{ item.endDate }}
+                    </p>
+                  </div>
                 </div>
-                <span class="text-xs text-green-600 font-bold">80%</span>
+                <span class="text-xs font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded">
+                  {{ item.progressPercent }}%
+                </span>
+              </div>
+
+              <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-blue-500 rounded-full transition-all duration-500"
+                  :style="{ width: `${item.progressPercent}%` }"
+                ></div>
+              </div>
+
+              <div class="flex justify-between text-[10px] text-gray-400">
+                <span>목표: {{ item.goalCount }}회</span>
+                <span>연속 {{ item.currentStreak }}일째 🔥</span>
               </div>
             </div>
           </div>
+
+          <div
+            v-else
+            @click="router.push('/challenge')"
+            class="bg-white border border-dashed border-gray-300 p-6 rounded-2xl text-center cursor-pointer hover:bg-gray-50 transition"
+          >
+            <p class="text-sm text-gray-400 mb-1">아직 참여 중인 챌린지가 없어요</p>
+            <span class="text-blue-500 font-bold text-xs">새로운 도전 시작하기 →</span>
+          </div>
         </div>
       </div>
+
       <nav
         class="h-[88px] bg-white border-t flex justify-around pb-6 pt-2 text-[10px] z-20 shadow-[0_-5px_10px_rgba(0,0,0,0.02)]"
       >
@@ -194,6 +262,7 @@ const handleLogout = () => {
         </div>
 
         <div
+          @click="router.push('/challenge')"
           class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
         >
           <span class="text-2xl mb-1">🔥</span>챌린지
@@ -214,39 +283,42 @@ const handleLogout = () => {
         </div>
       </nav>
 
-      <!-- 목표 수정 모달 -->
-      <div v-if="showTargetModal" class="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-6 backdrop-blur-sm animate-fade-in">
+      <div
+        v-if="showTargetModal"
+        class="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-6 backdrop-blur-sm animate-fade-in"
+      >
         <div class="bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-scale-up">
-            <h3 class="text-xl font-bold text-gray-800 mb-2">목표 칼로리 설정</h3>
-            <p class="text-sm text-gray-500 mb-6">하루 섭취 목표 칼로리를 입력해주세요.</p>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">목표 칼로리 설정</h3>
+          <p class="text-sm text-gray-500 mb-6">하루 섭취 목표 칼로리를 입력해주세요.</p>
 
-            <div class="mb-6 relative">
-                 <input 
-                    type="number" 
-                    v-model.number="editingTarget" 
-                    class="w-full h-14 bg-gray-50 border border-gray-200 rounded-xl px-4 text-center text-2xl font-bold focus:outline-none focus:border-blue-500 focus:bg-white transition"
-                    placeholder="2000"
-                >
-                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">kcal</span>
-            </div>
+          <div class="mb-6 relative">
+            <input
+              type="number"
+              v-model.number="editingTarget"
+              class="w-full h-14 bg-gray-50 border border-gray-200 rounded-xl px-4 text-center text-2xl font-bold focus:outline-none focus:border-blue-500 focus:bg-white transition"
+              placeholder="2000"
+            />
+            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold"
+              >kcal</span
+            >
+          </div>
 
-            <div class="flex gap-3">
-                <button 
-                    @click="closeTargetModal" 
-                    class="flex-1 h-12 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition"
-                >
-                    취소
-                </button>
-                <button 
-                    @click="saveTargetCalories" 
-                    class="flex-1 h-12 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition"
-                >
-                    저장하기
-                </button>
-            </div>
+          <div class="flex gap-3">
+            <button
+              @click="closeTargetModal"
+              class="flex-1 h-12 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition"
+            >
+              취소
+            </button>
+            <button
+              @click="saveTargetCalories"
+              class="flex-1 h-12 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition"
+            >
+              저장하기
+            </button>
+          </div>
         </div>
       </div>
-
     </div>
   </div>
 </template>
@@ -256,17 +328,27 @@ const handleLogout = () => {
   display: none;
 }
 .animate-scale-up {
-    animation: scaleUp 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: scaleUp 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes scaleUp {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 .animate-fade-in {
-    animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.2s ease-out;
 }
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 </style>

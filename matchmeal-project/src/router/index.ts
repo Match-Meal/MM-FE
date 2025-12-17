@@ -17,6 +17,7 @@ import CommunityMainView from '@/views/CommunityMainView.vue'
 import CommunityDetailView from '@/views/CommunityDetailView.vue'
 import CommunityWriteView from '@/views/CommunityWriteView.vue'
 import { useAuthStore } from '../stores/auth'
+import ChallengeView from '@/views/ChallengeView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -136,6 +137,12 @@ const router = createRouter({
       path: '/community/:id',
       name: 'community-detail',
       component: CommunityDetailView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/challenge',
+      name: 'challenge',
+      component: ChallengeView,
       meta: { requiresAuth: true },
     },
   ],
