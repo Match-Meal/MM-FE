@@ -10,7 +10,15 @@ import ProfileIntroView from '../views/ProfileIntroView.vue'
 import ProfileFormView from '../views/ProfileFormView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import SettingsView from '@/views/SettingsView.vue'
+import DietMainView from '@/views/DietMainView.vue'
+import DietRecordView from '@/views/DietRecordView.vue'
+import DietDetailView from '@/views/DietDetailView.vue'
+import CommunityMainView from '@/views/CommunityMainView.vue'
+import CommunityDetailView from '@/views/CommunityDetailView.vue'
+import CommunityWriteView from '@/views/CommunityWriteView.vue'
 import { useAuthStore } from '../stores/auth'
+import ChallengeView from '@/views/ChallengeView.vue'
+import ChallengeDetailView from '@/views/ChallengeDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -83,6 +91,78 @@ const router = createRouter({
       name: 'settings',
       component: SettingsView,
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/diet',
+      name: 'diet-main',
+      component: DietMainView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/diet/record',
+      name: 'diet-create',
+      component: DietRecordView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/diet/record/:id',
+      name: 'diet-edit',
+      component: DietRecordView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/diet/detail/:id',
+      name: 'diet-detail',
+      component: DietDetailView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/diet/stats',
+      name: 'diet-stats',
+      component: () => import('@/views/DietStatsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/community',
+      name: 'community-main',
+      component: CommunityMainView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/community/write',
+      name: 'community-write',
+      component: CommunityWriteView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/community/edit/:id',
+      name: 'community-edit',
+      component: CommunityWriteView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/community/:id',
+      name: 'community-detail',
+      component: CommunityDetailView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/challenge',
+      name: 'challenge',
+      component: ChallengeView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/challenge',
+      name: 'challenge',
+      component: ChallengeView,
+    },
+    // [추가] 상세 페이지 (Dynamic Route)
+    {
+      path: '/challenge/:id',
+      name: 'challenge-detail',
+      component: ChallengeDetailView,
+      props: true, // id 파라미터를 props로 전달
     },
   ],
 })
