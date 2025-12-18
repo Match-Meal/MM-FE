@@ -117,6 +117,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/diet/stats',
+      name: 'diet-stats',
+      component: () => import('@/views/DietStatsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/community',
       name: 'community-main',
       component: CommunityMainView,

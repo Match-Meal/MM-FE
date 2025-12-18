@@ -166,7 +166,9 @@ const getMealIcon = (type: string) => {
       <header class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 shrink-0">
         <button @click="router.push('/home')" class="text-2xl w-8">←</button>
         <h1 class="font-bold text-lg truncate">식단 관리</h1>
-        <div class="w-8"></div>
+        <div class="w-8 flex justify-end">
+            <button @click="router.push('/diet/stats')" class="text-xl">📊</button>
+        </div>
       </header>
 
       <!-- Main Content -->
