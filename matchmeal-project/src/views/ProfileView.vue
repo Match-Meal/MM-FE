@@ -2,13 +2,20 @@
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import apiClient from '@/services/apiClient'
 import FollowListModal, { type FollowUser } from '@/components/FollowListModal.vue'
 import PostListModal from '@/components/PostListModal.vue'
 import { getPosts, type PostListItem } from '@/services/communityService'
 
 const authStore = useAuthStore()
 const router = useRouter()
+
+interface ApiFollowerDto {
+  userId: number
+  userName: string
+  profileImage: string
+  isFollowing: boolean
+}
 
 // 모달 관련
 const isModalOpen = ref(false)
@@ -28,26 +35,26 @@ onMounted(async () => {
 })
 
 const fetchMyPosts = async () => {
-    if (!authStore.user?.userName) return
-    try {
-        const response = await getPosts({
-            page: 0,
-            size: 20, // 모달에서 보여줄 개수 증가
-            searchType: 'WRITER',
-            keyword: authStore.user.userName,
-            sortType: 'LATEST'
-        })
-        myPosts.value = response.content
-        myPostCount.value = response.pageInfo.totalCount
-    } catch (e) {
-        console.error('Failed to fetch my posts', e)
-    }
+  if (!authStore.user?.userName) return
+  try {
+    const response = await getPosts({
+      page: 0,
+      size: 20, // 모달에서 보여줄 개수 증가
+      searchType: 'WRITER',
+      keyword: authStore.user.userName,
+      sortType: 'LATEST',
+    })
+    myPosts.value = response.content
+    myPostCount.value = response.pageInfo.totalCount
+  } catch (e) {
+    console.error('Failed to fetch my posts', e)
+  }
 }
 
 const openPostModal = () => {
-    if (myPosts.value.length > 0) {
-        isPostModalOpen.value = true
-    }
+  if (myPosts.value.length > 0) {
+    isPostModalOpen.value = true
+  }
 }
 
 const goToEditProfile = () => router.push('/profile-form')
@@ -56,26 +63,34 @@ const navigateTo = (path: string) => router.push(path)
 
 // 팔로우 모달
 const openFollowModal = async (type: 'follower' | 'following') => {
-  if (!authStore.user) return
-
   modalTitle.value = type === 'follower' ? '팔로워 목록' : '팔로잉 목록'
-  const endpoint = type === 'follower' ? 'followers' : 'followings'
+  isModalOpen.value = true
 
   try {
-    // 1. axios.get에 제네릭 <FollowUser[]>을 사용하여 리턴 타입을 명시합니다.
-    const response = await axios.get<FollowUser[]>(
-      `http://localhost:8080/user/${authStore.user.id}/${endpoint}`,
-    )
+    const userId = authStore.user?.id
+    if (!userId) return
 
-    modalList.value = response.data.map((user) => ({
-      ...user,
-      isFollowing: type === 'following' ? true : user.isFollowing,
+    let response
+
+    // apiClient에 baseURL(8080)이 설정되어 있으므로 /user/... 만 쓰면 됨
+    if (type === 'follower') {
+      response = await apiClient.get(`/user/${userId}/followers`)
+    } else {
+      response = await apiClient.get(`/user/${userId}/followings`)
+    }
+
+    // { status: 200, data: [ ... ] } 형태이므로 .data.data 접근
+    const list = response.data.data || []
+
+    // FollowListModal은 'userName'을 원합니다.
+    modalList.value = list.map((u: ApiFollowerDto) => ({
+      userId: u.userId,
+      userName: u.userName, // ✨ 여기가 틀렸었습니다! (nickname -> userName)
+      profileImage: u.profileImage,
+      isFollowing: u.isFollowing,
     }))
-
-    isModalOpen.value = true
-  } catch (e) {
-    console.error('팔로우 목록 조회 실패:', e)
-    alert('목록을 불러오지 못했습니다.')
+  } catch (error) {
+    console.error('팔로우 목록 조회 실패:', error)
   }
 }
 
@@ -110,15 +125,12 @@ const handleModalFollowToggle = async (targetUser: FollowUser) => {
 
   try {
     // 백엔드 API 호출
-    const response = await axios.post(`http://localhost:8080/user/${targetUser.userId}/follow`)
+    const response = await apiClient.post(`/user/${targetUser.userId}/follow`)
 
-    // 내 정보(팔로잉 숫자) 갱신
     if (response.data && authStore.user) {
       if (typeof response.data.myFollowingCount === 'number') {
         authStore.user.followingCount = response.data.myFollowingCount
       }
-
-      // 서버 데이터로 덮어쓰기
       if (response.data.isFollowing !== undefined) {
         userItem.isFollowing = response.data.isFollowing
       }
@@ -212,10 +224,7 @@ const bmiPercent = computed(() => {
 
             <!-- 통계 및 클릭 이벤트 -->
             <div class="flex gap-8 text-center w-full justify-center">
-              <div 
-                class="cursor-pointer hover:opacity-60 transition"
-                @click="openPostModal"
-              >
+              <div class="cursor-pointer hover:opacity-60 transition" @click="openPostModal">
                 <span class="block font-bold text-xl text-gray-800">{{ myPostCount }}</span>
                 <span class="text-xs text-gray-400">게시글</span>
               </div>
@@ -359,7 +368,7 @@ const bmiPercent = computed(() => {
       />
 
       <!-- 게시글 목록 모달 -->
-      <PostListModal 
+      <PostListModal
         :is-open="isPostModalOpen"
         title="내가 쓴 게시글"
         :post-list="myPosts"

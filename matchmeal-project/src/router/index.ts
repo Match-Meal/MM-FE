@@ -17,6 +17,8 @@ import CommunityMainView from '@/views/CommunityMainView.vue'
 import CommunityDetailView from '@/views/CommunityDetailView.vue'
 import CommunityWriteView from '@/views/CommunityWriteView.vue'
 import { useAuthStore } from '../stores/auth'
+import ChallengeView from '@/views/ChallengeView.vue'
+import ChallengeDetailView from '@/views/ChallengeDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -137,6 +139,24 @@ const router = createRouter({
       name: 'community-detail',
       component: CommunityDetailView,
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/challenge',
+      name: 'challenge',
+      component: ChallengeView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/challenge',
+      name: 'challenge',
+      component: ChallengeView,
+    },
+    // [추가] 상세 페이지 (Dynamic Route)
+    {
+      path: '/challenge/:id',
+      name: 'challenge-detail',
+      component: ChallengeDetailView,
+      props: true, // id 파라미터를 props로 전달
     },
   ],
 })
