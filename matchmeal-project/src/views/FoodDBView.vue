@@ -1,6 +1,16 @@
 <script lang="ts">
 export default {
-  name: 'FoodDBView'
+  name: 'FoodDBView',
+  beforeRouteEnter(to, from, next) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    next((vm: any) => {
+      // 다른 화면에서 진입했을 때만 리셋 (상세 화면이나 수정 화면 등에서 돌아온 경우는 유지)
+      // /food-create에서 돌아온 경우도 유지하려면 조건 추가 필요하지만, 기본적으로 /food-db 하위가 아니면 리셋
+      if (!from.path.startsWith('/food-db/')) {
+        vm.resetFilters?.()
+      }
+    })
+  }
 }
 </script>
 
@@ -142,6 +152,18 @@ onMounted(() => {
   fetchCategories()
 })
 
+const resetFilters = () => {
+    keyword.value = ''
+    selectedCategory.value = ''
+    categorySearch.value = ''
+    isSearchFilterOpen.value = false
+    foods.value = [] // Reset result list too for fresh start
+}
+
+defineExpose({
+    resetFilters
+})
+
 // 컴포넌트를 떠날 때 필터 초기화 여부 결정
 onBeforeRouteLeave((to, from, next) => {
   // 상세 화면(/food-db/...)이나 음식 수정(/food-db/edit/...),
@@ -149,14 +171,7 @@ onBeforeRouteLeave((to, from, next) => {
   // (음식 등록으로 갔다가 취소하고 오면 필터가 유지되는게 일반적이지만,
   //  사용자 요청은 "음식 상세에 들어갔다가 나왔을 경우만 유지"이므로 상세 제외 모두 리셋 처리)
   if (!to.path.startsWith('/food-db/')) {
-    keyword.value = ''
-    selectedCategory.value = ''
-    categorySearch.value = ''
-    // userOnly.value는 유지하는게 사용자 경험상 좋을 수 있으나, 명시적으로 초기화하려면:
-    // userOnly.value = false
-    isSearchFilterOpen.value = false
-    // 검색 결과도 초기화하려면:
-    // foods.value = []
+    resetFilters()
   }
   next()
 })
