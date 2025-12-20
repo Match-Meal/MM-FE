@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDietStore, type DietFoodItem } from '@/stores/dietStore';
-import { createDiet, getDietDetail, updateDiet, deleteDiet, type DietDetailItem } from '@/services/dietService';
+import { createDiet, getDietDetail, updateDiet, deleteDiet, type DietDetailItem, analyzeDietImage, type FoodAnalysisResponseDto, type MatchedFoodItem } from '@/services/dietService';
 import { createFood, type CreateFoodPayload } from '@/services/foodService';
 import { storeToRefs } from 'pinia';
 import { useToastStore } from '@/stores/toast';
@@ -17,6 +17,11 @@ const { currentDiet } = storeToRefs(dietStore);
 const isEditMode = computed(() => !!route.params.id);
 const isLoading = ref(false);
 const isDeleteModalOpen = ref(false);
+
+// AI Analysis State
+const isAnalyzing = ref(false);
+const showAnalysisModal = ref(false);
+const analysisResult = ref<FoodAnalysisResponseDto | null>(null);
 
 const fileInput = ref<HTMLInputElement | null>(null)
 
@@ -85,11 +90,34 @@ const handleFileChange = async (event: Event) => {
                 const compressedFile = await compressImage(file);
                 currentDiet.value.imageFile = compressedFile
                 
-                // 이전 URL 해제 (메모리 누수 방지)
+                // 메모리 누수 방지 및 미리보기 업데이트 (분석 전에 수행)
                 if (currentDiet.value.previewImageUrl && currentDiet.value.previewImageUrl.startsWith('blob:')) {
                     URL.revokeObjectURL(currentDiet.value.previewImageUrl)
                 }
                 currentDiet.value.previewImageUrl = URL.createObjectURL(compressedFile)
+
+                // AI 분석 호출
+                isAnalyzing.value = true;
+                showAnalysisModal.value = true; // Show modal immediately for scanning effect
+                
+                try {
+                    const result = await analyzeDietImage(compressedFile);
+                    
+                    // 분석 완료 시점이더라도 사용자가 취소했으면 결과 무시
+                    if (!isAnalyzing.value) return;
+
+                    analysisResult.value = result;
+                    // showAnalysisModal.value = true; // Already shown
+                } catch (e) {
+                    console.error("AI Analysis failed:", e);
+                    // 취소된 상태면 에러 토스트 띄우지 않음 (선택적)
+                    if (isAnalyzing.value) {
+                         toastStore.show("음식 분석에 실패했습니다. 직접 입력해주세요.");
+                         showAnalysisModal.value = false;
+                    }
+                } finally {
+                    isAnalyzing.value = false;
+                }
             } catch (e) {
                 console.error("Image compression failed:", e);
                 alert("이미지 처리에 실패했습니다. 원본을 사용합니다.");
@@ -256,7 +284,7 @@ const manualFood = ref({
     sugars: undefined as number | undefined,
     sodium: undefined as number | undefined,
     quantity: 1, // 기본 1인분 or 1개
-    unit: '인분',
+    unit: 'g',   // Default unit changed to 'g'
     saveToDictionary: false
 });
 
@@ -270,9 +298,10 @@ const openManualInput = () => {
         sugars: undefined,
         sodium: undefined,
         quantity: 1,
-        unit: '인분',
+        unit: 'g', // Default unit changed to 'g'
         saveToDictionary: false
     };
+    // Logic check: openManualInput sets showManualInput = true in original code.
     showManualInput.value = true;
 };
 
@@ -333,6 +362,29 @@ const addManualFood = async () => {
     });
 
     closeManualInput();
+};
+
+const selectAnalyzedFood = (food: MatchedFoodItem) => {
+    dietStore.addFoodToDiet({
+        foodId: food.foodId,
+        foodName: food.foodName,
+        quantity: food.servingSize || 1, // Use API servingSize or default
+        unit: food.unit || 'g',          // Use API unit or default to 'g'
+        calories: food.calories,
+        carbohydrate: food.carbohydrate,
+        protein: food.protein,
+        fat: food.fat,
+        sugars: food.sugars,
+        sodium: food.sodium
+    });
+    showAnalysisModal.value = false;
+    toastStore.show('음식이 추가되었습니다.');
+};
+
+
+const cancelAnalysis = () => {
+    isAnalyzing.value = false;
+    showAnalysisModal.value = false;
 };
 </script>
 
@@ -504,7 +556,10 @@ const addManualFood = async () => {
                     </div>
                     <div>
                         <label class="text-xs font-bold text-gray-500 mb-1 block">단위</label>
-                        <input type="text" v-model="manualFood.unit" class="input-field h-10" placeholder="인분, g 등">
+                        <select v-model="manualFood.unit" class="input-field h-10 bg-white">
+                            <option value="g">g</option>
+                            <option value="ml">ml</option>
+                        </select>
                     </div>
                 </div>
 
@@ -555,6 +610,83 @@ const addManualFood = async () => {
         </div>
     </div>
 
+    <!-- AI Analysis Unified Modal -->
+    <div v-if="showAnalysisModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+        
+        <!-- Scanning State -->
+        <div v-if="isAnalyzing" class="flex flex-col items-center justify-center w-full max-w-sm">
+             <div class="relative w-64 h-64 rounded-2xl overflow-hidden border-4 border-blue-500 shadow-2xl shadow-blue-500/50 mb-8">
+                <!-- Background Image -->
+                <img v-if="currentDiet.previewImageUrl" :src="currentDiet.previewImageUrl" class="absolute inset-0 w-full h-full object-cover opacity-60">
+                
+                <!-- Scanning Line -->
+                <div class="absolute inset-0 bg-gradient-to-b from-transparent via-blue-400/30 to-transparent w-full h-full animate-scan"></div>
+                <div class="absolute top-0 left-0 w-full h-1 bg-blue-400 shadow-[0_0_15px_rgba(59,130,246,1)] animate-scan-line"></div>
+                
+                <!-- Grid Overlay -->
+                <div class="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.2)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+            </div>
+
+            <div class="text-center space-y-2 relative z-10">
+                <h3 class="text-2xl font-bold text-white animate-pulse">AI 음식 분석중...</h3>
+                <p class="text-blue-200 text-sm">이미지에서 영양 정보를 추출하고 있습니다</p>
+                <button @click="cancelAnalysis" class="mt-4 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-full text-sm backdrop-blur-sm transition">
+                    분석 취소
+                </button>
+            </div>
+        </div>
+
+        <!-- Result State -->
+        <div v-else-if="analysisResult" class="bg-white rounded-2xl w-full max-w-sm max-h-[80vh] flex flex-col shadow-2xl animate-scale-up overflow-hidden">
+            <div class="p-4 border-b bg-gray-50 flex justify-between items-center shrink-0">
+                <h3 class="font-bold text-lg">📷 AI 분석 결과</h3>
+                <button @click="showAnalysisModal = false" class="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            
+            <div class="p-4 overflow-y-auto">
+                 <div class="mb-4 text-center">
+                    <div class="w-full h-40 bg-gray-100 rounded-xl mb-3 overflow-hidden border border-gray-200">
+                         <img v-if="currentDiet.previewImageUrl" :src="currentDiet.previewImageUrl" class="w-full h-full object-cover">
+                    </div>
+                    <p class="text-sm text-gray-500 mb-1">AI가 예측한 음식</p>
+                    <p class="text-2xl font-bold text-blue-600">{{ analysisResult.predictedName }}</p>
+                    <p class="text-xs text-gray-400 mt-1">
+                        후보: {{ analysisResult.candidates.join(', ') }}
+                    </p>
+                </div>
+
+                <div class="space-y-3">
+                    <p class="text-sm font-bold text-gray-700">검색된 영양 정보 선택</p>
+                    <div 
+                        v-for="food in analysisResult.matchedFoods" 
+                        :key="food.foodId"
+                        @click="selectAnalyzedFood(food)"
+                        class="border rounded-xl p-3 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition relative group"
+                    >
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="font-bold text-gray-800">{{ food.foodName }}</span>
+                            <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full group-hover:bg-blue-200 group-hover:text-blue-700 transition">선택</span>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                             <span class="font-medium text-gray-700">{{ food.servingSize }}{{ food.unit }}</span>
+                            / {{ Math.round(food.calories) }} kcal
+                        </div>
+                        <div class="text-[10px] text-gray-400 mt-1">
+                            탄{{ Math.round(food.carbohydrate) }}/단{{ Math.round(food.protein) }}/지{{ Math.round(food.fat) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 text-center">
+                    <button @click="showAnalysisModal = false" class="text-xs text-gray-500 underline hover:text-gray-800">
+                        원하는 음식이 없나요? 직접 입력하기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Confirm Modal -->
     <ConfirmModal
         :is-open="isDeleteModalOpen"
@@ -601,4 +733,23 @@ const addManualFood = async () => {
     animation: fadein 0.2s ease-out;
 }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
+@keyframes scan {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+}
+.animate-scan {
+    animation: scan 2s linear infinite;
+}
+
+@keyframes scanLine {
+    0% { top: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+}
+.animate-scan-line {
+    animation: scanLine 2s linear infinite;
+}
+
 </style>

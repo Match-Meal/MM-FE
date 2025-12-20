@@ -227,3 +227,39 @@ export const getDietListByPeriod = async (startDate: string, endDate: string, us
     throw error
   }
 }
+
+export interface MatchedFoodItem {
+    foodId: number;
+    foodName: string;
+    servingSize: number;
+    unit: string;
+    calories: number;
+    carbohydrate: number;
+    protein: number;
+    fat: number;
+    sugars: number;
+    sodium: number;
+}
+
+export interface FoodAnalysisResponseDto {
+    predictedName: string;
+    candidates: string[];
+    matchedFoods: MatchedFoodItem[];
+}
+
+export const analyzeDietImage = async (file: File): Promise<FoodAnalysisResponseDto> => {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await apiClient.post<CommonResponse<FoodAnalysisResponseDto>>('/diet/analyze', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response.data.data;
+    } catch (error) {
+        console.error('Error analyzing diet image:', error);
+        // Fallback or rethrow? Rethrow for now.
+        throw error;
+    }
+};
