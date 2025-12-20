@@ -6,7 +6,7 @@ import { useToastStore } from '@/stores/toast'
 import { acceptInvitation, rejectInvitation } from '@/services/challengeService'
 import type { ChallengeInvitationResponse } from '@/services/challengeService'
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean
   invitations: ChallengeInvitationResponse[]
 }>()
@@ -18,7 +18,7 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const toastStore = useToastStore()
-const challengeStore = useChallengeStore()
+// const challengeStore = useChallengeStore()
 const isProcessing = ref(false)
 
 const handleAccept = async (invitation: ChallengeInvitationResponse) => {

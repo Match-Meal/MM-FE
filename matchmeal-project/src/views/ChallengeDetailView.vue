@@ -37,7 +37,7 @@ const challenge = computed(() => challengeStore.currentChallenge)
 const showEditModal = ref(false)
 const showInviteModal = ref(false)
 const showUserModal = ref(false)
-const selectedUser = ref<any>(null)
+const selectedUser = ref<ChallengeParticipantDto | null>(null)
 const isMenuOpen = ref(false) // Added for header menu
 
 // 챌린지 식단 기록 관련
@@ -49,7 +49,8 @@ const openUserModal = (participant: ChallengeParticipantDto) => {
   selectedUser.value = {
     userId: participant.userId,
     userName: participant.userName,
-    profileImage: participant.profileImage,
+    profileImage: participant.profileImage || undefined,
+    progressPercent: participant.progressPercent,
   }
   showUserModal.value = true
 }
@@ -72,7 +73,7 @@ const openChallengeLog = async () => {
 
     // API 응답 필드 불일치 가능성 처리 (details vs dietDetails)
     let mappedList =
-      list?.map((item: any) => ({
+      list?.map((item: DailyDietResponseItem & { dietDetails?: any[] }) => ({
         ...item,
         details: item.details || item.dietDetails || [],
       })) || []
@@ -505,7 +506,10 @@ const handleJoin = async () => {
       <UserInfoModal
         v-if="selectedUser"
         :is-open="showUserModal"
-        :user="selectedUser"
+        :user="{
+          ...selectedUser,
+          profileImage: selectedUser.profileImage || null,
+        }"
         :show-challenge-log="challenge?.isJoined"
         @close="showUserModal = false"
         @view-challenge-log="openChallengeLog"

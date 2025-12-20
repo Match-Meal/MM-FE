@@ -81,19 +81,6 @@ const handleLogout = () => {
   }
 }
 
-const getChallengeIcon = (type: string) => {
-  switch (type) {
-    case 'CALORIE_LIMIT':
-      return '🥗'
-    case 'TIME_RANGE':
-      return '⏰'
-    case 'RECORD_FREQUENCY':
-      return '📝'
-    default:
-      return '🔥'
-  }
-}
-
 // [Added] 챌린지 대시보드 통계
 import { computed } from 'vue'
 

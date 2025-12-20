@@ -61,7 +61,7 @@ export const getDailyDiets = async (
   userId?: number,
 ): Promise<DailyDietListResult> => {
   try {
-    const params: any = { date }
+    const params: Record<string, string | number> = { date }
     if (userId) params.userId = userId
 
     const response = await apiClient.get('/diet', { params })
@@ -215,7 +215,7 @@ export const getDietStats = async (
 // [Updated] 기간별 식단 리스트 조회 (챌린지 기록 확인용)
 export const getDietListByPeriod = async (startDate: string, endDate: string, userId?: number) => {
   try {
-    const params: any = { startDate, endDate }
+    const params: Record<string, string | number> = { startDate, endDate }
     if (userId) params.userId = userId
 
     const response = await apiClient.get<CommonResponse<DailyDietResponseItem[]>>('/diet/period', {

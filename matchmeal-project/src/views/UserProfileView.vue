@@ -212,7 +212,7 @@ const checkFollowStatus = async () => {
   try {
     const response = await apiClient.get(`/user/${authStore.user.id}/followings`)
     const list = response.data.data || []
-    const found = list.find((u: any) => u.userId === targetUserId)
+    const found = list.find((u: ApiFollowerDto) => u.userId === targetUserId)
     isFollowing.value = !!found
   } catch (e) {
     console.error('Follow check failed', e)
