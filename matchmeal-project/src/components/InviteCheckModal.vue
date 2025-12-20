@@ -92,7 +92,12 @@ const close = () => emit('close')
             >
               👤
             </div>
-            <span class="text-xs text-gray-600 font-bold">{{ inv.inviterName }}님의 초대</span>
+            <span
+              class="text-xs text-gray-600 font-bold"
+              :class="{ 'text-gray-400': !inv.inviterName }"
+            >
+              {{ inv.inviterName || '알 수 없는 사용자' }}님의 초대
+            </span>
             <span class="text-[10px] text-gray-400 ml-auto">{{ inv.sentAt?.split('T')[0] }}</span>
           </div>
 

@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import axios from 'axios'
 
 const router = useRouter()
@@ -50,10 +51,30 @@ const togglePrivacy = async () => {
   }
 }
 
-const handleLogout = () => {
-  if (confirm('정말 로그아웃 하시겠습니까?')) {
-    authStore.logout()
-    router.replace('/login')
+// 모달 상태
+const isLogoutModalOpen = ref(false)
+const isWithdrawModalOpen = ref(false)
+
+const openLogoutModal = () => {
+  isLogoutModalOpen.value = true
+}
+
+const openWithdrawModal = () => {
+  isWithdrawModalOpen.value = true
+}
+
+const handleLogoutConfirm = () => {
+  authStore.logout()
+  // router.replace 처리 등이 authStore.logout 내부에 있거나 여기서 처리
+  // authStore now handles redirect
+}
+
+const handleWithdrawConfirm = async () => {
+  try {
+    await authStore.withdraw()
+    // withdraw calls logout on success
+  } catch (e) {
+    alert('탈퇴 처리에 실패했습니다. 다시 시도해주세요.')
   }
 }
 </script>
@@ -134,12 +155,42 @@ const handleLogout = () => {
         <!-- 로그아웃 버튼 -->
         <div class="p-6 mt-4">
           <button
-            @click="handleLogout"
-            class="w-full py-4 text-red-500 font-bold bg-red-50 rounded-xl hover:bg-red-100 transition"
+            @click="openLogoutModal"
+            class="w-full py-4 text-gray-500 font-bold bg-gray-100 rounded-xl hover:bg-gray-200 transition mb-3"
           >
             로그아웃
           </button>
+
+          <button
+            @click="openWithdrawModal"
+            class="w-full py-4 text-xs text-gray-400 font-medium underline"
+          >
+            회원 탈퇴
+          </button>
         </div>
+
+        <!-- Modals -->
+        <ConfirmModal
+          :is-open="isLogoutModalOpen"
+          title="로그아웃"
+          message="정말 로그아웃 하시겠습니까?"
+          confirm-text="로그아웃"
+          @close="isLogoutModalOpen = false"
+          @confirm="handleLogoutConfirm"
+        />
+
+        <ConfirmModal
+          :is-open="isWithdrawModalOpen"
+          title="회원 탈퇴"
+          message="정말 탈퇴하시겠습니까?
+          
+탈퇴 시 계정은 3개월간 보관되며,
+이 기간 내에 로그인하면 복구할 수 있습니다.
+3개월 후에는 모든 데이터가 영구 삭제됩니다."
+          confirm-text="탈퇴하기"
+          @close="isWithdrawModalOpen = false"
+          @confirm="handleWithdrawConfirm"
+        />
       </main>
     </div>
   </div>

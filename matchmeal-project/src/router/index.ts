@@ -171,6 +171,11 @@ const router = createRouter({
       component: ChallengeDetailView,
       props: true, // id 파라미터를 props로 전달
     },
+    {
+      path: '/recovery',
+      name: 'account-recovery',
+      component: () => import('@/views/AccountRecoveryView.vue'),
+    },
   ],
 })
 

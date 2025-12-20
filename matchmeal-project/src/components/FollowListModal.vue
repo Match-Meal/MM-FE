@@ -116,7 +116,9 @@ const confirmUnfollow = () => {
             <div class="flex flex-col">
               <!-- 나 자신이면 표시 -->
               <span class="font-bold text-sm text-gray-800 flex items-center gap-1">
-                {{ user.userName }}
+                <span :class="{ 'text-gray-400': !user.userName }">{{
+                  user.userName || '탈퇴한 사용자'
+                }}</span>
                 <span
                   v-if="currentUserId && user.userId === currentUserId"
                   class="text-[10px] bg-blue-100 text-blue-600 px-1.5 rounded-md"
