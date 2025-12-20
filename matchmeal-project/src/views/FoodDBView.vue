@@ -7,7 +7,7 @@ export default {
       // 다른 화면에서 진입했을 때만 리셋 (상세 화면이나 수정 화면 등에서 돌아온 경우는 유지)
       // /food-create에서 돌아온 경우도 유지하려면 조건 추가 필요하지만, 기본적으로 /food-db 하위가 아니면 리셋
       if (!from.path.startsWith('/food-db/')) {
-        vm.resetFilters && vm.resetFilters()
+        vm.resetFilters?.()
       }
     })
   }
