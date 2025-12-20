@@ -2,7 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
-interface User {
+export interface User {
   id: number
   socialId: string
   email: string
@@ -21,6 +21,8 @@ interface User {
   // 팔로우 통계
   followerCount?: number
   followingCount?: number
+
+  postCount?: number
 
   allergies: string[]
   diseases: string[]
