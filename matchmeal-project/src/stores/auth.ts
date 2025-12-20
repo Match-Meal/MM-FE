@@ -65,8 +65,9 @@ export const useAuthStore = defineStore('auth', () => {
   async function fetchUser() {
     try {
       // 백엔드 UserController (/user/me) 호출
-      const response = await axios.get<User>('http://localhost:8080/user/me')
-      user.value = response.data
+      // 백엔드 UserController (/user/me) 호출
+      const response = await axios.get<{ data: User }>('http://localhost:8080/user/me')
+      user.value = response.data.data
     } catch (error) {
       console.error('Failed to fetch user', error)
       logout() // 토큰 만료 시 로그아웃

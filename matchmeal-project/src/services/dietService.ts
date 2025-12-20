@@ -1,210 +1,229 @@
-import apiClient from './apiClient';
+import apiClient from './apiClient'
 
 export interface CommonResponse<T> {
-  status: number;
-  message: string;
-  data: T;
+  status: number
+  message: string
+  data: T
 }
 
 export interface DietFoodItem {
-    foodId?: number;
-    foodName: string;
-    quantity: number;
-    unit: string;
-    calories: number;
-    carbohydrate: number;
-    protein: number;
-    fat: number;
-    sugars?: number;
-    sodium?: number;
+  foodId?: number
+  foodName: string
+  quantity: number
+  unit: string
+  calories: number
+  carbohydrate: number
+  protein: number
+  fat: number
+  sugars?: number
+  sodium?: number
 }
 
 export interface CreateDietPayload {
-    eatDate: string; // YYYY-MM-DD
-    eatTime: string; // HH:mm
-    mealType: string; // BREAKFAST, LUNCH, DINNER, SNACK
-    memo?: string;
-    foods: DietFoodItem[];
+  eatDate: string // YYYY-MM-DD
+  eatTime: string // HH:mm
+  mealType: string // BREAKFAST, LUNCH, DINNER, SNACK
+  memo?: string
+  foods: DietFoodItem[]
 }
 
 export interface DietDetailItem extends DietFoodItem {
-    dietDetailId: number;
+  dietDetailId: number
 }
 
 export interface DailyDietResponseItem {
-    dietId: number;
-    eatDate: string;
-    eatTime: string;
-    mealType: string;
-    memo: string;
-    totalCalories: number;
-    totalCarbohydrate: number;
-    totalProtein: number;
-    totalFat: number;
-    totalSugars?: number;
-    totalSodium?: number;
-    dietImgUrl?: string; // Changed from imageUrl based on API response
-    details: DietDetailItem[];
+  dietId: number
+  eatDate: string
+  eatTime: string
+  mealType: string
+  memo: string
+  totalCalories: number
+  totalCarbohydrate: number
+  totalProtein: number
+  totalFat: number
+  totalSugars?: number
+  totalSodium?: number
+  dietImgUrl?: string // Changed from imageUrl based on API response
+  details: DietDetailItem[]
 }
 
 export interface DailyDietListResponse {
-    date: string;
-    totalCalories: number;
-    diets: DailyDietResponseItem[];
+  date: string
+  totalCalories: number
+  diets: DailyDietResponseItem[]
 }
 
-export type DailyDietListResult = DailyDietListResponse | DailyDietResponseItem[];
+export type DailyDietListResult = DailyDietListResponse | DailyDietResponseItem[]
 
 // 식단 목록(일별) 조회
-export const getDailyDiets = async (date: string): Promise<DailyDietListResult> => {
-    try {
-        const response = await apiClient.get('/diet', { params: { date } });
-        return response.data.data;
-    } catch (error) {
-        console.error('Error fetching daily diets:', error);
-        throw error;
-    }
-};
+export const getDailyDiets = async (
+  date: string,
+  userId?: number,
+): Promise<DailyDietListResult> => {
+  try {
+    const params: any = { date }
+    if (userId) params.userId = userId
+
+    const response = await apiClient.get('/diet', { params })
+    return response.data.data
+  } catch (error) {
+    console.error('Error fetching daily diets:', error)
+    throw error
+  }
+}
 
 // 식단 상세 조회
 export const getDietDetail = async (dietId: number): Promise<{ data: DailyDietResponseItem }> => {
-    try {
-        const response = await apiClient.get(`/diet/${dietId}`);
-        return response.data; // data.data 가 아니라 data 전체를 리턴하는 경우도 확인 필요하지만, 보통 apiClient에서 처리하거나 여기서 처리. 
-                             // 기존 코드에선 response.data.data 였을 수 있음. 상세 조회 응답 확인 필요.
-                             // 보통 공통 포맷이면 response.data.data 일 것임.
-                             // 하지만 이전 코드에서 response.data를 썼던 기억이 있음. 안전하게 response를 통해 확인.
-                             // 이전 코드: dietData.value = response.data 
-                             // 즉, 여기서 response.data 를 리턴하면 됨.
-                             // 하지만 API 표준 응답이 { data: ... } 라면 response.data.data 여야 함.
-                             // 일단 apiClient가 axios instance라면 response.data는 서버 응답 바디임.
-                             // 서버 응답이 { code:..., data: ... } 형태라면 response.data.data를 리턴하는게 편함.
-                             // 이전 기록을 보면 getDietDetail에서 response.data.data를 리턴했는지 확인.
-        return response.data; 
-    } catch (error) {
-        console.error(`Error fetching diet detail for ${dietId}:`, error);
-        throw error;
-    }
-};
+  try {
+    const response = await apiClient.get(`/diet/${dietId}`)
+    return response.data
+  } catch (error) {
+    console.error(`Error fetching diet detail for ${dietId}:`, error)
+    throw error
+  }
+}
 
 // 식단 생성
 export const createDiet = async (payload: CreateDietPayload, file?: File) => {
-    try {
-        const formData = new FormData();
-        const jsonBlob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-        formData.append('data', jsonBlob);
-        
-        if (file) {
-            formData.append('file', file);
-        } else {
-             formData.append('file', new Blob(), '');
-        }
+  try {
+    const formData = new FormData()
+    const jsonBlob = new Blob([JSON.stringify(payload)], { type: 'application/json' })
+    formData.append('data', jsonBlob)
 
-        const response = await apiClient.post('/diet', formData, {
-            headers: {
-                // headers: { 'Content-Type': 'multipart/form-data' } // explicitly might not be needed as browser sets boundary, but good to ensure apiClient doesn't override wrong
-                'Content-Type': 'multipart/form-data'
-            }
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error creating diet:', error);
-        throw error;
+    if (file) {
+      formData.append('file', file)
+    } else {
+      formData.append('file', new Blob(), '')
     }
-};
+
+    const response = await apiClient.post('/diet', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  } catch (error) {
+    console.error('Error creating diet:', error)
+    throw error
+  }
+}
 
 // 식단 수정
 export const updateDiet = async (dietId: number, payload: CreateDietPayload, file?: File) => {
-    try {
-        const formData = new FormData();
-        const jsonBlob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-        formData.append('data', jsonBlob);
+  try {
+    const formData = new FormData()
+    const jsonBlob = new Blob([JSON.stringify(payload)], { type: 'application/json' })
+    formData.append('data', jsonBlob)
 
-        if (file) {
-            formData.append('file', file);
-        } else {
-            // 파일을 변경하지 않는 경우에도 빈 파일 파트를 보내야 함 (백엔드 요구사항: Required part 'file' is not present)
-            // 빈 Blob을 보내되, filename을 빈 문자열로 설정하여 "파일 없음" 처리 유도
-            formData.append('file', new Blob(), '');
-        }
-
-        const response = await apiClient.put(`/diet/${dietId}`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
-        return response.data;
-    } catch (error) {
-        console.error(`Error updating diet ${dietId}:`, error);
-        throw error;
+    if (file) {
+      formData.append('file', file)
+    } else {
+      formData.append('file', new Blob(), '')
     }
-};
+
+    const response = await apiClient.put(`/diet/${dietId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  } catch (error) {
+    console.error(`Error updating diet ${dietId}:`, error)
+    throw error
+  }
+}
 
 // 식단 삭제
 export const deleteDiet = async (dietId: number) => {
-    try {
-        const response = await apiClient.delete(`/diet/${dietId}`);
-        return response.data;
-    } catch (error) {
-        console.error(`Error deleting diet ${dietId}:`, error);
-        throw error;
-    }
-};
+  try {
+    const response = await apiClient.delete(`/diet/${dietId}`)
+    return response.data
+  } catch (error) {
+    console.error(`Error deleting diet ${dietId}:`, error)
+    throw error
+  }
+}
 
 // --- 식단 통계 관련 Interfaces ---
 
 export interface CpfRatioAnalysis {
-    carbRatio: number;
-    proteinRatio: number;
-    fatRatio: number;
-    recommendedCarbRatio: number;
-    recommendedProteinRatio: number;
-    recommendedFatRatio: number;
-    feedback: string;
+  carbRatio: number
+  proteinRatio: number
+  fatRatio: number
+  recommendedCarbRatio: number
+  recommendedProteinRatio: number
+  recommendedFatRatio: number
+  feedback: string
 }
 
 export interface NutrientAnalysis {
-    nutrientName: string;
-    currentIntake: number;
-    recommendedLimit: number;
-    intakePercentage: number;
-    status: 'GOOD' | 'BAD' | 'WARNING';
+  nutrientName: string
+  currentIntake: number
+  recommendedLimit: number
+  intakePercentage: number
+  status: 'GOOD' | 'BAD' | 'WARNING'
 }
 
 export interface DailyStat {
-    date: string;
-    totalCalories: number;
-    carbsG: number;
-    proteinG: number;
-    fatG: number;
-    sugarG: number;
-    sodiumMg: number;
-    dietScore: number;
+  date: string
+  totalCalories: number
+  carbsG: number
+  proteinG: number
+  fatG: number
+  sugarG: number
+  sodiumMg: number
+  dietScore: number
 }
 
 export interface DietStatsResponse {
-    periodTotalDays: number;
-    averageCalories: number;
-    cpfRatioAnalysis: CpfRatioAnalysis;
-    sodiumAnalysis: NutrientAnalysis;
-    sugarAnalysis: NutrientAnalysis;
-    dailyStats: DailyStat[];
+  periodTotalDays: number
+  averageCalories: number
+  cpfRatioAnalysis: CpfRatioAnalysis
+  sodiumAnalysis: NutrientAnalysis
+  sugarAnalysis: NutrientAnalysis
+  dailyStats: DailyStat[]
 }
 
 // 식단 통계 조회
-export const getDietStats = async (periodType: 'WEEKLY' | 'MONTHLY' | 'CUSTOM', startDate?: string, endDate?: string) => {
-    try {
-        const params: Record<string, string> = { periodType };
-        if (periodType === 'CUSTOM' && startDate && endDate) {
-            params.startDate = startDate;
-            params.endDate = endDate;
-        }
-
-        const response = await apiClient.get<CommonResponse<DietStatsResponse>>('/diet/stats', { params });
-        return response.data.data;
-    } catch (error) {
-        console.error('Error fetching diet stats:', error);
-        throw error;
+export const getDietStats = async (
+  periodType: 'WEEKLY' | 'MONTHLY' | 'CUSTOM',
+  startDate?: string,
+  endDate?: string,
+  userId?: number, // [Added]
+) => {
+  try {
+    const params: Record<string, string | number> = { periodType }
+    if (periodType === 'CUSTOM' && startDate && endDate) {
+      params.startDate = startDate
+      params.endDate = endDate
     }
-};
+    if (userId) {
+      // [Added]
+      params.userId = userId
+    }
 
+    const response = await apiClient.get<CommonResponse<DietStatsResponse>>('/diet/stats', {
+      params,
+    })
+    return response.data.data
+  } catch (error) {
+    console.error('Error fetching diet stats:', error)
+    throw error
+  }
+}
+
+// [Updated] 기간별 식단 리스트 조회 (챌린지 기록 확인용)
+export const getDietListByPeriod = async (startDate: string, endDate: string, userId?: number) => {
+  try {
+    const params: any = { startDate, endDate }
+    if (userId) params.userId = userId
+
+    const response = await apiClient.get<CommonResponse<DailyDietResponseItem[]>>('/diet/period', {
+      params,
+    })
+    return response.data.data
+  } catch (error) {
+    console.error('Error fetching diet list by period:', error)
+    throw error
+  }
+}

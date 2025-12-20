@@ -10,10 +10,12 @@ import { useToastStore } from '@/stores/toast'
 const props = defineProps<{
   isOpen: boolean
   user: PostUser
+  showChallengeLog?: boolean // [Added] 챌린지 기록 보기 버튼 활성화 여부
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
+  (e: 'view-challenge-log'): void // [Added] 챌린지 기록 보기 이벤트
 }>()
 
 const router = useRouter()
@@ -59,10 +61,10 @@ const checkFollowStatus = async () => {
     if (!authStore.user) return
 
     // 내 팔로잉 목록을 가져와서 확인 (기존 ProfileView 로직 활용)
-    const response = await axios.get<FollowUser[]>(
+    const response = await axios.get<{ data: FollowUser[] }>(
       `http://localhost:8080/user/${authStore.user.id}/followings`,
     )
-    const followingList = response.data
+    const followingList = response.data.data
     const found = followingList.find((u) => u.userId === props.user.userId)
     isFollowing.value = !!found
   } catch (e) {
@@ -81,18 +83,19 @@ const toggleFollow = async () => {
   isLoading.value = true
   try {
     const response = await axios.post(`http://localhost:8080/user/${props.user.userId}/follow`)
+    const result = response.data.data // CommonResponse의 data
 
     // 응답으로 상태 업데이트
-    if (response.data.isFollowing !== undefined) {
-      isFollowing.value = response.data.isFollowing
+    if (result && result.isFollowing !== undefined) {
+      isFollowing.value = result.isFollowing
     } else {
-      // fallback if response doesn't have isFollowing
+      // fallback
       isFollowing.value = !isFollowing.value
     }
 
     // 내 팔로잉 수 업데이트 (AuthStore)
-    if (response.data.myFollowingCount !== undefined && authStore.user) {
-      authStore.user.followingCount = response.data.myFollowingCount
+    if (result && result.myFollowingCount !== undefined && authStore.user) {
+      authStore.user.followingCount = result.myFollowingCount
     }
 
     toastStore.show(isFollowing.value ? '팔로우했습니다.' : '팔로우를 취소했습니다.')
@@ -139,16 +142,20 @@ const close = () => emit('close')
 
       <!-- Status / Action -->
       <div class="mt-6 w-full">
-        <div v-if="user.userId === authStore.user?.id" class="text-center text-gray-400 text-sm">
-          나 자신입니다.
-        </div>
-        <div v-else-if="isChecking" class="flex justify-center py-2">
+        <!-- 나 자신일 경우 팔로우 버튼 숨김, 나머지 버튼은 노출 -->
+
+        <div
+          v-if="isChecking && user.userId !== authStore.user?.id"
+          class="flex justify-center py-2"
+        >
           <div
             class="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
           ></div>
         </div>
-        <div v-else class="w-full space-y-2">
+        <div class="w-full space-y-2">
+          <!-- 팔로우 버튼 (타인일 때만) -->
           <button
+            v-if="user.userId !== authStore.user?.id"
             @click="toggleFollow"
             :disabled="isLoading"
             class="w-full py-3 rounded-xl font-bold transition-all transform active:scale-95 shadow-md flex items-center justify-center gap-2"
@@ -163,6 +170,15 @@ const close = () => emit('close')
               class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"
             ></span>
             <span>{{ isFollowing ? '언팔로우' : '팔로우' }}</span>
+          </button>
+
+          <!-- 챌린지 기록 보기 버튼 -->
+          <button
+            v-if="showChallengeLog"
+            @click="emit('view-challenge-log')"
+            class="w-full py-3 rounded-xl font-bold text-sm bg-orange-500 text-white shadow-md hover:bg-orange-600 transition active:scale-95"
+          >
+            🔥 챌린지 기록 보기
           </button>
 
           <button

@@ -81,7 +81,6 @@ const handleLogout = () => {
   }
 }
 
-// 챌린지 타입에 따른 아이콘 반환
 const getChallengeIcon = (type: string) => {
   switch (type) {
     case 'CALORIE_LIMIT':
@@ -94,6 +93,24 @@ const getChallengeIcon = (type: string) => {
       return '🔥'
   }
 }
+
+// [Added] 챌린지 대시보드 통계
+import { computed } from 'vue'
+
+const averageProgress = computed(() => {
+  if (challengeStore.myChallenges.length === 0) return 0
+  const total = challengeStore.myChallenges.reduce((acc, c) => acc + c.progressPercent, 0)
+  return Math.round(total / challengeStore.myChallenges.length)
+})
+
+const totalSuccessCount = computed(() => {
+  return challengeStore.myChallenges.reduce((acc, c) => acc + c.currentCount, 0)
+})
+
+const maxStreak = computed(() => {
+  if (challengeStore.myChallenges.length === 0) return 0
+  return Math.max(...challengeStore.myChallenges.map((c) => c.currentStreak))
+})
 </script>
 
 <template>
@@ -192,47 +209,44 @@ const getChallengeIcon = (type: string) => {
             </span>
           </div>
 
-          <div v-if="challengeStore.myChallenges.length > 0" class="space-y-3">
+          <!-- Statistics Dashboard -->
+          <div v-if="challengeStore.myChallenges.length > 0" class="grid grid-cols-2 gap-3">
+            <!-- Active Count -->
             <div
-              v-for="item in challengeStore.myChallenges.slice(0, 2)"
-              :key="item.challengeId"
-              @click="router.push('/challenge')"
-              class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-3 cursor-pointer hover:shadow-md transition group"
+              class="bg-blue-50 p-4 rounded-2xl flex flex-col items-center justify-center gap-1 border border-blue-100 shadow-sm"
             >
-              <div class="flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                  <div
-                    class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-lg"
-                  >
-                    {{ getChallengeIcon(item.type) }}
-                  </div>
-                  <div>
-                    <h4
-                      class="font-bold text-sm text-gray-800 group-hover:text-blue-600 transition"
-                    >
-                      {{ item.title }}
-                    </h4>
-                    <p class="text-[10px] text-gray-400">
-                      {{ item.startDate }} ~ {{ item.endDate }}
-                    </p>
-                  </div>
-                </div>
-                <span class="text-xs font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded">
-                  {{ item.progressPercent }}%
-                </span>
-              </div>
+              <span class="text-xs text-blue-500 font-bold">진행 중</span>
+              <span class="text-2xl font-black text-blue-600">{{
+                challengeStore.myChallenges.length
+              }}</span>
+              <span class="text-[10px] text-blue-400">개의 챌린지</span>
+            </div>
 
-              <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  class="h-full bg-blue-500 rounded-full transition-all duration-500"
-                  :style="{ width: `${item.progressPercent}%` }"
-                ></div>
-              </div>
+            <!-- Avg Progress -->
+            <div
+              class="bg-orange-50 p-4 rounded-2xl flex flex-col items-center justify-center gap-1 border border-orange-100 shadow-sm"
+            >
+              <span class="text-xs text-orange-500 font-bold">평균 달성률</span>
+              <span class="text-2xl font-black text-orange-600">{{ averageProgress }}%</span>
+              <span class="text-[10px] text-orange-400">꾸준히 하고 있어요!</span>
+            </div>
 
-              <div class="flex justify-between text-[10px] text-gray-400">
-                <span>목표: {{ item.goalCount }}회</span>
-                <span>연속 {{ item.currentStreak }}일째 🔥</span>
-              </div>
+            <!-- Total Success -->
+            <div
+              class="bg-green-50 p-4 rounded-2xl flex flex-col items-center justify-center gap-1 border border-green-100 shadow-sm"
+            >
+              <span class="text-xs text-green-500 font-bold">총 성공 횟수</span>
+              <span class="text-2xl font-black text-green-600">{{ totalSuccessCount }}</span>
+              <span class="text-[10px] text-green-400">회 완료</span>
+            </div>
+
+            <!-- Max Streak -->
+            <div
+              class="bg-purple-50 p-4 rounded-2xl flex flex-col items-center justify-center gap-1 border border-purple-100 shadow-sm"
+            >
+              <span class="text-xs text-purple-500 font-bold">최장 연속</span>
+              <span class="text-2xl font-black text-purple-600">{{ maxStreak }}</span>
+              <span class="text-[10px] text-purple-400">일 불태웠어요 🔥</span>
             </div>
           </div>
 

@@ -1,9 +1,20 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-// [중요] auth.ts에서 수정한 User 타입과 스토어 import
 import { useAuthStore, type User } from '@/stores/auth'
 import apiClient from '@/services/apiClient'
+import UserInfoModal from '@/components/UserInfoModal.vue'
+import FollowListModal, { type FollowUser } from '@/components/FollowListModal.vue'
+import PostListModal from '@/components/PostListModal.vue' // Assuming this exists or was used in original
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import { getPosts, type PostListItem, type PostUser } from '@/services/communityService'
+
+interface ApiFollowerDto {
+  userId: number
+  userName: string
+  profileImage: string
+  isFollowing: boolean
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -20,6 +31,22 @@ const user = ref<UserProfileResponse | null>(null)
 const isLoading = ref(true)
 const isFollowing = ref(false)
 
+// 모달 관련 상태
+const isModalOpen = ref(false)
+const modalTitle = ref('')
+const modalList = ref<FollowUser[]>([])
+
+// 유저 정보 모달 관련
+const isUserInfoModalOpen = ref(false)
+const selectedUser = ref<PostUser | null>(null)
+
+// 게시글 관련 상태
+const targetUserPosts = ref<PostListItem[]>([])
+const isPostModalOpen = ref(false)
+
+// 언팔로우 확인 모달
+const isConfirmOpen = ref(false)
+
 onMounted(async () => {
   // 내 프로필이면 리다이렉트
   if (authStore.user && authStore.user.id === targetUserId) {
@@ -29,13 +56,147 @@ onMounted(async () => {
   await fetchUserProfile()
 })
 
+// 게시글 목록 조회
+const fetchTargetUserPosts = async (userName: string) => {
+  try {
+    const response = await getPosts({
+      page: 0,
+      size: 20,
+      searchType: 'WRITER',
+      keyword: userName,
+      sortType: 'LATEST',
+    })
+    targetUserPosts.value = response.content
+  } catch (e) {
+    console.error('게시글 조회 실패', e)
+  }
+}
+
+const openPostModal = () => {
+  isPostModalOpen.value = true
+}
+
+// 팔로우 모달 열기
+const openFollowModal = async (type: 'follower' | 'following') => {
+  modalTitle.value = type === 'follower' ? '팔로워 목록' : '팔로잉 목록'
+  isModalOpen.value = true
+
+  try {
+    let response
+    // 타인 프로필이므로 targetUserId 사용
+    if (type === 'follower') {
+      response = await apiClient.get(`/user/${targetUserId}/followers`)
+    } else {
+      response = await apiClient.get(`/user/${targetUserId}/followings`)
+    }
+
+    const list = response.data.data || []
+
+    modalList.value = list.map((u: ApiFollowerDto) => ({
+      userId: u.userId,
+      userName: u.userName,
+      profileImage: u.profileImage,
+      isFollowing: u.isFollowing,
+    }))
+  } catch (error) {
+    console.error('팔로우 목록 조회 실패:', error)
+  }
+}
+
+// 유저 정보 모달 열기
+const openUserInfoModal = (user: FollowUser) => {
+  selectedUser.value = {
+    userId: user.userId,
+    userName: user.userName,
+    profileImage: user.profileImage || '',
+  }
+  isUserInfoModalOpen.value = true
+}
+
+// 모달 내 팔로우 토글
+const handleModalFollowToggle = async (targetUser: FollowUser) => {
+  const index = modalList.value.findIndex((u) => u.userId === targetUser.userId)
+  if (index === -1) return
+
+  const userItem = modalList.value[index]
+  if (!userItem) return
+
+  const originalState = userItem.isFollowing
+  const originalFollowingCount = authStore.user?.followingCount || 0
+
+  // 낙관적 업데이트
+  userItem.isFollowing = !originalState
+
+  // 내 팔로잉 숫자 업데이트 (authStore)
+  if (authStore.user) {
+    if (userItem.isFollowing) {
+      authStore.user.followingCount = (authStore.user.followingCount || 0) + 1
+    } else {
+      authStore.user.followingCount = Math.max(0, (authStore.user.followingCount || 0) - 1)
+    }
+  }
+
+  // 만약 현재 보고 있는 프로필 유저를 리스트에서 팔로우/언팔로우 했다면 메인 버튼 상태도 동기화
+  if (targetUser.userId === targetUserId) {
+    isFollowing.value = userItem.isFollowing
+    // 팔로워 숫자도 같이 조정
+    if (user.value) {
+      if (isFollowing.value) {
+        user.value.followerCount = (user.value.followerCount || 0) + 1
+      } else {
+        user.value.followerCount = Math.max(0, (user.value.followerCount || 0) - 1)
+      }
+    }
+  }
+
+  try {
+    const response = await apiClient.post(`/user/${targetUser.userId}/follow`)
+    const result = response.data.data
+
+    if (result) {
+      if (result.isFollowing !== undefined) {
+        userItem.isFollowing = result.isFollowing
+        // 메인 버튼 동기화 (재확인)
+        if (targetUser.userId === targetUserId) {
+          isFollowing.value = result.isFollowing
+        }
+      }
+      if (typeof result.myFollowingCount === 'number' && authStore.user) {
+        authStore.user.followingCount = result.myFollowingCount
+      }
+    }
+  } catch (e) {
+    console.error('Follow toggle error:', e)
+    userItem.isFollowing = originalState
+    if (authStore.user) {
+      authStore.user.followingCount = originalFollowingCount
+    }
+    // 메인 버튼 롤백
+    if (targetUser.userId === targetUserId) {
+      isFollowing.value = originalState
+    }
+    alert('요청 처리에 실패했습니다.')
+  }
+}
+
 const fetchUserProfile = async () => {
   try {
     isLoading.value = true
-    // 백엔드에서 postCount도 함께 내려준다고 가정합니다.
     const response = await apiClient.get(`/user/${targetUserId}`)
-    user.value = response.data
-    isFollowing.value = response.data.isFollowing || false
+    const data = response.data.data
+    user.value = data
+
+    // API가 isFollowing을 주지만, 정확성을 위해 내 팔로잉 목록에서 재확인
+    if (authStore.user) {
+      await checkFollowStatus()
+    } else {
+      isFollowing.value = !!data.isFollowing
+    }
+
+    // 유저 정보 로드 후 게시글 조회
+    if (user.value?.userName) {
+      await fetchTargetUserPosts(user.value.userName)
+    }
   } catch (error) {
     console.error('유저 정보 조회 실패:', error)
     alert('존재하지 않거나 조회할 수 없는 유저입니다.')
@@ -45,7 +206,20 @@ const fetchUserProfile = async () => {
   }
 }
 
-// [핵심] 팔로우 토글 핸들러
+// [추가] 팔로잉 상태 확실하게 체크
+const checkFollowStatus = async () => {
+  if (!authStore.user) return
+  try {
+    const response = await apiClient.get(`/user/${authStore.user.id}/followings`)
+    const list = response.data.data || []
+    const found = list.find((u: any) => u.userId === targetUserId)
+    isFollowing.value = !!found
+  } catch (e) {
+    console.error('Follow check failed', e)
+  }
+}
+
+// [핵심] 팔로우 토글 핸들러 (메인 프로필 버튼)
 const handleFollow = async () => {
   // 1. 로그인 상태 체크 (authStore 활용)
   if (!authStore.isAuthenticated || !authStore.user) {
@@ -58,29 +232,63 @@ const handleFollow = async () => {
   // 2. 데이터 방어 코드
   if (!user.value) return
 
+  // [수정] 언팔로우 시 확인 모달 띄우기
+  if (isFollowing.value) {
+    isConfirmOpen.value = true
+    return
+  }
+
+  // 팔로우 실행 (언팔로우 아님)
+  await processFollowToggle()
+}
+
+// 언팔로우 확인 후 실행
+const confirmUnfollow = async () => {
+  isConfirmOpen.value = false
+  await processFollowToggle()
+}
+
+// 실제 API 호출 로직 분리
+const processFollowToggle = async () => {
+  if (!user.value) return
+
   // 3. 낙관적 업데이트 (UI 먼저 즉시 반영)
   const previousState = isFollowing.value
+  const previousFollowerCount = user.value.followerCount || 0
+  const previousMyFollowingCount = authStore.user?.followingCount || 0
+
   isFollowing.value = !isFollowing.value
 
-  const currentFollowerCount = user.value.followerCount || 0
-
   if (isFollowing.value) {
-    user.value.followerCount = currentFollowerCount + 1
+    user.value.followerCount = previousFollowerCount + 1
+    if (authStore.user) authStore.user.followingCount = previousMyFollowingCount + 1
   } else {
-    user.value.followerCount = Math.max(0, currentFollowerCount - 1)
+    user.value.followerCount = Math.max(0, previousFollowerCount - 1)
+    if (authStore.user) authStore.user.followingCount = Math.max(0, previousMyFollowingCount - 1)
   }
 
   // 4. API 호출
   try {
-    // apiClient를 쓰면 authStore 토큰이 자동으로 헤더에 붙어서 나갑니다.
-    await apiClient.post(`/user/${targetUserId}/follow`)
+    const response = await apiClient.post(`/user/${targetUserId}/follow`)
+    const result = response.data.data
+
+    // 결과 반영
+    if (result) {
+      if (result.isFollowing !== undefined) {
+        isFollowing.value = result.isFollowing
+      }
+      if (typeof result.myFollowingCount === 'number' && authStore.user) {
+        authStore.user.followingCount = result.myFollowingCount
+      }
+    }
   } catch (error) {
     console.error('Follow failed', error)
     // 실패 시 롤백
     isFollowing.value = previousState
     if (user.value) {
-      user.value.followerCount = currentFollowerCount // 원래 숫자로 복구
+      user.value.followerCount = previousFollowerCount
     }
+    if (authStore.user) authStore.user.followingCount = previousMyFollowingCount
     alert('요청 처리에 실패했습니다.')
   }
 }
@@ -124,12 +332,8 @@ const goBack = () => router.back()
     <div
       class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-800 flex flex-col"
     >
-      <header
-        class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 sticky top-0"
-      >
-        <button @click="goBack" class="text-2xl w-8 text-gray-600 hover:text-gray-900 transition">
-          ←
-        </button>
+      <header class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 shrink-0">
+        <button @click="goBack" class="text-2xl w-8">←</button>
         <h1 class="font-bold text-lg truncate text-gray-800">{{ user?.userName || '프로필' }}</h1>
         <div class="w-8"></div>
       </header>
@@ -176,7 +380,7 @@ const goBack = () => router.back()
             </button>
 
             <div class="flex gap-8 text-center w-full justify-center">
-              <div>
+              <div class="cursor-pointer hover:opacity-60 transition" @click="openPostModal">
                 <span class="block font-bold text-xl text-gray-800">{{
                   user?.postCount || 0
                 }}</span>
@@ -184,7 +388,10 @@ const goBack = () => router.back()
               </div>
               <div class="w-[1px] h-8 bg-gray-200"></div>
 
-              <div>
+              <div
+                class="cursor-pointer hover:opacity-60 transition"
+                @click="openFollowModal('follower')"
+              >
                 <span class="block font-bold text-xl text-gray-800">{{
                   user?.followerCount || 0
                 }}</span>
@@ -192,7 +399,10 @@ const goBack = () => router.back()
               </div>
               <div class="w-[1px] h-8 bg-gray-200"></div>
 
-              <div>
+              <div
+                class="cursor-pointer hover:opacity-60 transition"
+                @click="openFollowModal('following')"
+              >
                 <span class="block font-bold text-xl text-gray-800">{{
                   user?.followingCount || 0
                 }}</span>
@@ -203,7 +413,9 @@ const goBack = () => router.back()
         </div>
 
         <template v-if="isPublicProfile">
+          <!-- ... (BMI 및 건강 정보 등 기존 코드 유지) ... -->
           <div class="px-4 mb-4 animate-fade-in">
+            <!-- ... -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
               <div class="flex justify-between items-end mb-3">
                 <div>
@@ -272,6 +484,43 @@ const goBack = () => router.back()
           </div>
         </template>
       </main>
+
+      <!-- 모달 컴포넌트 -->
+      <FollowListModal
+        :is-open="isModalOpen"
+        :title="modalTitle"
+        :user-list="modalList"
+        :current-user-id="authStore.user?.id"
+        @close="isModalOpen = false"
+        @toggle="handleModalFollowToggle"
+        @click-user="openUserInfoModal"
+      />
+
+      <UserInfoModal
+        v-if="selectedUser"
+        :is-open="isUserInfoModalOpen"
+        :user="selectedUser"
+        @close="isUserInfoModalOpen = false"
+      />
+
+      <!-- 포스트 모달 (PostListModal이 있다고 가정) -->
+      <PostListModal
+        :is-open="isPostModalOpen"
+        :title="`${user?.userName}님의 게시글`"
+        :post-list="targetUserPosts"
+        @close="isPostModalOpen = false"
+      />
+
+      <!-- 언팔로우 확인 모달 -->
+      <ConfirmModal
+        :is-open="isConfirmOpen"
+        title="팔로우 취소"
+        :message="`${user?.userName || '사용자'}님을 팔로우 취소하시겠습니까?`"
+        confirm-text="언팔로우"
+        cancel-text="취소"
+        @close="isConfirmOpen = false"
+        @confirm="confirmUnfollow"
+      />
     </div>
   </div>
 </template>
