@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useChallengeStore } from '@/stores/challenge'
+
 import { useToastStore } from '@/stores/toast'
 import { acceptInvitation, rejectInvitation } from '@/services/challengeService'
 import type { ChallengeInvitationResponse } from '@/services/challengeService'

@@ -21,6 +21,7 @@ import {
   getDietListByPeriod,
   getDietDetail,
   type DailyDietResponseItem,
+  type DietDetailItem,
 } from '@/services/dietService'
 
 const route = useRoute()
@@ -73,7 +74,7 @@ const openChallengeLog = async () => {
 
     // API 응답 필드 불일치 가능성 처리 (details vs dietDetails)
     let mappedList =
-      list?.map((item: DailyDietResponseItem & { dietDetails?: any[] }) => ({
+      list?.map((item: DailyDietResponseItem & { dietDetails?: DietDetailItem[] }) => ({
         ...item,
         details: item.details || item.dietDetails || [],
       })) || []
