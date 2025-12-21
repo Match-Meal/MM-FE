@@ -180,6 +180,7 @@ const maxStreak = computed(() => {
               <span class="font-bold text-xs text-gray-700">식단 기록</span>
             </div>
             <div
+              @click="router.push('/ai-chatbot')"
               class="bg-white p-3 py-4 rounded-2xl shadow-md flex flex-col items-center gap-2 cursor-pointer hover:scale-[1.02] transition active:scale-95"
             >
               <span class="text-2xl bg-blue-100 p-2 rounded-full">🤖</span>
