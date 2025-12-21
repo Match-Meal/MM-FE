@@ -73,7 +73,7 @@ const handleWithdrawConfirm = async () => {
   try {
     await authStore.withdraw()
     // withdraw calls logout on success
-  } catch (e) {
+  } catch {
     alert('탈퇴 처리에 실패했습니다. 다시 시도해주세요.')
   }
 }
