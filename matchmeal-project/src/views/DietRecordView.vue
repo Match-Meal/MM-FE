@@ -16,18 +16,19 @@ import { createFood, type CreateFoodPayload } from '@/services/foodService'
 import { storeToRefs } from 'pinia'
 import { useChallengeStore } from '@/stores/challenge'
 import { useToastStore } from '@/stores/toast'
-import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import { useConfirmStore } from '@/stores/confirm' // Added
 
 const route = useRoute()
 const router = useRouter()
 const dietStore = useDietStore()
 const challengeStore = useChallengeStore()
 const toastStore = useToastStore()
+const confirmStore = useConfirmStore() // Added
 const { currentDiet } = storeToRefs(dietStore)
 
 const isEditMode = computed(() => !!route.params.id)
 const isLoading = ref(false)
-const isDeleteModalOpen = ref(false)
+// const isDeleteModalOpen = ref(false) // Removed
 
 // AI Analysis State
 const isAnalyzing = ref(false)
@@ -263,23 +264,18 @@ const saveDiet = async () => {
   }
 }
 
-const handleDeleteClick = () => {
-  isDeleteModalOpen.value = true
-}
-
-const handleConfirmDelete = async () => {
-  if (currentDiet.value.dietId) {
+const handleDeleteClick = async () => {
+  const isConfirmed = await confirmStore.show('정말 삭제하시겠습니까?', '식단 삭제', '삭제', '취소')
+  if (isConfirmed && currentDiet.value.dietId) {
     try {
       await deleteDiet(currentDiet.value.dietId)
       await challengeStore.fetchMyChallenges()
-      await challengeStore.updateAllMyChallengesProgress() // [Added] 로컬 재계산
+      await challengeStore.updateAllMyChallengesProgress()
       toastStore.show('삭제되었습니다.')
       router.replace('/diet')
     } catch (e) {
       console.error(e)
       toastStore.show('삭제에 실패했습니다.')
-    } finally {
-      isDeleteModalOpen.value = false
     }
   }
 }
@@ -372,7 +368,9 @@ const addManualFood = async () => {
       foodId = await createFood(payload)
     } catch (e) {
       console.error('음식 사전 저장 실패:', e)
-      if (!confirm('음식 사전에 저장하지 못했습니다. 식단에는 추가하시겠습니까?')) {
+      if (
+        !(await confirmStore.show('음식 사전에 저장하지 못했습니다.\n식단에는 추가하시겠습니까?'))
+      ) {
         return
       }
     }
@@ -826,16 +824,6 @@ const cancelAnalysis = () => {
         </div>
       </div>
     </div>
-
-    <!-- Confirm Modal -->
-    <ConfirmModal
-      :is-open="isDeleteModalOpen"
-      title="식단 삭제"
-      message="정말로 삭제하시겠습니까?"
-      confirm-text="삭제"
-      @close="isDeleteModalOpen = false"
-      @confirm="handleConfirmDelete"
-    />
   </div>
 </template>
 

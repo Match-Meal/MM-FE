@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useChallengeStore } from '@/stores/challenge'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
+import { useConfirmStore } from '@/stores/confirm' // Added
 import type { ChallengeCreateRequest } from '@/services/challengeService'
 
 import ChallengeCreateForm from '@/components/ChallengeCreateForm.vue'
@@ -29,6 +30,7 @@ const router = useRouter()
 const challengeStore = useChallengeStore()
 const authStore = useAuthStore()
 const toastStore = useToastStore()
+const confirmStore = useConfirmStore() // Added
 
 const challengeId = Number(route.params.id)
 
@@ -131,7 +133,7 @@ const handleDeleteClick = () => {
 }
 
 const handleLeaveClick = () => {
-  handleLeave()
+  handleQuit()
   isMenuOpen.value = false
 }
 
@@ -196,10 +198,18 @@ const editInitialData = computed((): ChallengeCreateRequest | undefined => {
   }
 })
 
-// 삭제 핸들러
+// 챌린지 삭제 (방장 전용)
 const handleDelete = async () => {
-  if (!confirm('정말 챌린지를 삭제하시겠습니까? 모든 데이터가 사라집니다.')) return
-
+  if (!challenge.value) return
+  if (
+    !(await confirmStore.show(
+      '챌린지를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.',
+      '챌린지 삭제',
+      '삭제',
+      '취소',
+    ))
+  )
+    return
   try {
     await deleteChallenge(challengeId)
     toastStore.show('챌린지가 삭제되었습니다.', 'info')
@@ -210,10 +220,16 @@ const handleDelete = async () => {
   }
 }
 
-// 나가기 핸들러
-const handleLeave = async () => {
-  if (!confirm('챌린지를 그만두시겠습니까? 현재까지의 기록은 유지되지 않을 수 있습니다.')) return
-
+// 챌린지 나가기
+const handleQuit = async () => {
+  if (!challenge.value) return
+  if (
+    !(await confirmStore.show(
+      '정말 챌린지를 포기하시겠습니까?\n중도 포기 시 기록은 유지되지만 순위에서 제외됩니다.',
+      '챌린지 포기',
+    ))
+  )
+    return
   try {
     await leaveChallenge(challengeId)
     toastStore.show('챌린지에서 나갔습니다.', 'info')
@@ -226,8 +242,8 @@ const handleLeave = async () => {
 
 // 참여 핸들러
 const handleJoin = async () => {
-  if (!confirm('이 챌린지에 참여하시겠습니까?')) return
-
+  if (!challenge.value) return
+  if (!(await confirmStore.show('이 챌린지에 참여하시겠습니까?'))) return
   try {
     const result = await joinChallenge(challengeId)
     if (result) {

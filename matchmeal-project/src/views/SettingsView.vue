@@ -3,12 +3,14 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useToastStore } from '@/stores/toast'
+import { useConfirmStore } from '@/stores/confirm' // Added
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import axios from 'axios'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const toastStore = useToastStore()
+const confirmStore = useConfirmStore() // Added
 
 // 공개 설정 상태 (임시: 실제 백엔드 연동 시 store 값으로 초기화)
 const isPublic = ref(true)
@@ -53,29 +55,30 @@ const togglePrivacy = async () => {
   }
 }
 
-// 모달 상태
-const isLogoutModalOpen = ref(false)
-const isWithdrawModalOpen = ref(false)
-
-const openLogoutModal = () => {
-  isLogoutModalOpen.value = true
-}
-
-const openWithdrawModal = () => {
-  isWithdrawModalOpen.value = true
-}
-
-const handleLogoutConfirm = () => {
-  authStore.logout()
+// 로그아웃 핸들러
+const handleLogout = async () => {
+  const isConfirmed = await confirmStore.show('정말 로그아웃 하시겠습니까?')
+  if (!isConfirmed) return
+  await authStore.logout()
   // router.replace 처리 등이 authStore.logout 내부에 있거나 여기서 처리
   // authStore now handles redirect
 }
+// 회원 탈퇴 핸들러
+const handleWithdraw = async () => {
+  const isConfirmed = await confirmStore.show(
+    '정말 탈퇴하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.',
+    '회원 탈퇴',
+    '탈퇴하기',
+    '취소',
+  )
+  if (!isConfirmed) return
 
-const handleWithdrawConfirm = async () => {
   try {
     await authStore.withdraw()
-    // withdraw calls logout on success
-  } catch {
+    toastStore.show('회원 탈퇴가 완료되었습니다.', 'success')
+    router.push('/login')
+  } catch (e) {
+    console.error(e)
     toastStore.show('탈퇴 처리에 실패했습니다. 다시 시도해주세요.', 'error')
   }
 }
@@ -157,42 +160,20 @@ const handleWithdrawConfirm = async () => {
         <!-- 로그아웃 버튼 -->
         <div class="p-6 mt-4">
           <button
-            @click="openLogoutModal"
-            class="w-full py-4 text-gray-500 font-bold bg-gray-100 rounded-xl hover:bg-gray-200 transition mb-3"
+            @click="handleLogout"
+            class="w-full bg-gray-100 py-4 rounded-xl flex items-center justify-center gap-2 font-bold text-gray-700 hover:bg-gray-200 transition mb-3"
           >
+            <span class="text-xl">🚪</span>
             로그아웃
           </button>
 
           <button
-            @click="openWithdrawModal"
+            @click="handleWithdraw"
             class="w-full py-4 text-xs text-gray-400 font-medium underline"
           >
             회원 탈퇴
           </button>
         </div>
-
-        <!-- Modals -->
-        <ConfirmModal
-          :is-open="isLogoutModalOpen"
-          title="로그아웃"
-          message="정말 로그아웃 하시겠습니까?"
-          confirm-text="로그아웃"
-          @close="isLogoutModalOpen = false"
-          @confirm="handleLogoutConfirm"
-        />
-
-        <ConfirmModal
-          :is-open="isWithdrawModalOpen"
-          title="회원 탈퇴"
-          message="정말 탈퇴하시겠습니까?
-          
-탈퇴 시 계정은 3개월간 보관되며,
-이 기간 내에 로그인하면 복구할 수 있습니다.
-3개월 후에는 모든 데이터가 영구 삭제됩니다."
-          confirm-text="탈퇴하기"
-          @close="isWithdrawModalOpen = false"
-          @confirm="handleWithdrawConfirm"
-        />
       </main>
     </div>
   </div>

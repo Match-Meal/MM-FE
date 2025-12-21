@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useChallengeStore } from '@/stores/challenge'
 import { useToastStore } from '@/stores/toast'
+import { useConfirmStore } from '@/stores/confirm' // Added
 import type { ChallengeCreateRequest } from '@/services/challengeService'
 
 const router = useRouter()
@@ -16,6 +17,7 @@ import InviteCheckModal from '@/components/InviteCheckModal.vue' // Added
 
 const challengeStore = useChallengeStore()
 const toastStore = useToastStore()
+const confirmStore = useConfirmStore() // Added
 
 // 탭 및 필터 상태
 const activeTab = ref<'my' | 'explore'>('my')
@@ -85,7 +87,7 @@ const handleCreateSubmit = async (payload: ChallengeCreateRequest) => {
 
 // 참여
 const handleJoin = async (id: number) => {
-  if (!confirm('정말 참여하시겠습니까?')) return
+  if (!(await confirmStore.show('정말 참여하시겠습니까?'))) return
   try {
     await challengeStore.joinChallenge(id)
     toastStore.show('참여 완료! 파이팅입니다 🔥', 'success')

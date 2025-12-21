@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { useChallengeStore } from '@/stores/challenge' // 챌린지 스토어
+import { useConfirmStore } from '@/stores/confirm' // Added
 import { useRouter } from 'vue-router'
 import { getDailyDiets } from '@/services/dietService'
 import dayjs from 'dayjs'
@@ -11,6 +12,7 @@ import BottomNav from '@/components/common/BottomNav.vue'
 const authStore = useAuthStore()
 const toastStore = useToastStore()
 const challengeStore = useChallengeStore()
+const confirmStore = useConfirmStore() // Added
 const router = useRouter()
 
 const todayCalories = ref(0)
@@ -82,8 +84,8 @@ const saveTargetCalories = () => {
 }
 
 // 로그아웃 처리
-const handleLogout = () => {
-  if (confirm('로그아웃 하시겠습니까?')) {
+const handleLogout = async () => {
+  if (await confirmStore.show('로그아웃 하시겠습니까?')) {
     authStore.logout()
     router.replace('/login')
   }
