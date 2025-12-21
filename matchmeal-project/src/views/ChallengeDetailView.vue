@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useChallengeStore } from '@/stores/challenge'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
+import { useConfirmStore } from '@/stores/confirm' // Added
 import type { ChallengeCreateRequest } from '@/services/challengeService'
 
 import ChallengeCreateForm from '@/components/ChallengeCreateForm.vue'
@@ -29,6 +30,7 @@ const router = useRouter()
 const challengeStore = useChallengeStore()
 const authStore = useAuthStore()
 const toastStore = useToastStore()
+const confirmStore = useConfirmStore() // Added
 
 const challengeId = Number(route.params.id)
 
@@ -114,57 +116,11 @@ const handleDietModalClose = () => {
 }
 
 // [Added] 프론트엔드 진행률 재계산 로직
-const realProgressPercent = ref(0)
-const realSuccessCount = ref(0) // 실제 성공 횟수
+// [Modified] 로컬 계산 로직 제거 -> Store의 updateChallengeProgress 사용
+// const realProgressPercent = ref(0)
+// const realSuccessCount = ref(0)
 
-const fetchAndCalculateProgress = async () => {
-  if (!challenge.value?.isJoined) return
-
-  try {
-    // 1. 전체 기간 식단 가져오기
-    const diets = await getDietListByPeriod(
-      challenge.value.startDate,
-      challenge.value.endDate,
-      authStore.user?.id,
-    )
-
-    if (!diets) return
-
-    // 2. 일별 그룹핑 및 칼로리 계산
-    const dailyMap: Record<string, number> = {}
-    diets.forEach((d) => {
-      const date = d.eatDate
-      dailyMap[date] = (dailyMap[date] || 0) + d.totalCalories
-    })
-
-    // 3. 성공 여부 카운트
-    let successCount = 0
-    const target = challenge.value.targetValue
-
-    // 챌린지 타입별 성공 조건 체크
-    if (challenge.value.type === 'CALORIE_LIMIT') {
-      Object.values(dailyMap).forEach((cal) => {
-        if (cal <= target) successCount++
-      })
-    } else if (challenge.value.type === 'RECORD_FREQUENCY') {
-      successCount = Object.keys(dailyMap).length
-    } else {
-      successCount = Object.keys(dailyMap).length
-    }
-
-    realSuccessCount.value = successCount
-    realProgressPercent.value = Math.min(
-      100,
-      Math.round((successCount / challenge.value.goalCount) * 100),
-    )
-  } catch (e) {
-    console.error('Progress calculation failed', e)
-    if (challenge.value) {
-      realProgressPercent.value = challenge.value.progressPercent
-      realSuccessCount.value = challenge.value.currentCount
-    }
-  }
-}
+// const fetchAndCalculateProgress = ... (removed)
 
 const handleEditClick = () => {
   showEditModal.value = true
@@ -177,7 +133,7 @@ const handleDeleteClick = () => {
 }
 
 const handleLeaveClick = () => {
-  handleLeave()
+  handleQuit()
   isMenuOpen.value = false
 }
 
@@ -187,12 +143,16 @@ onMounted(async () => {
   }
 
   await challengeStore.fetchChallengeDetail(challengeId)
-  await fetchAndCalculateProgress()
+  if (challenge.value?.isJoined) {
+    await challengeStore.updateChallengeProgress(challengeId)
+  }
 })
 
 onActivated(async () => {
   await challengeStore.fetchChallengeDetail(challengeId)
-  await fetchAndCalculateProgress()
+  if (challenge.value?.isJoined) {
+    await challengeStore.updateChallengeProgress(challengeId)
+  }
 })
 
 // 방장 여부 확인 (내 ID와 챌린지 Owner ID 비교)
@@ -238,10 +198,18 @@ const editInitialData = computed((): ChallengeCreateRequest | undefined => {
   }
 })
 
-// 삭제 핸들러
+// 챌린지 삭제 (방장 전용)
 const handleDelete = async () => {
-  if (!confirm('정말 챌린지를 삭제하시겠습니까? 모든 데이터가 사라집니다.')) return
-
+  if (!challenge.value) return
+  if (
+    !(await confirmStore.show(
+      '챌린지를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.',
+      '챌린지 삭제',
+      '삭제',
+      '취소',
+    ))
+  )
+    return
   try {
     await deleteChallenge(challengeId)
     toastStore.show('챌린지가 삭제되었습니다.', 'info')
@@ -252,10 +220,16 @@ const handleDelete = async () => {
   }
 }
 
-// 나가기 핸들러
-const handleLeave = async () => {
-  if (!confirm('챌린지를 그만두시겠습니까? 현재까지의 기록은 유지되지 않을 수 있습니다.')) return
-
+// 챌린지 나가기
+const handleQuit = async () => {
+  if (!challenge.value) return
+  if (
+    !(await confirmStore.show(
+      '정말 챌린지를 포기하시겠습니까?\n중도 포기 시 기록은 유지되지만 순위에서 제외됩니다.',
+      '챌린지 포기',
+    ))
+  )
+    return
   try {
     await leaveChallenge(challengeId)
     toastStore.show('챌린지에서 나갔습니다.', 'info')
@@ -268,8 +242,8 @@ const handleLeave = async () => {
 
 // 참여 핸들러
 const handleJoin = async () => {
-  if (!confirm('이 챌린지에 참여하시겠습니까?')) return
-
+  if (!challenge.value) return
+  if (!(await confirmStore.show('이 챌린지에 참여하시겠습니까?'))) return
   try {
     const result = await joinChallenge(challengeId)
     if (result) {
@@ -382,16 +356,18 @@ const handleJoin = async () => {
         >
           <div class="text-center p-5 bg-gray-50 rounded-2xl border border-gray-100">
             <div class="text-xs text-gray-500 font-bold mb-1">현재 달성률</div>
-            <div class="text-3xl font-black text-blue-600 mb-3">{{ realProgressPercent }}%</div>
+            <div class="text-3xl font-black text-blue-600 mb-3">
+              {{ challenge.progressPercent }}%
+            </div>
             <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
               <div
                 class="h-full bg-blue-500 rounded-full transition-all duration-1000"
-                :style="{ width: `${realProgressPercent}%` }"
+                :style="{ width: `${challenge.progressPercent}%` }"
               ></div>
             </div>
             <div class="flex justify-between mt-2 text-[10px] text-gray-400 font-bold">
               <span>0%</span>
-              <span>성공 {{ realSuccessCount }} / {{ challenge.goalCount }}회</span>
+              <span>성공 {{ challenge.currentCount }} / {{ challenge.goalCount }}회</span>
               <span>100%</span>
             </div>
           </div>

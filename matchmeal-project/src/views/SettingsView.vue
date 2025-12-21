@@ -2,10 +2,15 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useToastStore } from '@/stores/toast'
+import { useConfirmStore } from '@/stores/confirm' // Added
+
 import axios from 'axios'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const toastStore = useToastStore()
+const confirmStore = useConfirmStore() // Added
 
 // 공개 설정 상태 (임시: 실제 백엔드 연동 시 store 값으로 초기화)
 const isPublic = ref(true)
@@ -46,14 +51,35 @@ const togglePrivacy = async () => {
 
     // 4. 실패 시 UI 원복 (롤백)
     isPublic.value = previousValue
-    alert('설정 변경에 실패했습니다. 다시 시도해주세요.')
+    toastStore.show('설정 변경에 실패했습니다. 다시 시도해주세요.', 'error')
   }
 }
 
-const handleLogout = () => {
-  if (confirm('정말 로그아웃 하시겠습니까?')) {
-    authStore.logout()
-    router.replace('/login')
+// 로그아웃 핸들러
+const handleLogout = async () => {
+  const isConfirmed = await confirmStore.show('정말 로그아웃 하시겠습니까?')
+  if (!isConfirmed) return
+  await authStore.logout()
+  // router.replace 처리 등이 authStore.logout 내부에 있거나 여기서 처리
+  // authStore now handles redirect
+}
+// 회원 탈퇴 핸들러
+const handleWithdraw = async () => {
+  const isConfirmed = await confirmStore.show(
+    '정말 탈퇴하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.',
+    '회원 탈퇴',
+    '탈퇴하기',
+    '취소',
+  )
+  if (!isConfirmed) return
+
+  try {
+    await authStore.withdraw()
+    toastStore.show('회원 탈퇴가 완료되었습니다.', 'success')
+    router.push('/login')
+  } catch (e) {
+    console.error(e)
+    toastStore.show('탈퇴 처리에 실패했습니다. 다시 시도해주세요.', 'error')
   }
 }
 </script>
@@ -135,9 +161,17 @@ const handleLogout = () => {
         <div class="p-6 mt-4">
           <button
             @click="handleLogout"
-            class="w-full py-4 text-red-500 font-bold bg-red-50 rounded-xl hover:bg-red-100 transition"
+            class="w-full bg-gray-100 py-4 rounded-xl flex items-center justify-center gap-2 font-bold text-gray-700 hover:bg-gray-200 transition mb-3"
           >
+            <span class="text-xl">🚪</span>
             로그아웃
+          </button>
+
+          <button
+            @click="handleWithdraw"
+            class="w-full py-4 text-xs text-gray-400 font-medium underline"
+          >
+            회원 탈퇴
           </button>
         </div>
       </main>

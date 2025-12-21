@@ -8,9 +8,9 @@ const route = useRoute()
 const currentPath = computed(() => route.path)
 
 const navItems = [
-  { path: '/', icon: '🏠', label: '홈' },
   { path: '/diet', icon: '🍽️', label: '식단' },
   { path: '/challenge', icon: '🔥', label: '챌린지' },
+  { path: '/home', icon: '🏠', label: '홈' },
   { path: '/community', icon: '💬', label: '커뮤니티' },
   { path: '/profile', icon: '👤', label: 'MY' },
 ]

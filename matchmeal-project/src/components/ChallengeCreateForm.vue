@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useToastStore } from '@/stores/toast'
 import type { ChallengeCreateRequest } from '@/services/challengeService'
 
 // Props 정의
@@ -13,6 +14,8 @@ const emit = defineEmits<{
   (e: 'close'): void
   (e: 'submit', payload: ChallengeCreateRequest): void
 }>()
+
+const toastStore = useToastStore()
 
 // 폼 초기 상태
 const form = ref<ChallengeCreateRequest>({
@@ -60,23 +63,23 @@ const targetLabel = computed(() => {
 const handleSubmit = () => {
   // 1. 제목 검증
   if (!form.value.title.trim()) {
-    return alert('제목을 입력해주세요.')
+    return toastStore.show('제목을 입력해주세요.', 'warning')
   }
 
   // 2. 날짜 검증
   if (!form.value.startDate || !form.value.endDate) {
-    return alert('시작일과 종료일을 모두 설정해주세요.')
+    return toastStore.show('시작일과 종료일을 모두 설정해주세요.', 'warning')
   }
   if (form.value.startDate > form.value.endDate) {
-    return alert('종료일은 시작일보다 빠를 수 없습니다.')
+    return toastStore.show('종료일은 시작일보다 빠를 수 없습니다.', 'warning')
   }
 
   // 3. 수치 검증
   if (form.value.targetValue < 0) {
-    return alert('목표 수치는 0 이상이어야 합니다.')
+    return toastStore.show('목표 수치는 0 이상이어야 합니다.', 'warning')
   }
   if (form.value.goalCount < 1) {
-    return alert('성공 목표일은 최소 1일 이상이어야 합니다.')
+    return toastStore.show('성공 목표일은 최소 1일 이상이어야 합니다.', 'warning')
   }
 
   // 데이터 전송

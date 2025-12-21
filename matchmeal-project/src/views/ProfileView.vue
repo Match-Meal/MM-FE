@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { useToastStore } from '@/stores/toast'
 import { useRouter } from 'vue-router'
 import apiClient from '@/services/apiClient'
 import FollowListModal, { type FollowUser } from '@/components/FollowListModal.vue'
 import UserInfoModal from '@/components/UserInfoModal.vue'
 import PostListModal from '@/components/PostListModal.vue'
 import { getPosts, type PostListItem, type PostUser } from '@/services/communityService'
+import BottomNav from '@/components/common/BottomNav.vue'
 
 const authStore = useAuthStore()
+const toastStore = useToastStore()
 const router = useRouter()
 
 interface ApiFollowerDto {
@@ -62,7 +65,6 @@ const openPostModal = () => {
 
 const goToEditProfile = () => router.push('/profile-form')
 const goToSettings = () => router.push('/settings')
-const navigateTo = (path: string) => router.push(path)
 
 // 팔로우 모달
 const openFollowModal = async (type: 'follower' | 'following') => {
@@ -156,7 +158,7 @@ const handleModalFollowToggle = async (targetUser: FollowUser) => {
     if (authStore.user) {
       authStore.user.followingCount = originalFollowingCount
     }
-    alert('요청 처리에 실패했습니다.')
+    toastStore.show('요청 처리에 실패했습니다.', 'error')
   }
 }
 
@@ -348,34 +350,7 @@ const bmiPercent = computed(() => {
         </div>
       </main>
 
-      <nav
-        class="h-[88px] bg-white border-t flex justify-around pb-6 pt-2 text-[10px] z-20 shadow-[0_-5px_10px_rgba(0,0,0,0.02)]"
-      >
-        <div
-          @click="navigateTo('/home')"
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-        >
-          <span class="text-2xl mb-1">🏠</span>홈
-        </div>
-        <div
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-        >
-          <span class="text-2xl mb-1">🍽️</span>식단
-        </div>
-        <div
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-        >
-          <span class="text-2xl mb-1">🔥</span>챌린지
-        </div>
-        <div
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-        >
-          <span class="text-2xl mb-1">💬</span>커뮤니티
-        </div>
-        <div class="nav-item flex flex-col items-center cursor-pointer text-blue-600 font-bold">
-          <span class="text-2xl mb-1">👤</span>MY
-        </div>
-      </nav>
+      <BottomNav />
 
       <!-- 모달 컴포넌트 사용 -->
       <FollowListModal

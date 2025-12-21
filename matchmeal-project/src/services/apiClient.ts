@@ -7,6 +7,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // [Added] 세션 쿠키(JSESSIONID) 전달을 위해 필수
 })
 
 // 2. 요청 인터셉터(interceptor) 설정
