@@ -18,6 +18,7 @@ import {
   type FollowerResponse,
   type ChallengeInvitationResponse, // Added
 } from '@/services/challengeService'
+import { getDietListByPeriod } from '@/services/dietService' // [Added]
 
 export const useChallengeStore = defineStore('challenge', () => {
   const myChallenges = ref<ChallengeResponse[]>([])
@@ -134,6 +135,94 @@ export const useChallengeStore = defineStore('challenge', () => {
     }
   }
 
+  // [Added] 특정 챌린지 진행률 로컬 재계산 logic (Backend Sync 이슈 대응)
+  const updateChallengeProgress = async (challengeId: number) => {
+    // 타겟 챌린지 찾기
+    const target = myChallenges.value.find((c) => c.challengeId === challengeId)
+    // 혹은 디테일 뷰라면 currentChallenge
+    if (!target && currentChallenge.value?.challengeId !== challengeId) return
+
+    const challengeRef = target || currentChallenge.value
+    if (!challengeRef) return
+
+    // 계산 로직 (ChallengeDetailView와 동일)
+    try {
+      const diets = await getDietListByPeriod(
+        challengeRef.startDate,
+        challengeRef.endDate,
+        authStore.user?.id,
+      )
+
+      if (!diets) return
+
+      // 일별 그룹핑 및 칼로리 계산
+      const dailyMap: Record<string, number> = {}
+      diets.forEach((d) => {
+        const date = d.eatDate
+        dailyMap[date] = (dailyMap[date] || 0) + d.totalCalories
+      })
+
+      let successCount = 0
+      const goal = challengeRef.targetValue
+
+      if (challengeRef.type === 'CALORIE_LIMIT') {
+        Object.values(dailyMap).forEach((cal) => {
+          if (cal <= goal) successCount++
+        })
+      } else {
+        // RECORD_FREQUENCY, TIME_RANGE 등은 단순히 기록 유무로 판단 (임시)
+        successCount = Object.keys(dailyMap).length
+      }
+
+      // 상태 업데이트
+      challengeRef.currentCount = successCount
+      challengeRef.progressPercent = Math.min(
+        100,
+        Math.round((successCount / challengeRef.goalCount) * 100),
+      )
+
+      console.log(`[Store] Updated Challenge ${challengeId}:`, {
+        dietsCount: diets.length,
+        successCount,
+        goalCount: challengeRef.goalCount,
+        newPercent: challengeRef.progressPercent,
+      })
+
+      // 만약 currentChallenge도 같은 ID라면 동기화
+      if (currentChallenge.value?.challengeId === challengeId && target) {
+        currentChallenge.value.currentCount = target.currentCount
+        currentChallenge.value.progressPercent = target.progressPercent
+      }
+
+      // [Added] participants 리스트 내의 내 정보도 업데이트 (상세 페이지 리스트 반영용)
+      if (challengeRef.participants && authStore.user) {
+        const myInfo = challengeRef.participants.find((p) => p.userId === authStore.user?.id)
+        if (myInfo) {
+          console.log('[Store] Updating my participant info:', myInfo.userName)
+          myInfo.progressPercent = Math.min(
+            100,
+            Math.round((successCount / challengeRef.goalCount) * 100),
+          )
+        } else {
+          console.warn(
+            '[Store] My info not found in participants. My ID:',
+            authStore.user?.id,
+            'Participants:',
+            challengeRef.participants,
+          )
+        }
+      }
+    } catch (e) {
+      console.error(`Failed to recalc progress for challenge ${challengeId}`, e)
+    }
+  }
+
+  // [Added] 내 모든 챌린지 진행률 업데이트
+  const updateAllMyChallengesProgress = async () => {
+    if (myChallenges.value.length === 0) return
+    await Promise.all(myChallenges.value.map((c) => updateChallengeProgress(c.challengeId)))
+  }
+
   // [Added] 리턴에 포함
   return {
     myChallenges,
@@ -151,6 +240,9 @@ export const useChallengeStore = defineStore('challenge', () => {
     fetchPublicChallenges,
     joinChallenge,
     joinPrivateChallenge,
+
     createChallenge,
+    updateChallengeProgress, // Added
+    updateAllMyChallengesProgress, // Added
   }
 })

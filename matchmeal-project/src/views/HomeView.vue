@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { useToastStore } from '@/stores/toast'
 import { useChallengeStore } from '@/stores/challenge' // 챌린지 스토어
 import { useRouter } from 'vue-router'
 import { getDailyDiets } from '@/services/dietService'
 import dayjs from 'dayjs'
+import BottomNav from '@/components/common/BottomNav.vue'
 
 const authStore = useAuthStore()
+const toastStore = useToastStore()
 const challengeStore = useChallengeStore()
 const router = useRouter()
 
@@ -32,7 +35,12 @@ onMounted(async () => {
   // 데이터 로드 병렬 처리 (오늘 칼로리 + 내 챌린지 목록)
   await Promise.all([
     fetchTodayCalories(),
-    challengeStore.fetchMyChallenges(), // 내 챌린지 목록 불러오기
+    // [Safe Check] store method exist?
+    challengeStore.fetchMyChallenges().then(() => {
+      if (challengeStore.updateAllMyChallengesProgress) {
+        challengeStore.updateAllMyChallengesProgress()
+      }
+    }),
   ])
 })
 
@@ -69,7 +77,7 @@ const saveTargetCalories = () => {
     localStorage.setItem('targetCalories', editingTarget.value.toString())
     closeTargetModal()
   } else {
-    alert('올바른 숫자를 입력해주세요.')
+    toastStore.show('올바른 숫자를 입력해주세요.', 'warning')
   }
 }
 
@@ -248,41 +256,7 @@ const maxStreak = computed(() => {
         </div>
       </div>
 
-      <nav
-        class="h-[88px] bg-white border-t flex justify-around pb-6 pt-2 text-[10px] z-20 shadow-[0_-5px_10px_rgba(0,0,0,0.02)]"
-      >
-        <div class="nav-item flex flex-col items-center cursor-pointer text-blue-600 font-bold">
-          <span class="text-2xl mb-1">🏠</span>홈
-        </div>
-
-        <div
-          @click="router.push('/diet')"
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-        >
-          <span class="text-2xl mb-1">🍽️</span>식단
-        </div>
-
-        <div
-          @click="router.push('/challenge')"
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-        >
-          <span class="text-2xl mb-1">🔥</span>챌린지
-        </div>
-
-        <div
-          @click="router.push('/community')"
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-        >
-          <span class="text-2xl mb-1">💬</span>커뮤니티
-        </div>
-
-        <div
-          @click="router.push('/profile')"
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-        >
-          <span class="text-2xl mb-1">👤</span>MY
-        </div>
-      </nav>
+      <BottomNav />
 
       <div
         v-if="showTargetModal"

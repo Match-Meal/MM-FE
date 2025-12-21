@@ -10,6 +10,7 @@ import {
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/ko'
+import BottomNav from '@/components/common/BottomNav.vue'
 
 defineOptions({
   name: 'CommunityMainView',
@@ -364,43 +365,8 @@ onBeforeRouteLeave((to, from, next) => {
         ✏️
       </button>
 
-      <!-- Bottom Nav (Placeholder for layout consistency) -->
-      <nav
-        class="h-[88px] bg-white border-t flex justify-around pb-6 pt-2 text-[10px] z-20 shadow-[0_-5px_10px_rgba(0,0,0,0.02)] shrink-0"
-      >
-        <div
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-          @click="router.push('/')"
-        >
-          <span class="text-2xl mb-1">🏠</span>홈
-        </div>
-
-        <div
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-          @click="router.push('/diet')"
-        >
-          <span class="text-2xl mb-1">🍽️</span>식단
-        </div>
-
-        <div
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-        >
-          <span class="text-2xl mb-1">🔥</span>챌린지
-        </div>
-
-        <div
-          class="nav-item flex flex-col items-center cursor-pointer text-blue-600 font-bold transition"
-        >
-          <span class="text-2xl mb-1">💬</span>커뮤니티
-        </div>
-
-        <div
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-          @click="router.push('/profile')"
-        >
-          <span class="text-2xl mb-1">👤</span>MY
-        </div>
-      </nav>
+      <!-- Bottom Nav -->
+      <BottomNav />
     </div>
   </div>
 </template>

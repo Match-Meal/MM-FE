@@ -52,7 +52,7 @@ onMounted(async () => {
 
     // isMine이 false이면 수정 권한이 없으므로 되돌려 보냄
     if (!existingFood.isMine) {
-      alert('수정 권한이 없습니다.')
+      toastStore.show('수정 권한이 없습니다.', 'error')
       router.back()
       return
     }

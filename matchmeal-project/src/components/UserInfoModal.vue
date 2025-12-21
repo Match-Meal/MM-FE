@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import apiClient from '@/services/apiClient'
 import { useAuthStore } from '@/stores/auth'
 import type { PostUser } from '@/services/communityService'
 import type { FollowUser } from '@/components/FollowListModal.vue'
@@ -40,6 +41,24 @@ const goToProfile = () => {
   }
 }
 
+const checkFollowStatus = async () => {
+  isChecking.value = true
+  try {
+    if (!authStore.user) return
+
+    // 내 팔로잉 목록을 가져와서 확인 (기존 ProfileView 로직 활용)
+    // [Modified] axios -> apiClient 변경 (인증 헤더 자동 포함)
+    const response = await apiClient.get(`/user/${authStore.user.id}/followings`)
+    const followingList = response.data.data
+    const found = followingList.find((u: FollowUser) => u.userId === props.user.userId)
+    isFollowing.value = !!found
+  } catch (e) {
+    console.error('Follow status check failed', e)
+  } finally {
+    isChecking.value = false
+  }
+}
+
 // 모달이 열릴 때마다 팔로우 상태 확인
 watch(
   () => props.isOpen,
@@ -53,26 +72,8 @@ watch(
       await checkFollowStatus()
     }
   },
+  { immediate: true },
 )
-
-const checkFollowStatus = async () => {
-  isChecking.value = true
-  try {
-    if (!authStore.user) return
-
-    // 내 팔로잉 목록을 가져와서 확인 (기존 ProfileView 로직 활용)
-    const response = await axios.get<{ data: FollowUser[] }>(
-      `http://localhost:8080/user/${authStore.user.id}/followings`,
-    )
-    const followingList = response.data.data
-    const found = followingList.find((u) => u.userId === props.user.userId)
-    isFollowing.value = !!found
-  } catch (e) {
-    console.error('Follow status check failed', e)
-  } finally {
-    isChecking.value = false
-  }
-}
 
 const toggleFollow = async () => {
   if (!authStore.user) {
@@ -82,7 +83,8 @@ const toggleFollow = async () => {
 
   isLoading.value = true
   try {
-    const response = await axios.post(`http://localhost:8080/user/${props.user.userId}/follow`)
+    // [Modified] axios -> apiClient
+    const response = await apiClient.post(`/user/${props.user.userId}/follow`)
     const result = response.data.data // CommonResponse의 data
 
     // 응답으로 상태 업데이트
@@ -146,13 +148,15 @@ const close = () => emit('close')
 
         <div
           v-if="isChecking && user.userId !== authStore.user?.id"
-          class="flex justify-center py-2"
+          class="flex justify-center py-6"
         >
           <div
-            class="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
+            class="w-8 h-8 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"
           ></div>
         </div>
-        <div class="w-full space-y-2">
+
+        <!-- [Modified] 로딩 중에는 버튼 숨김 -->
+        <div v-else class="w-full space-y-2">
           <!-- 팔로우 버튼 (타인일 때만) -->
           <button
             v-if="user.userId !== authStore.user?.id"

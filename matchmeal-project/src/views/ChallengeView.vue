@@ -31,7 +31,11 @@ const showInviteCheckModal = ref(false) // Added
 // 초기 데이터 로드
 onMounted(async () => {
   await Promise.all([
-    challengeStore.fetchMyChallenges(),
+    challengeStore.fetchMyChallenges().then(() => {
+      if (challengeStore.updateAllMyChallengesProgress) {
+        challengeStore.updateAllMyChallengesProgress()
+      }
+    }),
     challengeStore.fetchPublicChallenges(),
     challengeStore.fetchMyInvitations(), // Added
   ])
@@ -159,7 +163,7 @@ const handleCodeSubmit = async (code: string) => {
           </button>
         </div>
 
-        <div v-if="activeTab === 'explore'" class="space-y-3 pb-2 animate-fade-in">
+        <div v-if="activeTab === 'explore'" class="space-y-3 pb-2 px-4 animate-fade-in">
           <div class="relative">
             <input
               v-model="searchKeyword"

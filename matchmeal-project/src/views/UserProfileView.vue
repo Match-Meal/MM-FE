@@ -5,9 +5,11 @@ import { useAuthStore, type User } from '@/stores/auth'
 import apiClient from '@/services/apiClient'
 import UserInfoModal from '@/components/UserInfoModal.vue'
 import FollowListModal, { type FollowUser } from '@/components/FollowListModal.vue'
-import PostListModal from '@/components/PostListModal.vue' // Assuming this exists or was used in original
+import PostListModal from '@/components/PostListModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { getPosts, type PostListItem, type PostUser } from '@/services/communityService'
+import { useToastStore } from '@/stores/toast'
+import BottomNav from '@/components/common/BottomNav.vue'
 
 interface ApiFollowerDto {
   userId: number
@@ -19,6 +21,7 @@ interface ApiFollowerDto {
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const toastStore = useToastStore()
 
 const targetUserId = Number(route.params.id)
 
@@ -100,6 +103,7 @@ const openFollowModal = async (type: 'follower' | 'following') => {
     }))
   } catch (error) {
     console.error('팔로우 목록 조회 실패:', error)
+    toastStore.show('팔로우 목록을 불러오지 못했습니다.', 'error')
   }
 }
 
@@ -175,7 +179,7 @@ const handleModalFollowToggle = async (targetUser: FollowUser) => {
     if (targetUser.userId === targetUserId) {
       isFollowing.value = originalState
     }
-    alert('요청 처리에 실패했습니다.')
+    toastStore.show('요청 처리에 실패했습니다.', 'error')
   }
 }
 
@@ -199,7 +203,7 @@ const fetchUserProfile = async () => {
     }
   } catch (error) {
     console.error('유저 정보 조회 실패:', error)
-    alert('존재하지 않거나 조회할 수 없는 유저입니다.')
+    toastStore.show('존재하지 않거나 조회할 수 없는 유저입니다.', 'error')
     router.back()
   } finally {
     isLoading.value = false
@@ -289,7 +293,7 @@ const processFollowToggle = async () => {
       user.value.followerCount = previousFollowerCount
     }
     if (authStore.user) authStore.user.followingCount = previousMyFollowingCount
-    alert('요청 처리에 실패했습니다.')
+    toastStore.show('요청 처리에 실패했습니다.', 'error')
   }
 }
 
@@ -484,6 +488,8 @@ const goBack = () => router.back()
           </div>
         </template>
       </main>
+
+      <BottomNav />
 
       <!-- 모달 컴포넌트 -->
       <FollowListModal

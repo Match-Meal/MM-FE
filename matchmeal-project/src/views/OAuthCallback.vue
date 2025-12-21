@@ -2,10 +2,12 @@
 import { onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useToastStore } from '@/stores/toast'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const toastStore = useToastStore()
 
 onMounted(async () => {
   // URL 쿼리 파라미터 추출
@@ -38,24 +40,28 @@ onMounted(async () => {
       }
     } catch (e) {
       console.error(e)
-      alert('사용자 정보를 불러오는데 실패했습니다.')
+      toastStore.show('사용자 정보를 불러오는데 실패했습니다.', 'error')
       router.replace('/login')
     }
   } else {
     // 3. 실패 (error=true 등)
-    const message = route.query.message || '로그인에 실패했습니다.'
-    alert(message)
+    const message = (route.query.message as string) || '로그인에 실패했습니다.'
+    toastStore.show(message, 'error')
     router.replace('/login')
   }
 })
 </script>
 
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-white">
-    <div class="text-center">
-      <div class="text-4xl mb-4 animate-spin">🌀</div>
-      <h2 class="text-xl font-bold">로그인 처리 중...</h2>
-      <p class="text-gray-500">잠시만 기다려 주세요.</p>
+  <div class="bg-gray-200 min-h-screen flex items-center justify-center font-sans text-gray-800">
+    <div
+      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-800 flex flex-col items-center justify-center"
+    >
+      <div class="text-center">
+        <div class="text-4xl mb-4 animate-spin">🌀</div>
+        <h2 class="text-xl font-bold">로그인 처리 중...</h2>
+        <p class="text-gray-500">잠시만 기다려 주세요.</p>
+      </div>
     </div>
   </div>
 </template>

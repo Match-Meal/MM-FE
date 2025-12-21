@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useToastStore } from '@/stores/toast'
 
 defineProps<{
   isOpen: boolean
 }>()
 
 const emit = defineEmits(['close', 'submit'])
+const toastStore = useToastStore()
 const code = ref('')
 
 const handleSubmit = () => {
-  if (code.value.length < 1) return alert('코드를 입력해주세요')
+  if (code.value.length < 1) return toastStore.show('코드를 입력해주세요', 'warning')
   emit('submit', code.value)
   code.value = ''
 }

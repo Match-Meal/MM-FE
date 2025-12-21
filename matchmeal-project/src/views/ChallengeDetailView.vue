@@ -114,57 +114,11 @@ const handleDietModalClose = () => {
 }
 
 // [Added] 프론트엔드 진행률 재계산 로직
-const realProgressPercent = ref(0)
-const realSuccessCount = ref(0) // 실제 성공 횟수
+// [Modified] 로컬 계산 로직 제거 -> Store의 updateChallengeProgress 사용
+// const realProgressPercent = ref(0)
+// const realSuccessCount = ref(0)
 
-const fetchAndCalculateProgress = async () => {
-  if (!challenge.value?.isJoined) return
-
-  try {
-    // 1. 전체 기간 식단 가져오기
-    const diets = await getDietListByPeriod(
-      challenge.value.startDate,
-      challenge.value.endDate,
-      authStore.user?.id,
-    )
-
-    if (!diets) return
-
-    // 2. 일별 그룹핑 및 칼로리 계산
-    const dailyMap: Record<string, number> = {}
-    diets.forEach((d) => {
-      const date = d.eatDate
-      dailyMap[date] = (dailyMap[date] || 0) + d.totalCalories
-    })
-
-    // 3. 성공 여부 카운트
-    let successCount = 0
-    const target = challenge.value.targetValue
-
-    // 챌린지 타입별 성공 조건 체크
-    if (challenge.value.type === 'CALORIE_LIMIT') {
-      Object.values(dailyMap).forEach((cal) => {
-        if (cal <= target) successCount++
-      })
-    } else if (challenge.value.type === 'RECORD_FREQUENCY') {
-      successCount = Object.keys(dailyMap).length
-    } else {
-      successCount = Object.keys(dailyMap).length
-    }
-
-    realSuccessCount.value = successCount
-    realProgressPercent.value = Math.min(
-      100,
-      Math.round((successCount / challenge.value.goalCount) * 100),
-    )
-  } catch (e) {
-    console.error('Progress calculation failed', e)
-    if (challenge.value) {
-      realProgressPercent.value = challenge.value.progressPercent
-      realSuccessCount.value = challenge.value.currentCount
-    }
-  }
-}
+// const fetchAndCalculateProgress = ... (removed)
 
 const handleEditClick = () => {
   showEditModal.value = true
@@ -187,12 +141,16 @@ onMounted(async () => {
   }
 
   await challengeStore.fetchChallengeDetail(challengeId)
-  await fetchAndCalculateProgress()
+  if (challenge.value?.isJoined) {
+    await challengeStore.updateChallengeProgress(challengeId)
+  }
 })
 
 onActivated(async () => {
   await challengeStore.fetchChallengeDetail(challengeId)
-  await fetchAndCalculateProgress()
+  if (challenge.value?.isJoined) {
+    await challengeStore.updateChallengeProgress(challengeId)
+  }
 })
 
 // 방장 여부 확인 (내 ID와 챌린지 Owner ID 비교)
@@ -382,16 +340,18 @@ const handleJoin = async () => {
         >
           <div class="text-center p-5 bg-gray-50 rounded-2xl border border-gray-100">
             <div class="text-xs text-gray-500 font-bold mb-1">현재 달성률</div>
-            <div class="text-3xl font-black text-blue-600 mb-3">{{ realProgressPercent }}%</div>
+            <div class="text-3xl font-black text-blue-600 mb-3">
+              {{ challenge.progressPercent }}%
+            </div>
             <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
               <div
                 class="h-full bg-blue-500 rounded-full transition-all duration-1000"
-                :style="{ width: `${realProgressPercent}%` }"
+                :style="{ width: `${challenge.progressPercent}%` }"
               ></div>
             </div>
             <div class="flex justify-between mt-2 text-[10px] text-gray-400 font-bold">
               <span>0%</span>
-              <span>성공 {{ realSuccessCount }} / {{ challenge.goalCount }}회</span>
+              <span>성공 {{ challenge.currentCount }} / {{ challenge.goalCount }}회</span>
               <span>100%</span>
             </div>
           </div>

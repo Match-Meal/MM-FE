@@ -2,11 +2,13 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useToastStore } from '@/stores/toast'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import axios from 'axios'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const toastStore = useToastStore()
 
 // 공개 설정 상태 (임시: 실제 백엔드 연동 시 store 값으로 초기화)
 const isPublic = ref(true)
@@ -47,7 +49,7 @@ const togglePrivacy = async () => {
 
     // 4. 실패 시 UI 원복 (롤백)
     isPublic.value = previousValue
-    alert('설정 변경에 실패했습니다. 다시 시도해주세요.')
+    toastStore.show('설정 변경에 실패했습니다. 다시 시도해주세요.', 'error')
   }
 }
 
@@ -74,7 +76,7 @@ const handleWithdrawConfirm = async () => {
     await authStore.withdraw()
     // withdraw calls logout on success
   } catch {
-    alert('탈퇴 처리에 실패했습니다. 다시 시도해주세요.')
+    toastStore.show('탈퇴 처리에 실패했습니다. 다시 시도해주세요.', 'error')
   }
 }
 </script>
