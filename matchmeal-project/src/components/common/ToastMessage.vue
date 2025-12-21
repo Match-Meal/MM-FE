@@ -7,6 +7,7 @@ const toastStore = useToastStore()
 const typeClass = {
   success: 'bg-green-600/90',
   error: 'bg-red-500/90',
+  warning: 'bg-orange-500/90', // Added
   info: 'bg-gray-800/90',
 }
 </script>
@@ -19,7 +20,15 @@ const typeClass = {
       :class="typeClass[toastStore.type] || typeClass.info"
     >
       <span class="text-lg">
-        {{ toastStore.type === 'success' ? '✅' : toastStore.type === 'error' ? '⚠️' : 'ℹ️' }}
+        {{
+          toastStore.type === 'success'
+            ? '✅'
+            : toastStore.type === 'error'
+              ? '⚠️'
+              : toastStore.type === 'warning'
+                ? '⚡'
+                : 'ℹ️'
+        }}
       </span>
       <span class="text-sm font-medium">{{ toastStore.message }}</span>
     </div>
