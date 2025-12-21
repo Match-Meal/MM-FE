@@ -13,11 +13,13 @@ defineProps<{
   isOpen: boolean
   title: string
   userList: FollowUser[]
+  currentUserId?: number
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'toggle', user: FollowUser): void
+  (e: 'click-user', user: FollowUser): void
 }>()
 
 // 언팔 확인 모달 상태
@@ -39,6 +41,12 @@ const handleToggleClick = (user: FollowUser) => {
     // Case 2: 팔로우 안 함 -> 팔로우 시도 -> 즉시 실행
     emit('toggle', user)
   }
+}
+
+// 유저 클릭 핸들러 (UserInfoModal 열기)
+const handleRowClick = (user: FollowUser) => {
+  // 자신을 클릭했거나 기타 로직 처리 가능
+  emit('click-user', user)
 }
 
 // 경고 모달에서 '확인'을 눌렀을 때 실행
@@ -90,7 +98,8 @@ const confirmUnfollow = () => {
         <div
           v-for="user in userList"
           :key="user.userId"
-          class="flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-gray-100"
+          class="flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-gray-100 cursor-pointer active:scale-[0.98] transition-all"
+          @click="handleRowClick(user)"
         >
           <div class="flex items-center gap-3">
             <!-- 프로필 이미지 -->
@@ -104,11 +113,22 @@ const confirmUnfollow = () => {
               <span v-else class="w-full h-full flex items-center justify-center text-lg">😎</span>
             </div>
             <!-- 닉네임 -->
-            <span class="font-bold text-sm text-gray-800">{{ user.userName }}</span>
+            <div class="flex flex-col">
+              <!-- 나 자신이면 표시 -->
+              <span class="font-bold text-sm text-gray-800 flex items-center gap-1">
+                {{ user.userName }}
+                <span
+                  v-if="currentUserId && user.userId === currentUserId"
+                  class="text-[10px] bg-blue-100 text-blue-600 px-1.5 rounded-md"
+                  >ME</span
+                >
+              </span>
+            </div>
           </div>
 
-          <!-- [버튼] 상태에 따라 스타일과 텍스트 변경 -->
+          <!-- [버튼] 나 자신이 아닐 때만 노출 -->
           <button
+            v-if="!currentUserId || user.userId !== currentUserId"
             @click.stop="handleToggleClick(user)"
             class="px-3 py-1.5 rounded-full text-xs font-bold transition border"
             :class="
@@ -117,7 +137,6 @@ const confirmUnfollow = () => {
                 : 'bg-blue-600 text-white border-transparent hover:bg-blue-700'
             "
           >
-            <!-- isFollowing이 true면 '언팔로우'(또는 팔로잉), false면 '팔로우' -->
             {{ user.isFollowing ? '언팔로우' : '팔로우' }}
           </button>
         </div>

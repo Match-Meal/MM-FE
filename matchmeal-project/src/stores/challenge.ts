@@ -11,10 +11,12 @@ import {
   updateChallenge as apiUpdate,
   inviteUser as apiInvite,
   getMyFollowings,
+  getMyInvitations,
   type ChallengeResponse,
   type SearchCondition,
   type ChallengeCreateRequest,
   type FollowerResponse,
+  type ChallengeInvitationResponse, // Added
 } from '@/services/challengeService'
 
 export const useChallengeStore = defineStore('challenge', () => {
@@ -23,6 +25,7 @@ export const useChallengeStore = defineStore('challenge', () => {
   const isLoading = ref(false)
   const currentChallenge = ref<ChallengeResponse | null>(null)
   const followings = ref<FollowerResponse[]>([])
+  const myInvitations = ref<ChallengeInvitationResponse[]>([]) // Added
 
   const authStore = useAuthStore()
 
@@ -69,7 +72,12 @@ export const useChallengeStore = defineStore('challenge', () => {
     await fetchMyChallenges() // 참여 후 내 목록 갱신
     // 공개 목록에서도 상태 갱신 (선택적)
     const target = publicChallenges.value.find((c) => c.challengeId === id)
-    if (target) target.isJoined = true
+    if (target) {
+      target.isJoined = true
+      if (typeof target.currentHeadCount === 'number') {
+        target.currentHeadCount += 1
+      }
+    }
   }
 
   // 코드로 참여
@@ -117,16 +125,28 @@ export const useChallengeStore = defineStore('challenge', () => {
     await apiInvite(challengeId, targetUserId)
   }
 
+  // [Added] 초대 목록 불러오기
+  const fetchMyInvitations = async () => {
+    try {
+      myInvitations.value = await getMyInvitations()
+    } catch (error) {
+      console.error('초대장 조회 실패', error)
+    }
+  }
+
+  // [Added] 리턴에 포함
   return {
     myChallenges,
     publicChallenges,
     isLoading,
     currentChallenge,
     followings,
+    myInvitations, // Added
     fetchChallengeDetail,
     modifyChallenge,
     fetchFollowings,
     inviteFriend,
+    fetchMyInvitations, // Added
     fetchMyChallenges,
     fetchPublicChallenges,
     joinChallenge,

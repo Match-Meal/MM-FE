@@ -18,6 +18,13 @@ export interface ChallengeCreateRequest {
   isPublic: boolean
 }
 
+export interface ChallengeParticipantDto {
+  userId: number
+  userName: string
+  profileImage?: string
+  progressPercent: number
+}
+
 // 2. 응답 데이터 타입
 export interface ChallengeResponse {
   challengeId: number
@@ -38,6 +45,11 @@ export interface ChallengeResponse {
   progressPercent: number
   currentCount: number
   currentStreak: number
+  // [Added]
+  userChallengeId?: number
+  maxStreak?: number
+  lastSuccessDate?: string
+  participants?: ChallengeParticipantDto[]
 }
 
 // 3. 검색 조건 타입
@@ -48,12 +60,27 @@ export interface SearchCondition {
   endDate?: string
 }
 
-// 팔로잉 유저 타입
 export interface FollowerResponse {
   userId: number
   userName: string
   profileImage?: string
   isFollowing: boolean
+}
+
+// [Added] 초대장 응답 DTO
+export interface ChallengeInvitationResponse {
+  invitationId: number
+  sentAt: string
+  inviterId: number
+  inviterName: string
+  inviterProfileImage?: string
+  challengeId: number
+  challengeTitle: string
+  type: 'CALORIE_LIMIT' | 'RECORD_FREQUENCY' | 'TIME_RANGE'
+  targetValue: number
+  goalCount: number
+  currentHeadCount: number
+  maxParticipants: number
 }
 
 // --- [API Functions] ---
@@ -127,4 +154,32 @@ export const getMyFollowings = async (userId: number) => {
     console.error('❌ 팔로잉 목록 조회 API 에러:', error)
     return []
   }
+}
+
+// [Added] 나에게 온 초대 목록 조회
+export const getMyInvitations = async () => {
+  const response = await apiClient.get<{ data: ChallengeInvitationResponse[] }>(
+    `${API_URL}/invitations`,
+  )
+  return response.data.data
+}
+
+// [Added] 초대 수락
+export const acceptInvitation = async (invitationId: number) => {
+  return await apiClient.post(`${API_URL}/invite/${invitationId}/accept`)
+}
+
+// [Added] 초대 거절
+export const rejectInvitation = async (invitationId: number) => {
+  return await apiClient.post(`${API_URL}/invite/${invitationId}/reject`)
+}
+
+// [Added] 챌린지 삭제
+export const deleteChallenge = async (challengeId: number) => {
+  return await apiClient.delete(`${API_URL}/${challengeId}`)
+}
+
+// [Added] 챌린지 나가기
+export const leaveChallenge = async (challengeId: number) => {
+  return await apiClient.post(`${API_URL}/${challengeId}/leave`)
 }
