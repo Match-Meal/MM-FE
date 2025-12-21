@@ -65,7 +65,6 @@ const openPostModal = () => {
 
 const goToEditProfile = () => router.push('/profile-form')
 const goToSettings = () => router.push('/settings')
-const navigateTo = (path: string) => router.push(path)
 
 // 팔로우 모달
 const openFollowModal = async (type: 'follower' | 'following') => {

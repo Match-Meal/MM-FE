@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
 import apiClient from '@/services/apiClient'
 import { useAuthStore } from '@/stores/auth'
 import type { PostUser } from '@/services/communityService'
