@@ -2,10 +2,12 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useToastStore } from '@/stores/toast'
 import axios from 'axios'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const toastStore = useToastStore()
 const isLoading = ref(false)
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -92,8 +94,8 @@ const goBack = () => {
 }
 
 const submitProfile = async () => {
-  if (!form.value.userName) return alert('닉네임을 입력해주세요.')
-  if (!form.value.birthDate) return alert('생년월일을 입력해주세요.')
+  if (!form.value.userName) return toastStore.show('닉네임을 입력해주세요.', 'warning')
+  if (!form.value.birthDate) return toastStore.show('생년월일을 입력해주세요.', 'warning')
 
   try {
     isLoading.value = true
@@ -122,11 +124,11 @@ const submitProfile = async () => {
     // 수정 후 최신 정보 다시 가져오기
     await authStore.fetchUser()
 
-    alert('프로필이 저장되었습니다! 🎉')
+    toastStore.show('프로필이 저장되었습니다! 🎉', 'success')
     router.replace('/profile') // 수정 완료 후 마이페이지로 이동
   } catch (e) {
     console.error(e)
-    alert('저장 중 오류가 발생했습니다.')
+    toastStore.show('저장 중 오류가 발생했습니다.', 'error')
   } finally {
     isLoading.value = false
   }

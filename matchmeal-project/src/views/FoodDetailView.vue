@@ -58,7 +58,7 @@ const handleEdit = () => {
 }
 
 const handleDeleteClick = () => {
-    isDeleteModalOpen.value = true
+  isDeleteModalOpen.value = true
 }
 
 const handleConfirmDelete = async () => {
@@ -68,34 +68,34 @@ const handleConfirmDelete = async () => {
       toastStore.show('음식이 삭제되었습니다.')
       router.back()
     } catch (err) {
-      alert('음식 삭제에 실패했습니다.')
+      toastStore.show('음식 삭제에 실패했습니다.', 'error')
       console.error(err)
     } finally {
-        isDeleteModalOpen.value = false
+      isDeleteModalOpen.value = false
     }
   }
 }
 
 const addToDiet = () => {
-    if (!food.value) return
+  if (!food.value) return
 
-    dietStore.addFoodToDiet({
-        foodId: food.value.foodId,
-        foodName: food.value.foodName,
-        quantity: food.value.servingSize,
-        unit: food.value.unit,
-        calories: food.value.calories,
-        carbohydrate: food.value.carbohydrate,
-        protein: food.value.protein,
-        fat: food.value.fat,
-        sugars: food.value.sugars,
-        sodium: food.value.sodium
-    })
-    
-    // router.push('/diet/record') 대신, 히스토리 스택을 2단계 뒤로 이동하여
-    // (DietRecordView -> FoodDBView -> FoodDetailView) 순서를 거슬러 올라감
-    // 이렇게 하면 DietRecordView로 돌아갔을 때 '뒤로 가기'를 누르면 MainView로 정상 이동됨
-    router.go(-2)
+  dietStore.addFoodToDiet({
+    foodId: food.value.foodId,
+    foodName: food.value.foodName,
+    quantity: food.value.servingSize,
+    unit: food.value.unit,
+    calories: food.value.calories,
+    carbohydrate: food.value.carbohydrate,
+    protein: food.value.protein,
+    fat: food.value.fat,
+    sugars: food.value.sugars,
+    sodium: food.value.sodium,
+  })
+
+  // router.push('/diet/record') 대신, 히스토리 스택을 2단계 뒤로 이동하여
+  // (DietRecordView -> FoodDBView -> FoodDetailView) 순서를 거슬러 올라감
+  // 이렇게 하면 DietRecordView로 돌아갔을 때 '뒤로 가기'를 누르면 MainView로 정상 이동됨
+  router.go(-2)
 }
 </script>
 
@@ -179,32 +179,31 @@ const addToDiet = () => {
 
             <!-- 하단 버튼 영역 -->
             <div class="mt-10">
-                <!-- 선택 모드일 때: 식단에 추가 버튼 -->
+              <!-- 선택 모드일 때: 식단에 추가 버튼 -->
+              <button
+                v-if="isSelectMode"
+                @click="addToDiet"
+                class="w-full h-12 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
+              >
+                <span>🍽️</span> 이 음식을 식단에 추가하기
+              </button>
+
+              <!-- 일반 모드이고 내 음식일 때: 수정/삭제 -->
+              <div v-else-if="food.isMine" class="flex gap-3">
                 <button
-                    v-if="isSelectMode"
-                    @click="addToDiet"
-                    class="w-full h-12 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                  @click="handleDeleteClick"
+                  class="flex-1 h-12 border-2 border-red-200 text-red-500 font-bold rounded-xl hover:bg-red-50 transition"
                 >
-                    <span>🍽️</span> 이 음식을 식단에 추가하기
+                  삭제
                 </button>
-
-                <!-- 일반 모드이고 내 음식일 때: 수정/삭제 -->
-                <div v-else-if="food.isMine" class="flex gap-3">
-                    <button
-                        @click="handleDeleteClick"
-                        class="flex-1 h-12 border-2 border-red-200 text-red-500 font-bold rounded-xl hover:bg-red-50 transition"
-                    >
-                        삭제
-                    </button>
-                    <button
-                        @click="handleEdit"
-                        class="flex-[2] h-12 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition"
-                    >
-                        수정하기
-                    </button>
-                </div>
+                <button
+                  @click="handleEdit"
+                  class="flex-[2] h-12 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition"
+                >
+                  수정하기
+                </button>
+              </div>
             </div>
-
           </div>
         </div>
       </main>

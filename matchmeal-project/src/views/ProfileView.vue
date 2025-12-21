@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { useToastStore } from '@/stores/toast'
 import { useRouter } from 'vue-router'
 import apiClient from '@/services/apiClient'
 import FollowListModal, { type FollowUser } from '@/components/FollowListModal.vue'
+import UserInfoModal from '@/components/UserInfoModal.vue'
 import PostListModal from '@/components/PostListModal.vue'
-import { getPosts, type PostListItem } from '@/services/communityService'
+import { getPosts, type PostListItem, type PostUser } from '@/services/communityService'
+import BottomNav from '@/components/common/BottomNav.vue'
 
 const authStore = useAuthStore()
+const toastStore = useToastStore()
 const router = useRouter()
 
 interface ApiFollowerDto {
@@ -21,6 +25,10 @@ interface ApiFollowerDto {
 const isModalOpen = ref(false)
 const modalTitle = ref('')
 const modalList = ref<FollowUser[]>([])
+
+// 유저 정보 모달 관련
+const isUserInfoModalOpen = ref(false)
+const selectedUser = ref<PostUser | null>(null)
 
 // 내 게시글 관련
 const myPosts = ref<PostListItem[]>([])
@@ -52,14 +60,11 @@ const fetchMyPosts = async () => {
 }
 
 const openPostModal = () => {
-  if (myPosts.value.length > 0) {
-    isPostModalOpen.value = true
-  }
+  isPostModalOpen.value = true
 }
 
 const goToEditProfile = () => router.push('/profile-form')
 const goToSettings = () => router.push('/settings')
-const navigateTo = (path: string) => router.push(path)
 
 // 팔로우 모달
 const openFollowModal = async (type: 'follower' | 'following') => {
@@ -85,13 +90,23 @@ const openFollowModal = async (type: 'follower' | 'following') => {
     // FollowListModal은 'userName'을 원합니다.
     modalList.value = list.map((u: ApiFollowerDto) => ({
       userId: u.userId,
-      userName: u.userName, // ✨ 여기가 틀렸었습니다! (nickname -> userName)
+      userName: u.userName,
       profileImage: u.profileImage,
       isFollowing: u.isFollowing,
     }))
   } catch (error) {
     console.error('팔로우 목록 조회 실패:', error)
   }
+}
+
+// 유저 정보 모달 열기
+const openUserInfoModal = (user: FollowUser) => {
+  selectedUser.value = {
+    userId: user.userId,
+    userName: user.userName,
+    profileImage: user.profileImage || '',
+  }
+  isUserInfoModalOpen.value = true
 }
 
 // 리스트 내 팔로우 토글 핸들러
@@ -126,13 +141,14 @@ const handleModalFollowToggle = async (targetUser: FollowUser) => {
   try {
     // 백엔드 API 호출
     const response = await apiClient.post(`/user/${targetUser.userId}/follow`)
+    const result = response.data.data
 
-    if (response.data && authStore.user) {
-      if (typeof response.data.myFollowingCount === 'number') {
-        authStore.user.followingCount = response.data.myFollowingCount
+    if (result && authStore.user) {
+      if (typeof result.myFollowingCount === 'number') {
+        authStore.user.followingCount = result.myFollowingCount
       }
-      if (response.data.isFollowing !== undefined) {
-        userItem.isFollowing = response.data.isFollowing
+      if (result.isFollowing !== undefined) {
+        userItem.isFollowing = result.isFollowing
       }
     }
   } catch (e) {
@@ -142,7 +158,7 @@ const handleModalFollowToggle = async (targetUser: FollowUser) => {
     if (authStore.user) {
       authStore.user.followingCount = originalFollowingCount
     }
-    alert('요청 처리에 실패했습니다.')
+    toastStore.show('요청 처리에 실패했습니다.', 'error')
   }
 }
 
@@ -179,6 +195,11 @@ const bmiPercent = computed(() => {
     <div
       class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-800 flex flex-col"
     >
+      <header class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 shrink-0">
+        <button @click="router.back()" class="text-2xl w-8">←</button>
+        <h1 class="font-bold text-lg truncate text-gray-800">내 프로필</h1>
+        <div class="w-8"></div>
+      </header>
       <main class="flex-1 overflow-y-auto bg-gray-50 scrollbar-hide pb-6">
         <div class="bg-white pb-8 rounded-b-[2.5rem] shadow-sm mb-4">
           <div class="flex flex-col items-center pt-8">
@@ -329,42 +350,24 @@ const bmiPercent = computed(() => {
         </div>
       </main>
 
-      <nav
-        class="h-[88px] bg-white border-t flex justify-around pb-6 pt-2 text-[10px] z-20 shadow-[0_-5px_10px_rgba(0,0,0,0.02)]"
-      >
-        <div
-          @click="navigateTo('/home')"
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-        >
-          <span class="text-2xl mb-1">🏠</span>홈
-        </div>
-        <div
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-        >
-          <span class="text-2xl mb-1">🍽️</span>식단
-        </div>
-        <div
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-        >
-          <span class="text-2xl mb-1">🔥</span>챌린지
-        </div>
-        <div
-          class="nav-item flex flex-col items-center cursor-pointer text-gray-400 hover:text-blue-500 transition"
-        >
-          <span class="text-2xl mb-1">💬</span>커뮤니티
-        </div>
-        <div class="nav-item flex flex-col items-center cursor-pointer text-blue-600 font-bold">
-          <span class="text-2xl mb-1">👤</span>MY
-        </div>
-      </nav>
+      <BottomNav />
 
       <!-- 모달 컴포넌트 사용 -->
       <FollowListModal
         :is-open="isModalOpen"
         :title="modalTitle"
         :user-list="modalList"
+        :current-user-id="authStore.user?.id"
         @close="isModalOpen = false"
         @toggle="handleModalFollowToggle"
+        @click-user="openUserInfoModal"
+      />
+
+      <UserInfoModal
+        v-if="selectedUser"
+        :is-open="isUserInfoModalOpen"
+        :user="selectedUser"
+        @close="isUserInfoModalOpen = false"
       />
 
       <!-- 게시글 목록 모달 -->

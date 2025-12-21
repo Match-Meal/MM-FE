@@ -19,6 +19,7 @@ import CommunityWriteView from '@/views/CommunityWriteView.vue'
 import { useAuthStore } from '../stores/auth'
 import ChallengeView from '@/views/ChallengeView.vue'
 import ChallengeDetailView from '@/views/ChallengeDetailView.vue'
+import UserProfileView from '@/views/UserProfileView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -84,6 +85,12 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: ProfileView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/user/:id',
+      name: 'user-profile',
+      component: UserProfileView,
       meta: { requiresAuth: true },
     },
     {
@@ -163,6 +170,17 @@ const router = createRouter({
       name: 'challenge-detail',
       component: ChallengeDetailView,
       props: true, // id 파라미터를 props로 전달
+    },
+    {
+      path: '/recovery',
+      name: 'account-recovery',
+      component: () => import('@/views/AccountRecoveryView.vue'),
+    },
+    {
+      path: '/ai-chatbot',
+      name: 'ai-chatbot',
+      component: () => import('@/views/AiChatbotView.vue'),
+      meta: { requiresAuth: true },
     },
   ],
 })

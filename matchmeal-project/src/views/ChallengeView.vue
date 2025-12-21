@@ -1,17 +1,23 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useChallengeStore } from '@/stores/challenge'
 import { useToastStore } from '@/stores/toast'
+import { useConfirmStore } from '@/stores/confirm' // Added
 import type { ChallengeCreateRequest } from '@/services/challengeService'
+
+const router = useRouter()
 
 // 컴포넌트 임포트
 import BottomNav from '@/components/common/BottomNav.vue'
 import PrivateCodeModal from '@/components/PrivateCodeModal.vue'
 import ChallengeCreateForm from '@/components/ChallengeCreateForm.vue'
 import ChallengeCard from '@/components/ChallengeCard.vue'
+import InviteCheckModal from '@/components/InviteCheckModal.vue' // Added
 
 const challengeStore = useChallengeStore()
 const toastStore = useToastStore()
+const confirmStore = useConfirmStore() // Added
 
 // 탭 및 필터 상태
 const activeTab = ref<'my' | 'explore'>('my')
@@ -22,10 +28,19 @@ const hideJoined = ref(false)
 // 모달 상태
 const showCreateModal = ref(false)
 const showCodeModal = ref(false)
+const showInviteCheckModal = ref(false) // Added
 
 // 초기 데이터 로드
 onMounted(async () => {
-  await Promise.all([challengeStore.fetchMyChallenges(), challengeStore.fetchPublicChallenges()])
+  await Promise.all([
+    challengeStore.fetchMyChallenges().then(() => {
+      if (challengeStore.updateAllMyChallengesProgress) {
+        challengeStore.updateAllMyChallengesProgress()
+      }
+    }),
+    challengeStore.fetchPublicChallenges(),
+    challengeStore.fetchMyInvitations(), // Added
+  ])
 })
 
 // --- [Computed] ---
@@ -72,7 +87,7 @@ const handleCreateSubmit = async (payload: ChallengeCreateRequest) => {
 
 // 참여
 const handleJoin = async (id: number) => {
-  if (!confirm('정말 참여하시겠습니까?')) return
+  if (!(await confirmStore.show('정말 참여하시겠습니까?'))) return
   try {
     await challengeStore.joinChallenge(id)
     toastStore.show('참여 완료! 파이팅입니다 🔥', 'success')
@@ -102,40 +117,55 @@ const handleCodeSubmit = async (code: string) => {
     <div
       class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-900 flex flex-col"
     >
-      <div class="bg-white px-5 pt-6 pb-2 z-10 border-b border-gray-50">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-black text-gray-900">Challenges</h2>
-          <div class="flex gap-2">
-            <button @click="showCodeModal = true" class="icon-btn bg-gray-100 text-gray-500">
-              🔒
-            </button>
-            <button
-              @click="showCreateModal = true"
-              class="icon-btn bg-blue-600 text-white shadow-lg shadow-blue-200"
+      <!-- Header -->
+      <header class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 shrink-0">
+        <button v-if="activeTab === 'my'" @click="router.push('/home')" class="text-2xl w-8">
+          ←
+        </button>
+        <div v-else class="w-8"></div>
+        <h1 class="font-bold text-lg truncate">챌린지</h1>
+        <div class="flex gap-3 text-lg">
+          <button @click="showCodeModal = true" class="relative">🔒</button>
+          <button @click="showInviteCheckModal = true" class="relative">
+            💌
+            <span
+              v-if="challengeStore.myInvitations.length > 0"
+              class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full font-bold border-2 border-white"
             >
-              ➕
-            </button>
-          </div>
+              {{ challengeStore.myInvitations.length }}
+            </span>
+          </button>
         </div>
+      </header>
 
-        <div class="flex p-1 bg-gray-100 rounded-xl mb-3">
+      <!-- Tabs & Search (Sticky below header) -->
+      <div class="bg-white z-10 border-b border-gray-100">
+        <div class="flex p-2">
           <button
             @click="activeTab = 'my'"
-            class="tab-btn"
-            :class="activeTab === 'my' ? 'active' : ''"
+            class="flex-1 py-2 text-sm font-bold border-b-2 transition"
+            :class="
+              activeTab === 'my'
+                ? 'border-gray-800 text-gray-800'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            "
           >
             내 도전
           </button>
           <button
             @click="activeTab = 'explore'"
-            class="tab-btn"
-            :class="activeTab === 'explore' ? 'active' : ''"
+            class="flex-1 py-2 text-sm font-bold border-b-2 transition"
+            :class="
+              activeTab === 'explore'
+                ? 'border-gray-800 text-gray-800'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            "
           >
             탐색하기
           </button>
         </div>
 
-        <div v-if="activeTab === 'explore'" class="space-y-3 pb-2 animate-fade-in">
+        <div v-if="activeTab === 'explore'" class="space-y-3 pb-2 px-4 animate-fade-in">
           <div class="relative">
             <input
               v-model="searchKeyword"
@@ -215,6 +245,20 @@ const handleCodeSubmit = async (code: string) => {
         :is-open="showCodeModal"
         @close="showCodeModal = false"
         @submit="handleCodeSubmit"
+      />
+
+      <button
+        @click="showCreateModal = true"
+        class="absolute bottom-24 right-5 w-14 h-14 bg-blue-600 text-white rounded-full shadow-xl text-3xl flex items-center justify-center z-30 hover:bg-blue-700 transition active:scale-95"
+      >
+        ➕
+      </button>
+
+      <InviteCheckModal
+        :is-open="showInviteCheckModal"
+        :invitations="challengeStore.myInvitations"
+        @close="showInviteCheckModal = false"
+        @updated="challengeStore.fetchMyInvitations"
       />
     </div>
   </div>
