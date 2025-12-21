@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm' // Added
-import ConfirmModal from '@/components/common/ConfirmModal.vue'
+
 import axios from 'axios'
 
 const router = useRouter()
