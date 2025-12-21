@@ -5,7 +5,7 @@
     </KeepAlive>
   </RouterView>
   <ToastMessage />
-  <ToastMessage />
+
   <GlobalConfirmModal />
 </template>
 

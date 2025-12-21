@@ -176,6 +176,12 @@ const router = createRouter({
       name: 'account-recovery',
       component: () => import('@/views/AccountRecoveryView.vue'),
     },
+    {
+      path: '/ai-chatbot',
+      name: 'ai-chatbot',
+      component: () => import('@/views/AiChatbotView.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 })
 
