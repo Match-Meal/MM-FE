@@ -84,7 +84,18 @@ export const useAuthStore = defineStore('auth', () => {
   // 4. 계정 복구 액션
   async function reactivate() {
     try {
-      await authService.reactivate()
+      // 복구 요청 후 새로운 토큰 수신 (백엔드가 accessToken을 반환한다고 가정)
+      const response = await authService.reactivate()
+
+      // 응답 구조에 따라 수정 필요: response.data.data.accessToken 등
+      // CommonResponse 구조를 따른다고 가정
+      const newUserToken = response.data.data?.accessToken
+
+      // 만약 토큰이 왔다면 갱신
+      if (newUserToken) {
+        setToken(newUserToken)
+      }
+
       // 복구 후 정보 갱신
       await fetchUser()
     } catch (e) {

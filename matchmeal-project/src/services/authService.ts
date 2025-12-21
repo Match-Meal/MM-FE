@@ -31,6 +31,6 @@ export const authService = {
 
   // 계정 복구
   reactivate: async () => {
-    return apiClient.post('/user/reactivate')
+    return apiClient.post('/user/reactivate', { decision: 'RESTORE' })
   },
 }

@@ -8,33 +8,43 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 onMounted(async () => {
-  // URL 쿼리 파라미터에서 토큰 추출
-  const accessToken = route.query.accessToken as string
-  const isNew = route.query.isNew === 'true'
+  // URL 쿼리 파라미터 추출
+  const { accessToken, isNew, status, tempToken } = route.query
 
+  // 1. 탈퇴한 유저인 경우 (백엔드 OAuth2FailureHandler에서 status=withdrawn, tempToken 전달)
+  if (status === 'withdrawn' && tempToken) {
+    authStore.setToken(tempToken as string)
+    router.replace('/recovery')
+    return
+  }
+
+  // 2. 정상 로그인 (accessToken 존재)
   if (accessToken) {
-    // pinia 스토어에 토큰 저장
-    authStore.setToken(accessToken)
+    authStore.setToken(accessToken as string)
 
-    // 1. 임시 토큰(tempToken)이 있는지 확인 (탈퇴 유저 복구용)
-    // 백엔드에서 리다이렉트 시 ?tempToken=... 으로 준다고 가정 (일반 토큰과 구분 필요하거나, accessToken 필드에 주되 Role 확인)
-    // 사용자 설명: "임시 토큰(ROLE_WITHDRAWN, 5분 유효) 발급 및 프론트로 리다이렉트"
-    // 따라서 accessToken에 들어있을 수 있음. fetchUser 결과로 판단.
+    try {
+      await authStore.fetchUser()
 
-    await authStore.fetchUser()
+      // 안전장치: 혹시 토큰으로 ROLE_WITHDRAWN이 넘어온 경우도 처리
+      if (authStore.user?.role === 'ROLE_WITHDRAWN') {
+        router.replace('/recovery')
+        return
+      }
 
-    if (authStore.user?.role === 'ROLE_WITHDRAWN') {
-      router.replace('/recovery')
-      return
-    }
-
-    if (isNew) {
-      router.replace('/profile-intro')
-    } else {
-      router.replace('/home')
+      if (isNew === 'true') {
+        router.replace('/profile-intro')
+      } else {
+        router.replace('/home')
+      }
+    } catch (e) {
+      console.error(e)
+      alert('사용자 정보를 불러오는데 실패했습니다.')
+      router.replace('/login')
     }
   } else {
-    alert('로그인에 실패했습니다. 다시 시도해주세요.')
+    // 3. 실패 (error=true 등)
+    const message = route.query.message || '로그인에 실패했습니다.'
+    alert(message)
     router.replace('/login')
   }
 })
