@@ -19,11 +19,11 @@ watch(
     if (val) {
       const tomorrow = new Date()
       tomorrow.setDate(tomorrow.getDate() + 1)
-      startDate.value = tomorrow.toISOString().split('T')[0]
+      startDate.value = tomorrow.toISOString().split('T')[0] ?? ''
 
       const after3Days = new Date(tomorrow)
       after3Days.setDate(after3Days.getDate() + 2)
-      endDate.value = after3Days.toISOString().split('T')[0]
+      endDate.value = after3Days.toISOString().split('T')[0] ?? ''
     }
   },
 )
