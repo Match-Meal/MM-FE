@@ -4,15 +4,11 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm'
-import { 
-  ArrowLeft, 
-  ChevronRight, 
-  LogOut, 
-  Award, 
-  Bell, 
-  Info,
-  UserX
-} from 'lucide-vue-next'
+import SubscriptionModal from '@/components/payment/SubscriptionModal.vue'
+import SubscriptionCancelModal from '@/components/payment/SubscriptionCancelModal.vue'
+import SubscriptionReactivateModal from '@/components/payment/SubscriptionReactivateModal.vue'
+
+import { ArrowLeft, ChevronRight, LogOut, Award, Bell, Info, UserX } from 'lucide-vue-next'
 
 import axios from 'axios'
 
@@ -23,6 +19,15 @@ const confirmStore = useConfirmStore()
 
 // 공개 설정 상태
 const isPublic = ref(true)
+
+// 모달 상태
+const isSubscriptionModalOpen = ref(false)
+const isCancelModalOpen = ref(false)
+const isReactivateModalOpen = ref(false)
+
+const handleSubscriptionReactivated = async () => {
+  await authStore.fetchUser()
+}
 
 onMounted(async () => {
   // 1. 유저 정보가 없으면 로드
@@ -38,6 +43,12 @@ onMounted(async () => {
 })
 
 const goBack = () => router.back()
+
+// 구독 정보 갱신 (해지 후 호출)
+const handleSubscriptionCancelled = async () => {
+  // 유저 정보 갱신하면 role이 바뀌므로 UI 자동 업데이트
+  await authStore.fetchUser()
+}
 
 const togglePrivacy = async () => {
   const previousValue = isPublic.value
@@ -98,18 +109,98 @@ const handleWithdraw = async () => {
       class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
       <!-- 헤더 -->
-      <header class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0">
-        <button @click="goBack" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
-            <ArrowLeft :size="24" />
+      <header
+        class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0"
+      >
+        <button
+          @click="goBack"
+          class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+        >
+          <ArrowLeft :size="24" />
         </button>
         <h1 class="font-bold text-lg truncate text-slate-800">설정</h1>
         <div class="w-8"></div>
       </header>
 
       <main class="flex-1 overflow-y-auto bg-white no-scrollbar">
+        <!-- 설정 그룹: 멤버십 -->
+        <div class="py-2">
+          <h3
+            class="px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-50"
+          >
+            멤버십 관리
+          </h3>
+
+          <!-- 구독 상태 표시 -->
+          <div class="p-4 px-6 border-b border-slate-50">
+            <div v-if="authStore.user?.role === 'ROLE_SUBSCRIBER'" class="flex flex-col gap-3">
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <Award :size="18" class="text-yellow-500" /> 프리미엄 구독 중
+                </span>
+                <span
+                  v-if="authStore.subscription?.status === 'CANCELED'"
+                  class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg"
+                  >해지 예정</span
+                >
+                <span
+                  v-else
+                  class="text-xs font-bold text-primary-600 bg-primary-50 px-2 py-1 rounded-lg"
+                  >Active</span
+                >
+              </div>
+              <p class="text-xs text-slate-500">
+                AI 챗봇 무제한 이용 등 다양한 혜택을 누리고 계십니다.
+                <br v-if="authStore.subscription?.nextBillingDate" />
+                <span
+                  v-if="authStore.subscription?.nextBillingDate"
+                  class="text-slate-400 mt-1 block"
+                >
+                  <span v-if="authStore.subscription?.status === 'CANCELED'">
+                    이용 만료일: {{ authStore.subscription.nextBillingDate }}
+                  </span>
+                  <span v-else> 다음 결제일: {{ authStore.subscription.nextBillingDate }} </span>
+                </span>
+              </p>
+
+              <button
+                v-if="authStore.subscription?.status === 'CANCELED'"
+                @click="isReactivateModalOpen = true"
+                class="w-full mt-2 py-3 border border-blue-200 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-100 transition shadow-sm"
+              >
+                구독 다시 시작하기 (결제일 유지)
+              </button>
+              <button
+                v-else
+                @click="isCancelModalOpen = true"
+                class="w-full mt-2 py-3 border border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 transition"
+              >
+                구독 관리 / 해지
+              </button>
+            </div>
+
+            <div v-else class="flex flex-col gap-3">
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <Award :size="18" class="text-slate-400" /> 무료 회원
+                </span>
+              </div>
+              <p class="text-xs text-slate-500">프리미엄 구독으로 AI 영양 상담을 받아보세요!</p>
+              <button
+                @click="isSubscriptionModalOpen = true"
+                class="w-full mt-2 py-3 bg-primary-500 text-white rounded-xl text-xs font-bold hover:bg-primary-600 transition shadow-md shadow-primary-200"
+              >
+                프리미엄 구독하기
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- 설정 그룹: 계정 -->
         <div class="py-2">
-          <h3 class="px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-50">
+          <h3
+            class="px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-50"
+          >
             계정 설정
           </h3>
 
@@ -141,26 +232,34 @@ const handleWithdraw = async () => {
           <div
             class="p-4 px-6 flex justify-between items-center hover:bg-slate-50 cursor-pointer border-b border-slate-50 transition"
           >
-            <span class="text-sm font-bold text-slate-700 flex items-center gap-2"><Award :size="18" class="text-amber-500" /> 내 뱃지 컬렉션</span>
+            <span class="text-sm font-bold text-slate-700 flex items-center gap-2"
+              ><Award :size="18" class="text-amber-500" /> 내 뱃지 컬렉션</span
+            >
             <ChevronRight :size="16" class="text-slate-300" />
           </div>
         </div>
 
         <!-- 설정 그룹: 앱 정보 -->
         <div class="py-2">
-          <h3 class="px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-50">
+          <h3
+            class="px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-50"
+          >
             앱 정보
           </h3>
           <div
             class="p-4 px-6 flex justify-between items-center hover:bg-slate-50 cursor-pointer border-b border-slate-50 transition"
           >
-            <span class="text-sm font-bold text-slate-700 flex items-center gap-2"><Bell :size="18" class="text-slate-400" /> 공지사항</span>
+            <span class="text-sm font-bold text-slate-700 flex items-center gap-2"
+              ><Bell :size="18" class="text-slate-400" /> 공지사항</span
+            >
             <ChevronRight :size="16" class="text-slate-300" />
           </div>
           <div
             class="p-4 px-6 flex justify-between items-center hover:bg-slate-50 cursor-pointer border-b border-slate-50 transition"
           >
-            <span class="text-sm font-bold text-slate-700 flex items-center gap-2"><Info :size="18" class="text-slate-400" /> 버전 정보</span>
+            <span class="text-sm font-bold text-slate-700 flex items-center gap-2"
+              ><Info :size="18" class="text-slate-400" /> 버전 정보</span
+            >
             <span class="text-xs text-slate-400 font-bold">v1.0.0</span>
           </div>
         </div>
@@ -183,6 +282,26 @@ const handleWithdraw = async () => {
           </button>
         </div>
       </main>
+
+      <!-- Modals -->
+      <SubscriptionModal
+        :is-open="isSubscriptionModalOpen"
+        @close="isSubscriptionModalOpen = false"
+      />
+
+      <SubscriptionCancelModal
+        :is-open="isCancelModalOpen"
+        :next-billing-date="authStore.subscription?.nextBillingDate || null"
+        @close="isCancelModalOpen = false"
+        @cancelled="handleSubscriptionCancelled"
+      />
+
+      <SubscriptionReactivateModal
+        :is-open="isReactivateModalOpen"
+        :next-billing-date="authStore.subscription?.nextBillingDate || ''"
+        @close="isReactivateModalOpen = false"
+        @reactivated="handleSubscriptionReactivated"
+      />
     </div>
   </div>
 </template>

@@ -182,6 +182,13 @@ const router = createRouter({
       component: () => import('@/views/AiChatbotView.vue'),
       meta: { requiresAuth: true },
     },
+
+    {
+      path: '/payment/success',
+      name: 'payment-success',
+      component: () => import('@/views/payment/PaymentSuccessView.vue'),
+      meta: { requiresAuth: true }, // 로그인 상태에서만 접근 가능하도록 설정
+    },
   ],
 })
 
