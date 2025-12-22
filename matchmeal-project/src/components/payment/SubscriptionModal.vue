@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { paymentService } from '@/services/paymentService'
 import { X, Check } from 'lucide-vue-next'
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean
 }>()
 

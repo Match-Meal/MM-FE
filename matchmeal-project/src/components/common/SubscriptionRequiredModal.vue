@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { Sparkles, X } from 'lucide-vue-next'
 import SubscriptionModal from '@/components/payment/SubscriptionModal.vue'
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean
 }>()
 
 const emit = defineEmits(['close'])
-const router = useRouter()
+// const router = useRouter() // Unused
 
 const isSubscriptionModalOpen = ref(false)
 

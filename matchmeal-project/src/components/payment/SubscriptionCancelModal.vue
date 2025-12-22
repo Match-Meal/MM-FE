@@ -2,9 +2,9 @@
 import { ref } from 'vue'
 import { paymentService } from '@/services/paymentService'
 import { useToastStore } from '@/stores/toast'
-import { X, AlertTriangle } from 'lucide-vue-next'
+import { AlertTriangle } from 'lucide-vue-next'
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean
   nextBillingDate: string | null
 }>()

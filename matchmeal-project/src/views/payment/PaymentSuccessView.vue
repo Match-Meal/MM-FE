@@ -102,7 +102,7 @@ onMounted(async () => {
 
     // 유저 정보 갱신 (권한 변경 반영) 필요 시 호출
     // await authStore.fetchUser();
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(err)
     error.value = true
     message.value = '결제 승인에 실패했습니다.'

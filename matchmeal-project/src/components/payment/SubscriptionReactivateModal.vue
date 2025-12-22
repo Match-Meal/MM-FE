@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { RefreshCw, CheckCircle, X } from 'lucide-vue-next'
+import { RefreshCw, X } from 'lucide-vue-next'
 import { paymentService } from '@/services/paymentService'
 import { useToastStore } from '@/stores/toast'
 import { useAuthStore } from '@/stores/auth'
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean
   nextBillingDate: string
 }>()
