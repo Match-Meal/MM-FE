@@ -2,16 +2,12 @@
 import { ref, watch } from 'vue'
 import { useChallengeStore } from '@/stores/challenge'
 import { useToastStore } from '@/stores/toast'
-import {
-    X,
-    User,
-    UserPlus,
-    Loader2
-} from 'lucide-vue-next'
+import { X, User, UserPlus, Loader2 } from 'lucide-vue-next'
 
 const props = defineProps<{
   isOpen: boolean
   challengeId: number
+  participantIds?: number[] // [Added] 이미 참여 중인 유저 ID 목록
 }>()
 
 defineEmits<{ (e: 'close'): void }>()
@@ -49,14 +45,19 @@ const handleInvite = async (userId: number) => {
     v-if="isOpen"
     class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in p-4"
   >
-    <div class="bg-white w-full max-w-[320px] rounded-[32px] p-6 shadow-float border border-slate-100 flex flex-col max-h-[80vh]">
+    <div
+      class="bg-white w-full max-w-[320px] rounded-[32px] p-6 shadow-float border border-slate-100 flex flex-col max-h-[80vh]"
+    >
       <div class="flex justify-between items-center mb-6 shrink-0">
         <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-            <UserPlus :size="20" class="text-primary-500" />
-            친구 초대하기
+          <UserPlus :size="20" class="text-primary-500" />
+          친구 초대하기
         </h3>
-        <button @click="$emit('close')" class="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-50 transition">
-            <X :size="20" />
+        <button
+          @click="$emit('close')"
+          class="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-50 transition"
+        >
+          <X :size="20" />
         </button>
       </div>
 
@@ -75,7 +76,9 @@ const handleInvite = async (userId: number) => {
           class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100 transition hover:bg-white hover:shadow-sm"
         >
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
+            <div
+              class="w-10 h-10 rounded-full bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0"
+            >
               <img
                 v-if="user.profileImage"
                 :src="user.profileImage"
@@ -83,15 +86,23 @@ const handleInvite = async (userId: number) => {
               />
               <User v-else :size="18" class="text-slate-300" />
             </div>
-            <span class="text-sm font-bold text-slate-700 truncate max-w-[100px]">{{ user.userName }}</span>
+            <span class="text-sm font-bold text-slate-700 truncate max-w-[100px]">{{
+              user.userName
+            }}</span>
           </div>
 
           <button
             @click="handleInvite(user.userId)"
-            :disabled="invitingId === user.userId"
-            class="px-3 py-1.5 bg-primary-100 text-primary-600 text-xs font-bold rounded-xl hover:bg-primary-200 disabled:opacity-50 transition flex items-center gap-1 min-w-[60px] justify-center"
+            :disabled="invitingId === user.userId || participantIds?.includes(user.userId)"
+            class="px-3 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-1 min-w-[60px] justify-center"
+            :class="
+              participantIds?.includes(user.userId)
+                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                : 'bg-primary-100 text-primary-600 hover:bg-primary-200'
+            "
           >
             <Loader2 v-if="invitingId === user.userId" :size="14" class="animate-spin" />
+            <span v-else-if="participantIds?.includes(user.userId)">참여중</span>
             <span v-else>초대</span>
           </button>
         </div>

@@ -24,17 +24,17 @@ import {
   type DailyDietResponseItem,
   type DietDetailItem,
 } from '@/services/dietService'
-import { 
-  ArrowLeft, 
-  Mail, 
-  MoreVertical, 
-  Settings, 
-  Trash2, 
-  LogOut, 
-  Target, 
+import {
+  ArrowLeft,
+  Mail,
+  MoreVertical,
+  Settings,
+  Trash2,
+  LogOut,
+  Target,
   Flame,
   User as UserIcon,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -267,19 +267,30 @@ const handleJoin = async () => {
 
       <template v-else>
         <!-- Standard Header -->
-        <header class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0">
-          <button @click="router.back()" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+        <header
+          class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0"
+        >
+          <button
+            @click="router.back()"
+            class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+          >
             <ArrowLeft :size="24" />
           </button>
           <h1 class="font-bold text-lg truncate text-slate-800">챌린지 상세</h1>
           <div class="flex gap-2 relative">
-            <button @click="showInviteModal = true" class="p-2 rounded-full hover:bg-slate-50 transition text-slate-600">
-                <Mail :size="20" />
+            <button
+              @click="showInviteModal = true"
+              class="p-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+            >
+              <Mail :size="20" />
             </button>
 
             <!-- Menu Button -->
-            <button @click="isMenuOpen = !isMenuOpen" class="p-2 rounded-full hover:bg-slate-50 transition text-slate-600">
-                <MoreVertical :size="20" />
+            <button
+              @click="isMenuOpen = !isMenuOpen"
+              class="p-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+            >
+              <MoreVertical :size="20" />
             </button>
 
             <!-- Dropdown Menu -->
@@ -356,7 +367,8 @@ const handleJoin = async () => {
           <div class="text-center p-5 bg-slate-50 rounded-2xl border border-slate-100">
             <div class="text-xs text-slate-500 font-bold mb-1">현재 달성률</div>
             <div class="text-3xl font-black text-primary-600 mb-3 tracking-tight">
-              {{ challenge.progressPercent }}<span class="text-lg text-primary-400 align-top">%</span>
+              {{ challenge.progressPercent
+              }}<span class="text-lg text-primary-400 align-top">%</span>
             </div>
             <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
               <div
@@ -373,16 +385,21 @@ const handleJoin = async () => {
 
           <div>
             <h3 class="text-sm font-bold text-slate-800 mb-2">챌린지 소개</h3>
-            <p class="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl min-h-[80px] border border-slate-100 font-medium">
+            <p
+              class="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl min-h-[80px] border border-slate-100 font-medium"
+            >
               {{ challenge.description || '설명이 없습니다.' }}
             </p>
           </div>
 
           <div>
             <div class="flex items-end justify-between mb-3">
-                 <h3 class="text-sm font-bold text-slate-800">
-                    참여 멤버 <span class="text-primary-600 text-xs ml-1">{{ challenge.currentHeadCount || 0 }}/{{ challenge.maxParticipants }}</span>
-                </h3>
+              <h3 class="text-sm font-bold text-slate-800">
+                참여 멤버
+                <span class="text-primary-600 text-xs ml-1"
+                  >{{ challenge.currentHeadCount || 0 }}/{{ challenge.maxParticipants }}</span
+                >
+              </h3>
             </div>
 
             <!-- 아바타 그룹 (기존 유지) -->
@@ -439,7 +456,10 @@ const handleJoin = async () => {
 
                 <div class="flex-1">
                   <div class="flex justify-between items-center mb-1">
-                    <span class="text-xs font-bold text-slate-700 group-hover:text-primary-700 transition">{{ p.userName }}</span>
+                    <span
+                      class="text-xs font-bold text-slate-700 group-hover:text-primary-700 transition"
+                      >{{ p.userName }}</span
+                    >
                     <span class="text-xs text-primary-600 font-bold"
                       >{{ p.progressPercent || 0 }}%</span
                     >
@@ -479,6 +499,7 @@ const handleJoin = async () => {
       <InviteModal
         :is-open="showInviteModal"
         :challenge-id="challengeId"
+        :participant-ids="challenge?.participants?.map((p) => p.userId) || []"
         @close="showInviteModal = false"
       />
 

@@ -163,6 +163,7 @@ const router = createRouter({
       path: '/challenge',
       name: 'challenge',
       component: ChallengeView,
+      meta: { requiresAuth: true },
     },
     // [추가] 상세 페이지 (Dynamic Route)
     {
@@ -170,6 +171,7 @@ const router = createRouter({
       name: 'challenge-detail',
       component: ChallengeDetailView,
       props: true, // id 파라미터를 props로 전달
+      meta: { requiresAuth: true },
     },
     {
       path: '/recovery',
