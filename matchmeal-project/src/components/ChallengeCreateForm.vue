@@ -2,14 +2,21 @@
 import { ref, onMounted, computed } from 'vue'
 import { useToastStore } from '@/stores/toast'
 import type { ChallengeCreateRequest } from '@/services/challengeService'
+import {
+  X,
+  Flame,
+  FileText,
+  Clock,
+  Check,
+  Settings,
+  Sparkles
+} from 'lucide-vue-next'
 
-// Props 정의
 const props = defineProps<{
-  initialData?: ChallengeCreateRequest // 수정 시 데이터 주입
-  isEditMode?: boolean // 모드 구분
+  initialData?: ChallengeCreateRequest
+  isEditMode?: boolean
 }>()
 
-// Emits 정의
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'submit', payload: ChallengeCreateRequest): void
@@ -17,7 +24,6 @@ const emit = defineEmits<{
 
 const toastStore = useToastStore()
 
-// 폼 초기 상태
 const form = ref<ChallengeCreateRequest>({
   title: '',
   description: '',
@@ -30,22 +36,18 @@ const form = ref<ChallengeCreateRequest>({
   isPublic: true,
 })
 
-// 수정 모드일 때 데이터 채워넣기
 onMounted(() => {
   if (props.initialData) {
-    // 깊은 복사로 반응성 끊기 (수정 중 취소했을 때 원본 오염 방지)
     form.value = JSON.parse(JSON.stringify(props.initialData))
   }
 })
 
-// 챌린지 타입 옵션
 const typeOptions = [
-  { value: 'CALORIE_LIMIT', label: '🔥 칼로리 제한', desc: '목표 칼로리 이하로 섭취하기' },
-  { value: 'RECORD_FREQUENCY', label: '📝 기록 습관', desc: '하루 N회 이상 식단 기록하기' },
-  { value: 'TIME_RANGE', label: '⏰ 타임 어택', desc: '지정 시간(시) 이전에 아침 먹기' },
+  { value: 'CALORIE_LIMIT', label: '칼로리 제한', desc: '목표 칼로리 이하 섭취', icon: Flame, color: 'text-rose-500' },
+  { value: 'RECORD_FREQUENCY', label: '기록 습관', desc: '하루 N회 이상 기록', icon: FileText, color: 'text-primary-600' },
+  { value: 'TIME_RANGE', label: '타임 어택', desc: '아침 식사 마감 시간', icon: Clock, color: 'text-amber-500' },
 ] as const
 
-// 타입에 따른 목표 수치 라벨 동적 변경
 const targetLabel = computed(() => {
   switch (form.value.type) {
     case 'CALORIE_LIMIT':
@@ -59,14 +61,11 @@ const targetLabel = computed(() => {
   }
 })
 
-// 제출 핸들러
 const handleSubmit = () => {
-  // 1. 제목 검증
   if (!form.value.title.trim()) {
     return toastStore.show('제목을 입력해주세요.', 'warning')
   }
 
-  // 2. 날짜 검증
   if (!form.value.startDate || !form.value.endDate) {
     return toastStore.show('시작일과 종료일을 모두 설정해주세요.', 'warning')
   }
@@ -74,7 +73,6 @@ const handleSubmit = () => {
     return toastStore.show('종료일은 시작일보다 빠를 수 없습니다.', 'warning')
   }
 
-  // 3. 수치 검증
   if (form.value.targetValue < 0) {
     return toastStore.show('목표 수치는 0 이상이어야 합니다.', 'warning')
   }
@@ -82,28 +80,36 @@ const handleSubmit = () => {
     return toastStore.show('성공 목표일은 최소 1일 이상이어야 합니다.', 'warning')
   }
 
-  // 데이터 전송
   emit('submit', { ...form.value })
 }
 </script>
 
 <template>
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"
+    class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in p-4"
   >
     <div
-      class="bg-white w-[340px] max-h-[85vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden"
+      class="bg-white w-full max-w-[340px] max-h-[85vh] rounded-[32px] flex flex-col shadow-float overflow-hidden border border-slate-100"
     >
       <div
-        class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white z-10"
+        class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-white z-10"
       >
-        <h2 class="text-lg font-bold text-gray-800">
-          {{ isEditMode ? '🛠️ 챌린지 수정' : '✨ 챌린지 만들기' }}
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <template v-if="isEditMode">
+            <Settings :size="20" class="text-slate-600" />
+            <span>챌린지 수정</span>
+          </template>
+          <template v-else>
+            <Sparkles :size="20" class="text-amber-500" />
+            <span>챌린지 만들기</span>
+          </template>
         </h2>
-        <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600">✕</button>
+        <button @click="$emit('close')" class="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-50 transition">
+            <X :size="20" />
+        </button>
       </div>
 
-      <div class="p-6 space-y-5 overflow-y-auto scrollbar-hide flex-1">
+      <div class="p-6 space-y-5 overflow-y-auto no-scrollbar flex-1 bg-slate-50/50">
         <div>
           <label class="label">챌린지 제목</label>
           <input
@@ -120,7 +126,7 @@ const handleSubmit = () => {
             v-model="form.description"
             rows="2"
             placeholder="어떤 챌린지인가요?"
-            class="input-field resize-none"
+            class="input-field resize-none py-3"
           ></textarea>
         </div>
 
@@ -132,23 +138,30 @@ const handleSubmit = () => {
               :key="opt.value"
               type="button"
               @click="form.type = opt.value"
-              class="flex items-center justify-between px-4 py-3 rounded-xl border transition-all text-left"
+              class="flex items-center justify-between px-4 py-3 rounded-2xl border transition-all text-left relative overflow-hidden"
               :class="
                 form.type === opt.value
-                  ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
-                  : 'border-gray-200 hover:bg-gray-50'
+                  ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500 shadow-sm'
+                  : 'border-slate-200 bg-white hover:bg-slate-50'
               "
             >
-              <div>
-                <div
-                  class="text-xs font-bold"
-                  :class="form.type === opt.value ? 'text-blue-700' : 'text-gray-700'"
-                >
-                  {{ opt.label }}
-                </div>
-                <div class="text-[10px] text-gray-500 mt-0.5">{{ opt.desc }}</div>
+              <div class="flex items-center gap-3">
+                 <div class="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-slate-100 shadow-sm shrink-0">
+                     <component :is="opt.icon" :size="16" :class="opt.color" />
+                 </div>
+                 <div>
+                    <div
+                    class="text-xs font-bold"
+                    :class="form.type === opt.value ? 'text-primary-700' : 'text-slate-700'"
+                    >
+                    {{ opt.label }}
+                    </div>
+                    <div class="text-[10px] text-slate-500 mt-0.5">{{ opt.desc }}</div>
+                 </div>
               </div>
-              <div v-if="form.type === opt.value" class="text-blue-600 text-lg">✔</div>
+              <div v-if="form.type === opt.value" class="text-primary-600 bg-white rounded-full p-0.5 shadow-sm">
+                  <Check :size="14" stroke-width="3" />
+              </div>
             </button>
           </div>
         </div>
@@ -161,7 +174,10 @@ const handleSubmit = () => {
         <div class="flex gap-3">
           <div class="flex-1">
             <label class="label">시작일</label>
-            <input v-model="form.startDate" type="date" class="input-field text-xs" />
+            <div class="relative">
+                <input v-model="form.startDate" type="date" class="input-field text-xs" />
+            </div>
+            
           </div>
           <div class="flex-1">
             <label class="label">종료일</label>
@@ -186,26 +202,28 @@ const handleSubmit = () => {
           </div>
         </div>
 
-        <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
+        <div class="flex items-center justify-between bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
           <div class="flex flex-col">
-            <span class="text-sm font-bold text-gray-700">공개 챌린지</span>
-            <span class="text-[10px] text-gray-500">누구나 검색하고 참여할 수 있어요</span>
+            <span class="text-sm font-bold text-slate-700">공개 챌린지</span>
+            <span class="text-[10px] text-slate-400">누구나 검색하고 참여할 수 있어요</span>
           </div>
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" v-model="form.isPublic" class="sr-only peer" />
             <div
-              class="w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"
+              class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"
             ></div>
           </label>
         </div>
       </div>
 
-      <div class="p-4 border-t border-gray-100 bg-white">
+      <div class="p-4 border-t border-slate-100 bg-white pb-6">
         <button
           @click="handleSubmit"
-          class="w-full py-3.5 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-black transition shadow-lg active:scale-[0.98]"
+          class="w-full h-12 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-black transition shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"
         >
-          {{ isEditMode ? '수정 완료' : '챌린지 생성하기 🔥' }}
+          <Check v-if="isEditMode" :size="18" />
+          <Flame v-else :size="18" class="text-orange-500 fill-orange-500" />
+          {{ isEditMode ? '수정 완료' : '챌린지 생성하기' }}
         </button>
       </div>
     </div>
@@ -214,12 +232,12 @@ const handleSubmit = () => {
 
 <style scoped>
 .label {
-  @apply block text-xs font-bold text-gray-500 mb-1.5 ml-1;
+  @apply block text-xs font-bold text-slate-500 mb-1.5 ml-1;
 }
 .input-field {
-  @apply w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:border-blue-500 outline-none transition;
+  @apply w-full h-11 bg-white border border-slate-200 rounded-xl px-4 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none transition text-slate-800 placeholder:text-slate-300;
 }
-.scrollbar-hide::-webkit-scrollbar {
+.no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .animate-fade-in {

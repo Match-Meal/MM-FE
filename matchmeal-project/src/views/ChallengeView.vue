@@ -3,8 +3,18 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useChallengeStore } from '@/stores/challenge'
 import { useToastStore } from '@/stores/toast'
-import { useConfirmStore } from '@/stores/confirm' // Added
+import { useConfirmStore } from '@/stores/confirm'
 import type { ChallengeCreateRequest } from '@/services/challengeService'
+import { 
+  ArrowLeft, 
+  Lock, 
+  Mail, 
+  Search, 
+  Plus, 
+  Flame, 
+  Clock, 
+  Calendar 
+} from 'lucide-vue-next'
 
 const router = useRouter()
 
@@ -13,11 +23,11 @@ import BottomNav from '@/components/common/BottomNav.vue'
 import PrivateCodeModal from '@/components/PrivateCodeModal.vue'
 import ChallengeCreateForm from '@/components/ChallengeCreateForm.vue'
 import ChallengeCard from '@/components/ChallengeCard.vue'
-import InviteCheckModal from '@/components/InviteCheckModal.vue' // Added
+import InviteCheckModal from '@/components/InviteCheckModal.vue'
 
 const challengeStore = useChallengeStore()
 const toastStore = useToastStore()
-const confirmStore = useConfirmStore() // Added
+const confirmStore = useConfirmStore()
 
 // 탭 및 필터 상태
 const activeTab = ref<'my' | 'explore'>('my')
@@ -28,7 +38,7 @@ const hideJoined = ref(false)
 // 모달 상태
 const showCreateModal = ref(false)
 const showCodeModal = ref(false)
-const showInviteCheckModal = ref(false) // Added
+const showInviteCheckModal = ref(false)
 
 // 초기 데이터 로드
 onMounted(async () => {
@@ -39,7 +49,7 @@ onMounted(async () => {
       }
     }),
     challengeStore.fetchPublicChallenges(),
-    challengeStore.fetchMyInvitations(), // Added
+    challengeStore.fetchMyInvitations(),
   ])
 })
 
@@ -54,9 +64,9 @@ const filteredChallenges = computed(() => {
 
 const challengeTypes = [
   { value: '', label: '전체' },
-  { value: 'CALORIE_LIMIT', label: '칼로리' },
-  { value: 'RECORD_FREQUENCY', label: '습관' },
-  { value: 'TIME_RANGE', label: '시간' },
+  { value: 'CALORIE_LIMIT', label: '칼로리', icon: Flame },
+  { value: 'RECORD_FREQUENCY', label: '습관', icon: Calendar },
+  { value: 'TIME_RANGE', label: '시간', icon: Clock },
 ]
 
 // --- [Actions] ---
@@ -76,7 +86,7 @@ const selectType = (type: string) => {
 const handleCreateSubmit = async (payload: ChallengeCreateRequest) => {
   try {
     await challengeStore.createChallenge(payload)
-    toastStore.show('챌린지를 생성했습니다! 🎉', 'success')
+    toastStore.show('챌린지를 생성했습니다.', 'success')
     showCreateModal.value = false
     activeTab.value = 'my'
   } catch (e) {
@@ -90,7 +100,7 @@ const handleJoin = async (id: number) => {
   if (!(await confirmStore.show('정말 참여하시겠습니까?'))) return
   try {
     await challengeStore.joinChallenge(id)
-    toastStore.show('참여 완료! 파이팅입니다 🔥', 'success')
+    toastStore.show('참여 완료! 파이팅입니다.', 'success')
     activeTab.value = 'my'
   } catch (e) {
     console.error(e)
@@ -113,40 +123,40 @@ const handleCodeSubmit = async (code: string) => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center text-gray-800">
+  <div class="bg-gray-100 min-h-screen flex items-center justify-center text-slate-800">
     <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-900 flex flex-col"
+      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
       <!-- Header -->
-      <header class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 shrink-0">
-        <button v-if="activeTab === 'my'" @click="router.push('/home')" class="text-2xl w-8">
-          ←
+      <header class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0">
+        <button v-if="activeTab === 'my'" @click="router.push('/home')" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+          <ArrowLeft :size="24" />
         </button>
         <div v-else class="w-8"></div>
-        <h1 class="font-bold text-lg truncate">챌린지</h1>
-        <div class="flex gap-3 text-lg">
-          <button @click="showCodeModal = true" class="relative">🔒</button>
-          <button @click="showInviteCheckModal = true" class="relative">
-            💌
+        <h1 class="font-bold text-lg truncate text-slate-800">챌린지</h1>
+        <div class="flex gap-2">
+          <button @click="showCodeModal = true" class="relative p-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+            <Lock :size="20" />
+          </button>
+          <button @click="showInviteCheckModal = true" class="relative p-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+            <Mail :size="20" />
             <span
               v-if="challengeStore.myInvitations.length > 0"
-              class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full font-bold border-2 border-white"
-            >
-              {{ challengeStore.myInvitations.length }}
-            </span>
+              class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white"
+            ></span>
           </button>
         </div>
       </header>
 
       <!-- Tabs & Search (Sticky below header) -->
-      <div class="bg-white z-10 border-b border-gray-100">
+      <div class="bg-white z-10 border-b border-slate-100">
         <div class="flex p-2">
           <button
             @click="activeTab = 'my'"
-            class="flex-1 py-2 text-sm font-bold border-b-2 transition"
+            class="flex-1 py-2.5 text-sm font-bold border-b-2 transition"
             :class="
               activeTab === 'my'
-                ? 'border-gray-800 text-gray-800'
+                ? 'border-slate-800 text-slate-800'
                 : 'border-transparent text-gray-400 hover:text-gray-600'
             "
           >
@@ -154,10 +164,10 @@ const handleCodeSubmit = async (code: string) => {
           </button>
           <button
             @click="activeTab = 'explore'"
-            class="flex-1 py-2 text-sm font-bold border-b-2 transition"
+            class="flex-1 py-2.5 text-sm font-bold border-b-2 transition"
             :class="
               activeTab === 'explore'
-                ? 'border-gray-800 text-gray-800'
+                ? 'border-slate-800 text-slate-800'
                 : 'border-transparent text-gray-400 hover:text-gray-600'
             "
           >
@@ -165,54 +175,59 @@ const handleCodeSubmit = async (code: string) => {
           </button>
         </div>
 
-        <div v-if="activeTab === 'explore'" class="space-y-3 pb-2 px-4 animate-fade-in">
-          <div class="relative">
+        <div v-if="activeTab === 'explore'" class="space-y-3 pb-3 px-4 animate-fade-in">
+          <div class="relative mt-2">
             <input
               v-model="searchKeyword"
               @keyup.enter="handleSearch"
               type="text"
               placeholder="관심있는 챌린지 검색..."
-              class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 pl-9 pr-4 text-sm outline-none focus:border-blue-500 transition"
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-sm outline-none focus:border-primary-500 focus:bg-white transition"
             />
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
+            <Search :size="16" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
           </div>
 
           <div class="flex justify-between items-center">
-            <div class="flex gap-1.5 overflow-x-auto scrollbar-hide">
+            <div class="flex gap-1.5 overflow-x-auto scrollbar-hide py-1">
               <button
                 v-for="t in challengeTypes"
                 :key="t.value"
                 @click="selectType(t.value)"
-                class="px-2.5 py-1 rounded-lg text-[11px] font-bold border transition whitespace-nowrap"
+                class="px-3 py-1.5 rounded-xl text-[11px] font-bold border transition whitespace-nowrap flex items-center gap-1"
                 :class="
                   selectedType === t.value
-                    ? 'bg-gray-800 text-white border-gray-800'
-                    : 'bg-white text-gray-500 border-gray-200'
+                    ? 'bg-slate-800 text-white border-slate-800'
+                    : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
                 "
               >
+                <component v-if="t.icon" :is="t.icon" :size="12" />
                 {{ t.label }}
               </button>
             </div>
-            <label class="flex items-center gap-1 cursor-pointer">
+            <label class="flex items-center gap-1.5 cursor-pointer pl-2">
               <input
                 type="checkbox"
                 v-model="hideJoined"
-                class="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500 accent-blue-600"
+                class="w-4 h-4 rounded text-primary-600 focus:ring-primary-500 border-gray-300"
               />
-              <span class="text-[10px] text-gray-500 font-bold whitespace-nowrap">미참여만</span>
+              <span class="text-xs text-slate-500 font-medium whitespace-nowrap">미참여만</span>
             </label>
           </div>
         </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto scrollbar-hide bg-gray-50/50 p-5 space-y-4">
+      <div class="flex-1 overflow-y-auto scrollbar-hide bg-slate-50 p-5 space-y-4">
         <div v-if="challengeStore.isLoading" class="flex justify-center py-10">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
         </div>
 
         <template v-if="activeTab === 'my' && !challengeStore.isLoading">
-          <div v-if="challengeStore.myChallenges.length === 0" class="empty-state">
-            참여 중인 챌린지가 없어요 😢<br />새로운 목표에 도전해보세요!
+          <div v-if="challengeStore.myChallenges.length === 0" class="empty-state flex flex-col items-center justify-center py-20 text-center">
+            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-300">
+                <Flame :size="32" />
+            </div>
+            <p class="text-slate-500 font-medium text-sm">참여 중인 챌린지가 없어요</p>
+            <p class="text-slate-400 text-xs mt-1">새로운 목표에 도전해보세요!</p>
           </div>
           <ChallengeCard
             v-for="item in challengeStore.myChallenges"
@@ -249,9 +264,9 @@ const handleCodeSubmit = async (code: string) => {
 
       <button
         @click="showCreateModal = true"
-        class="absolute bottom-24 right-5 w-14 h-14 bg-blue-600 text-white rounded-full shadow-xl text-3xl flex items-center justify-center z-30 hover:bg-blue-700 transition active:scale-95"
+        class="absolute bottom-24 right-5 w-14 h-14 bg-slate-900 text-white rounded-2xl shadow-float flex items-center justify-center z-30 hover:bg-black transition-all active:scale-95 group"
       >
-        ➕
+        <Plus :size="28" stroke-width="2.5" class="group-hover:rotate-90 transition-transform duration-300" />
       </button>
 
       <InviteCheckModal
@@ -265,18 +280,6 @@ const handleCodeSubmit = async (code: string) => {
 </template>
 
 <style scoped>
-.icon-btn {
-  @apply w-8 h-8 rounded-full flex items-center justify-center text-sm transition hover:scale-110 active:scale-95;
-}
-.tab-btn {
-  @apply flex-1 py-2 text-xs font-bold rounded-lg text-gray-400 transition;
-}
-.tab-btn.active {
-  @apply bg-white text-gray-800 shadow-sm;
-}
-.empty-state {
-  @apply text-center py-20 text-xs text-gray-400 leading-relaxed;
-}
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }

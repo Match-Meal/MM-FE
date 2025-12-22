@@ -1,14 +1,28 @@
 <script setup lang="ts">
 import { useToastStore } from '@/stores/toast'
+import {
+  CheckCircle2,
+  AlertTriangle,
+  Info,
+  AlertOctagon
+} from 'lucide-vue-next'
 
 const toastStore = useToastStore()
 
-// 타입별 배경색 설정
-const typeClass = {
-  success: 'bg-green-600/90',
-  error: 'bg-red-500/90',
-  warning: 'bg-orange-500/90', // Added
-  info: 'bg-gray-800/90',
+// 타입별 스타일 설정
+// lucide 아이콘 매핑
+const icons = {
+  success: CheckCircle2,
+  error: AlertOctagon,
+  warning: AlertTriangle,
+  info: Info,
+}
+
+const typeClasses = {
+  success: 'bg-emerald-600 text-white shadow-emerald-200',
+  error: 'bg-rose-500 text-white shadow-rose-200',
+  warning: 'bg-amber-500 text-white shadow-amber-200',
+  info: 'bg-slate-800 text-white shadow-slate-200',
 }
 </script>
 
@@ -16,21 +30,16 @@ const typeClass = {
   <Transition name="toast">
     <div
       v-if="toastStore.isVisible"
-      class="fixed bottom-24 left-1/2 -translate-x-1/2 text-white px-6 py-3 rounded-full shadow-lg z-50 flex items-center gap-2 backdrop-blur-sm transition-colors duration-300"
-      :class="typeClass[toastStore.type] || typeClass.info"
+      class="fixed bottom-24 left-1/2 -translate-x-1/2 px-5 py-3.5 rounded-full shadow-float z-[100] flex items-center gap-3 backdrop-blur-md transition-all duration-300 min-w-[300px] max-w-[90vw] justify-center"
+      :class="typeClasses[toastStore.type] || typeClasses.info"
     >
-      <span class="text-lg">
-        {{
-          toastStore.type === 'success'
-            ? '✅'
-            : toastStore.type === 'error'
-              ? '⚠️'
-              : toastStore.type === 'warning'
-                ? '⚡'
-                : 'ℹ️'
-        }}
-      </span>
-      <span class="text-sm font-medium">{{ toastStore.message }}</span>
+      <component
+        :is="icons[toastStore.type] || icons.info"
+        :size="20"
+        stroke-width="2.5"
+        class="shrink-0"
+      />
+      <span class="text-sm font-bold tracking-wide">{{ toastStore.message }}</span>
     </div>
   </Transition>
 </template>
@@ -38,12 +47,12 @@ const typeClass = {
 <style scoped>
 .toast-enter-active,
 .toast-leave-active {
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .toast-enter-from,
 .toast-leave-to {
   opacity: 0;
-  transform: translate(-50%, 20px);
+  transform: translate(-50%, 40px) scale(0.9);
 }
 </style>

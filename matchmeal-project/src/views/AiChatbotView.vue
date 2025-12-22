@@ -1,76 +1,69 @@
 <template>
-  <div class="bg-gray-200 min-h-screen flex items-center justify-center font-sans text-gray-800">
+  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
     <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-800 flex flex-col"
+      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
       <!-- Header -->
-      <header class="bg-white border-b sticky top-0 z-10">
+      <header class="bg-white border-b border-slate-100 sticky top-0 z-10">
         <div class="flex items-center h-14 px-4">
-          <button @click="$router.back()" class="mr-3">
-            <svg
-              class="w-6 h-6 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
+          <button @click="$router.back()" class="mr-3 p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+            <ArrowLeft :size="24" />
           </button>
-          <h1 class="text-lg font-bold">AI 영양 코치</h1>
+          <h1 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <Bot :size="24" class="text-primary-600" />
+            AI 영양 코치
+          </h1>
         </div>
 
         <!-- Tabs -->
-        <div class="flex border-b">
+        <div class="flex border-b border-slate-100">
           <button
             v-for="tab in tabs"
             :key="tab.id"
             @click="currentTab = tab.id"
-            class="flex-1 py-3 text-sm font-medium transition-colors relative"
-            :class="currentTab === tab.id ? 'text-blue-600' : 'text-gray-500'"
+            class="flex-1 py-3 text-sm font-bold transition-all relative"
+            :class="currentTab === tab.id ? 'text-primary-600' : 'text-slate-400 hover:text-slate-600'"
           >
             {{ tab.label }}
             <div
               v-if="currentTab === tab.id"
-              class="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600"
+              class="absolute bottom-0 left-0 w-full h-0.5 bg-primary-600"
             ></div>
           </button>
         </div>
       </header>
 
       <!-- Content Area -->
-      <div class="flex-1 overflow-y-auto p-4 pb-20 scrollbar-hide">
+      <div class="flex-1 overflow-y-auto p-4 pb-20 scrollbar-hide bg-slate-50">
         <!-- 1. Period Feedback Tab -->
         <div v-if="currentTab === 'feedback'" class="space-y-6">
-          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h2 class="text-lg font-bold mb-4">기간별 식단 분석</h2>
-            <p class="text-xs text-gray-500 mb-6">
-              최근 식록을 바탕으로 영양 밸런스를 분석해드립니다.
+          <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+            <h2 class="text-lg font-bold mb-2 text-slate-800 flex items-center gap-2">
+                <BarChart3 :size="20" class="text-primary-500" /> 기간별 식단 분석
+            </h2>
+            <p class="text-xs text-slate-500 mb-6 leading-relaxed">
+              최근 식사 기록을 바탕으로 영양 밸런스를 분석해드립니다.
             </p>
 
             <div class="grid grid-cols-2 gap-4 mb-6">
               <div class="space-y-1">
-                <label class="text-[10px] text-gray-500 font-bold uppercase tracking-wider"
+                <label class="text-[10px] text-slate-500 font-bold uppercase tracking-wider"
                   >시작일</label
                 >
                 <input
                   type="date"
                   v-model="feedbackDate.start"
-                  class="w-full p-3 bg-gray-50 rounded-xl text-xs border border-gray-200 focus:outline-none focus:border-blue-500 transition"
+                  class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border border-slate-200 focus:outline-none focus:border-primary-500 transition text-slate-700"
                 />
               </div>
               <div class="space-y-1">
-                <label class="text-[10px] text-gray-500 font-bold uppercase tracking-wider"
+                <label class="text-[10px] text-slate-500 font-bold uppercase tracking-wider"
                   >종료일</label
                 >
                 <input
                   type="date"
                   v-model="feedbackDate.end"
-                  class="w-full p-3 bg-gray-50 rounded-xl text-xs border border-gray-200 focus:outline-none focus:border-blue-500 transition"
+                  class="w-full p-3 bg-slate-50 rounded-xl text-xs font-medium border border-slate-200 focus:outline-none focus:border-primary-500 transition text-slate-700"
                 />
               </div>
             </div>
@@ -78,9 +71,9 @@
             <button
               @click="reqFeedback"
               :disabled="loading"
-              class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center shadow-lg shadow-blue-200"
+              class="w-full py-4 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center shadow-lg shadow-primary-200 active:scale-[0.98]"
             >
-              <span v-if="loading" class="animate-spin mr-2">⏳</span>
+              <Loader2 v-if="loading" class="animate-spin mr-2" :size="20" />
               {{ loading ? '분석 중...' : '분석 요청하기' }}
             </button>
           </div>
@@ -88,9 +81,11 @@
 
         <!-- 2. Menu Recommendation Tab -->
         <div v-if="currentTab === 'recommend'" class="space-y-6">
-          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h2 class="text-lg font-bold mb-4">맞춤 메뉴 추천</h2>
-            <p class="text-xs text-gray-500 mb-6">
+          <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+            <h2 class="text-lg font-bold mb-2 text-slate-800 flex items-center gap-2">
+                <Utensils :size="20" class="text-orange-500" /> 맞춤 메뉴 추천
+            </h2>
+            <p class="text-xs text-slate-500 mb-6 leading-relaxed">
               오늘 먹은 음식과 건강 상태를 고려해 딱 맞는 메뉴를 추천해드려요.
             </p>
 
@@ -99,11 +94,11 @@
                 v-for="type in mealTypes"
                 :key="type"
                 @click="selectedMealType = type"
-                class="p-4 rounded-xl text-sm font-medium transition-all"
+                class="p-4 rounded-xl text-sm font-bold transition-all border"
                 :class="
                   selectedMealType === type
-                    ? 'bg-blue-600 text-white shadow-md transform scale-[1.02]'
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                    ? 'bg-primary-600 text-white border-primary-600 shadow-md transform scale-[1.02]'
+                    : 'bg-white text-slate-500 border-slate-100 hover:bg-slate-50'
                 "
               >
                 {{ type }}
@@ -113,9 +108,10 @@
             <button
               @click="reqRecommend"
               :disabled="loading"
-              class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center shadow-lg shadow-blue-200"
+              class="w-full py-4 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center shadow-lg shadow-primary-200 active:scale-[0.98]"
             >
-              <span v-if="loading" class="animate-spin mr-2">🍳</span>
+              <Loader2 v-if="loading" class="animate-spin mr-2" :size="20" />
+              <Sparkles v-else class="mr-2 text-yellow-300" :size="20" />
               {{ loading ? '메뉴 고민 중...' : '메뉴 추천받기' }}
             </button>
           </div>
@@ -124,46 +120,46 @@
         <!-- 3. History Tab -->
         <div v-if="currentTab === 'history'" class="space-y-4">
           <div v-if="historyLoading" class="flex justify-center py-8">
-            <span class="animate-spin text-2xl text-blue-500">⏳</span>
+            <Loader2 class="animate-spin text-primary-500" :size="32" />
           </div>
 
           <div
             v-else-if="historyList.length === 0"
-            class="flex flex-col items-center justify-center py-20 text-gray-400"
+            class="flex flex-col items-center justify-center py-20 text-slate-400"
           >
-            <span class="text-4xl mb-4">💬</span>
-            <p class="text-sm">아직 대화 기록이 없어요.</p>
+            <MessageSquare :size="48" class="mb-4 text-slate-300" />
+            <p class="text-sm font-medium">아직 대화 기록이 없어요.</p>
           </div>
 
           <div
             v-else
             v-for="(item, index) in historyList"
             :key="index"
-            class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100"
+            class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100"
           >
             <div class="flex justify-between items-start mb-3">
               <span
-                class="px-2 py-1 rounded-md text-[10px] font-bold tracking-wide"
+                class="px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wide border"
                 :class="
                   item.aiType === 'FEEDBACK'
-                    ? 'bg-blue-100 text-blue-600'
-                    : 'bg-green-100 text-green-600'
+                    ? 'bg-blue-50 text-blue-600 border-blue-100'
+                    : 'bg-green-50 text-green-600 border-green-100'
                 "
               >
                 {{ item.aiType === 'FEEDBACK' ? '식단 분석' : '메뉴 추천' }}
               </span>
-              <span class="text-[10px] text-gray-400">{{ formatDate(item.createdAt) }}</span>
+              <span class="text-[10px] text-slate-400 font-medium">{{ formatDate(item.createdAt) }}</span>
             </div>
 
             <div
               v-if="item.question"
-              class="mb-3 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-100"
+              class="mb-3 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 font-medium"
             >
-              {{ item.question }}
+              Q. {{ item.question }}
             </div>
 
             <div
-              class="text-xs text-gray-800 leading-relaxed result-markdown"
+              class="text-xs text-slate-800 leading-relaxed result-markdown"
               v-html="renderMarkdown(item.answer)"
             ></div>
           </div>
@@ -172,16 +168,16 @@
         <!-- Result Display Area (For Feedback/Recommend) -->
         <div
           v-if="result && currentTab !== 'history'"
-          class="mt-6 bg-white rounded-2xl p-6 shadow-sm border border-blue-100 animate-fade-in-up"
+          class="mt-6 bg-white rounded-3xl p-6 shadow-float border border-primary-100 animate-fade-in-up"
         >
-          <div class="flex items-center mb-4 border-b border-gray-100 pb-3">
-            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-              🤖
+          <div class="flex items-center mb-4 border-b border-slate-100 pb-3">
+            <div class="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center mr-3 text-primary-600 shadow-sm border border-primary-100">
+              <Bot :size="24" />
             </div>
-            <h3 class="font-bold text-gray-800 text-sm">AI 코치의 답변</h3>
+            <h3 class="font-bold text-slate-800 text-sm">AI 코치의 답변</h3>
           </div>
           <div
-            class="text-xs text-gray-700 leading-relaxed result-markdown"
+            class="text-xs text-slate-700 leading-relaxed result-markdown"
             v-html="renderMarkdown(result)"
           ></div>
         </div>
@@ -205,6 +201,7 @@ import {
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import BottomNav from '@/components/common/BottomNav.vue'
+import { ArrowLeft, Bot, Loader2, BarChart3, Utensils, MessageSquare, Sparkles } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const toastStore = useToastStore()
@@ -336,20 +333,20 @@ const formatDate = (dateStr?: string) => {
 :deep(.result-markdown h1),
 :deep(.result-markdown h2),
 :deep(.result-markdown h3) {
-  font-weight: bold;
+  font-weight: 800;
   margin-top: 1rem;
   margin-bottom: 0.5rem;
-  color: #1a202c;
+  color: #1e293b; /* slate-800 */
 }
 
 :deep(.result-markdown h1) {
-  font-size: 1.5rem;
-}
-:deep(.result-markdown h2) {
   font-size: 1.25rem;
 }
-:deep(.result-markdown h3) {
+:deep(.result-markdown h2) {
   font-size: 1.1rem;
+}
+:deep(.result-markdown h3) {
+  font-size: 1rem;
 }
 
 :deep(.result-markdown p) {
@@ -374,13 +371,16 @@ const formatDate = (dateStr?: string) => {
 
 :deep(.result-markdown strong) {
   font-weight: 700;
-  color: #2b6cb0; /* 강조색 */
+  color: #2563eb; /* primary-600 */
 }
 
 :deep(.result-markdown blockquote) {
-  border-left: 4px solid #e2e8f0;
+  border-left: 4px solid #cbd5e1; /* slate-300 */
   padding-left: 1rem;
-  color: #718096;
+  color: #64748b; /* slate-500 */
   font-style: italic;
+  background-color: #f8fafc; /* slate-50 */
+  padding: 0.5rem 1rem;
+  border-radius: 0 0.5rem 0.5rem 0;
 }
 </style>

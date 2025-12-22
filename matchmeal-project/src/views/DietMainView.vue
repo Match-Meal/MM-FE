@@ -9,6 +9,20 @@ import 'dayjs/locale/ko'
 import weekday from 'dayjs/plugin/weekday'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import BottomNav from '@/components/common/BottomNav.vue'
+import { 
+  ArrowLeft, 
+  BarChart2, 
+  Calendar as CalendarIcon, 
+  ChevronLeft, 
+  ChevronRight, 
+  Utensils, 
+  Plus,
+  Coffee,
+  Sun,
+  Moon,
+  Cookie,
+  AlertCircle
+} from 'lucide-vue-next'
 
 dayjs.extend(weekday)
 dayjs.extend(weekOfYear)
@@ -28,11 +42,9 @@ const fetchData = async () => {
     const response = await getDailyDiets(selectedDate.value)
 
     if (Array.isArray(response)) {
-      console.log('Daily Diets Response:', response)
       dietList.value = response
       dailyTotalCalories.value = response.reduce((acc, cur) => acc + (cur.totalCalories || 0), 0)
     } else if (response && response.diets) {
-      console.log('Daily Diets Response (Object):', response)
       dietList.value = response.diets || []
       dailyTotalCalories.value = response.totalCalories || 0
     } else {
@@ -148,92 +160,105 @@ const mealLabel = (type: string) => {
   return types[type] || type
 }
 
-const getMealIcon = (type: string) => {
-  const icons: Record<string, string> = {
-    BREAKFAST: '🥪',
-    LUNCH: '🍱',
-    DINNER: '🥗',
-    SNACK: '🍎',
+import type { Component } from 'vue'
+
+const getMealIconInfo = (type: string) => {
+  const icons: Record<string, { icon: Component; color: string; bg: string }> = {
+    BREAKFAST: { icon: Coffee, color: 'text-amber-500', bg: 'bg-amber-100' },
+    LUNCH: { icon: Sun, color: 'text-orange-500', bg: 'bg-orange-100' },
+    DINNER: { icon: Moon, color: 'text-indigo-500', bg: 'bg-indigo-100' },
+    SNACK: { icon: Cookie, color: 'text-pink-500', bg: 'bg-pink-100' },
   }
-  return icons[type] || '🍽️'
+  return icons[type] || { icon: Utensils, color: 'text-primary-500', bg: 'bg-primary-100' }
 }
 </script>
 
 <template>
-  <div class="bg-gray-200 min-h-screen flex items-center justify-center font-sans text-gray-800">
+  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
     <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-800 flex flex-col"
+      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
       <!-- Header -->
-      <header class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 shrink-0">
-        <button @click="router.push('/home')" class="text-2xl w-8">←</button>
-        <h1 class="font-bold text-lg truncate">식단 관리</h1>
+      <header class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0">
+        <button @click="router.push('/home')" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+            <ArrowLeft :size="24" />
+        </button>
+        <h1 class="font-bold text-lg truncate text-slate-800">식단 관리</h1>
         <div class="w-8 flex justify-end">
-          <button @click="router.push('/diet/stats')" class="text-xl">📊</button>
+          <button @click="router.push('/diet/stats')" class="p-2 -mr-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+              <BarChart2 :size="24" />
+          </button>
         </div>
       </header>
 
       <!-- Main Content -->
-      <main class="flex-1 overflow-y-auto bg-gray-50 pb-20 relative">
-        <div class="p-4 flex justify-between items-center bg-white shadow-sm mb-2">
-          <h2 class="font-bold text-xl">오늘의 식단</h2>
-          <div class="text-sm font-bold text-blue-600">
+      <main class="flex-1 overflow-y-auto bg-slate-50 pb-20 relative no-scrollbar">
+        <div class="p-6 flex justify-between items-center bg-white shadow-sm mb-2 z-10 relative">
+          <h2 class="font-bold text-xl text-slate-800">오늘의 식단</h2>
+          <div class="text-sm font-bold text-primary-600 bg-primary-50 px-3 py-1.5 rounded-full">
             총 {{ Math.round(dailyTotalCalories) }} kcal
           </div>
         </div>
 
         <!-- Date Navigation -->
         <div
-          class="px-4 mb-4 flex justify-center gap-4 items-center text-sm py-2 bg-white sticky top-0 z-10 shadow-sm relative"
+          class="px-4 mb-4 flex justify-center gap-4 items-center text-sm py-3 bg-white sticky top-0 z-10 shadow-sm relative border-b border-slate-100"
         >
-          <button @click="changeDate(-1)" class="text-gray-400 text-xl px-2">&lt;</button>
+          <button @click="changeDate(-1)" class="text-slate-400 p-1 hover:bg-slate-50 rounded-full transition">
+              <ChevronLeft :size="24" />
+          </button>
+          
           <span
             @click="toggleCalendar"
-            class="font-bold text-lg cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition flex items-center gap-1"
+            class="font-bold text-lg cursor-pointer hover:bg-slate-50 px-3 py-1.5 rounded-xl transition flex items-center gap-2 select-none"
           >
-            {{ formatDate(selectedDate) }} 📅
+            {{ formatDate(selectedDate) }} 
+            <CalendarIcon :size="18" class="text-slate-400" />
           </span>
-          <button @click="changeDate(1)" class="text-gray-400 text-xl px-2">&gt;</button>
+
+          <button @click="changeDate(1)" class="text-slate-400 p-1 hover:bg-slate-50 rounded-full transition">
+              <ChevronRight :size="24" />
+          </button>
 
           <!-- Calendar Modal Overlay -->
           <div
             v-if="showCalendar"
-            class="absolute top-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 w-[320px] z-50 animate-fade-in left-1/2 -translate-x-1/2"
+            class="absolute top-full mt-2 bg-white rounded-2xl shadow-float border border-slate-100 p-4 w-[320px] z-50 animate-fade-in left-1/2 -translate-x-1/2"
           >
             <div class="flex justify-between items-center mb-4">
               <button
                 @click.stop="changeMonth(-1)"
-                class="text-gray-400 p-1 hover:bg-gray-50 rounded"
+                class="text-slate-400 p-1 hover:bg-slate-50 rounded transition"
               >
-                &lt;
+                <ChevronLeft :size="20" />
               </button>
-              <span class="font-bold text-gray-800">{{ calendarDate.format('YYYY년 M월') }}</span>
+              <span class="font-bold text-slate-800">{{ calendarDate.format('YYYY년 M월') }}</span>
               <button
                 @click.stop="changeMonth(1)"
-                class="text-gray-400 p-1 hover:bg-gray-50 rounded"
+                class="text-slate-400 p-1 hover:bg-slate-50 rounded transition"
               >
-                &gt;
+                <ChevronRight :size="20" />
               </button>
             </div>
-            <div class="grid grid-cols-7 text-center text-xs text-gray-500 mb-2">
-              <div class="text-red-500">일</div>
+            <div class="grid grid-cols-7 text-center text-xs text-slate-400 mb-2 font-medium">
+              <div class="text-rose-500">일</div>
               <div>월</div>
               <div>화</div>
               <div>수</div>
               <div>목</div>
               <div>금</div>
-              <div class="text-blue-500">토</div>
+              <div class="text-primary-500">토</div>
             </div>
             <div class="grid grid-cols-7 gap-1 text-center">
               <button
                 v-for="day in calendarGrid"
                 :key="day.date"
                 @click.stop="selectCalendarDate(day.date)"
-                class="h-8 w-8 rounded-full flex items-center justify-center text-sm transition"
+                class="h-9 w-9 rounded-full flex items-center justify-center text-sm transition font-medium"
                 :class="[
-                  !day.isCurrentMonth ? 'text-gray-300' : 'text-gray-800 hover:bg-gray-100',
+                  !day.isCurrentMonth ? 'text-slate-300' : 'text-slate-700 hover:bg-slate-100',
                   day.date === selectedDate
-                    ? 'bg-blue-600 text-white font-bold hover:bg-blue-700'
+                    ? 'bg-primary-600 text-white font-bold hover:bg-primary-700 !shadow-md'
                     : '',
                 ]"
               >
@@ -245,70 +270,89 @@ const getMealIcon = (type: string) => {
           <div
             v-if="showCalendar"
             @click="showCalendar = false"
-            class="fixed inset-0 z-40 bg-transparent"
+            class="fixed inset-0 z-40 bg-black/5"
           ></div>
         </div>
 
         <!-- List -->
-        <div class="px-4 space-y-3 pb-24">
-          <div v-if="isLoading" class="text-center py-10 text-gray-400">Loading...</div>
+        <div class="px-5 space-y-4 pb-24">
+          <div v-if="isLoading" class="flex flex-col items-center justify-center py-20 text-slate-400 gap-2">
+             <div class="w-6 h-6 border-2 border-slate-200 border-t-primary-500 rounded-full animate-spin"></div>
+             <span class="text-xs">불러오는 중...</span>
+          </div>
           <template v-else>
             <div
               v-for="item in dietList"
               :key="item.dietId"
               @click="goToDetail(item)"
-              class="bg-white p-4 rounded-xl shadow-sm flex gap-4 cursor-pointer hover:bg-gray-50 transition border border-gray-100"
+              class="bg-white p-4 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100 cursor-pointer group hover:-translate-y-0.5"
             >
-              <div
-                class="w-16 h-16 bg-orange-100 rounded-xl flex items-center justify-center text-2xl overflow-hidden shrink-0"
-              >
-                <img
-                  v-if="item.dietImgUrl"
-                  :src="item.dietImgUrl"
-                  class="w-full h-full object-cover"
-                  alt="식단 사진"
-                />
-                <span v-else>{{ getMealIcon(item.mealType) }}</span>
-              </div>
-              <div class="flex-1">
-                <div class="flex justify-between items-start">
-                  <div class="flex flex-col">
-                    <span
-                      class="font-bold text-blue-600 text-[10px] bg-blue-50 px-2 py-0.5 rounded-full mb-1 inline-block w-fit"
-                    >
-                      {{ mealLabel(item.mealType) }}
-                    </span>
-                    <h3 class="font-bold text-sm line-clamp-1">
-                      {{
-                        item.details.map((d) => d.foodName).join(', ') || item.memo || '식단 기록'
-                      }}
-                    </h3>
+              <div class="flex gap-4">
+                  <div
+                    class="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl overflow-hidden shrink-0 transition-colors"
+                     :class="!item.dietImgUrl ? getMealIconInfo(item.mealType).bg : 'bg-slate-100'"
+                  >
+                    <img
+                      v-if="item.dietImgUrl"
+                      :src="item.dietImgUrl"
+                      class="w-full h-full object-cover"
+                      alt="식단 사진"
+                    />
+                    <component 
+                        v-else 
+                        :is="getMealIconInfo(item.mealType).icon" 
+                        :class="getMealIconInfo(item.mealType).color"
+                        :size="28" 
+                        stroke-width="2"
+                    />
                   </div>
-                  <span class="text-sm font-bold text-gray-800 whitespace-nowrap ml-2">
-                    {{ Math.round(item.totalCalories) }} kcal
-                  </span>
-                </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start mb-1">
+                      <div class="flex flex-col">
+                        <span
+                          class="font-extrabold text-[10px] px-2 py-0.5 rounded-full mb-1.5 inline-block w-fit tracking-wide"
+                           :class="[getMealIconInfo(item.mealType).bg, getMealIconInfo(item.mealType).color]"
+                        >
+                          {{ mealLabel(item.mealType) }}
+                        </span>
+                        <h3 class="font-bold text-slate-800 text-base line-clamp-1 group-hover:text-primary-600 transition-colors">
+                          {{
+                            item.details.map((d) => d.foodName).join(', ') || item.memo || '식단 기록'
+                          }}
+                        </h3>
+                      </div>
+                    </div>
+                     <div class="flex items-center justify-end mt-2">
+                        <span class="text-sm font-bold text-slate-600 whitespace-nowrap">
+                            {{ Math.round(item.totalCalories) }} <span class="text-xs font-normal text-slate-400">kcal</span>
+                        </span>
+                    </div>
+                  </div>
               </div>
             </div>
 
             <div
               v-if="dietList.length === 0"
-              class="text-center py-10 text-gray-400 bg-white rounded-xl border border-dashed"
+              class="flex flex-col items-center justify-center py-16 text-slate-400 bg-white rounded-3xl border-2 border-dashed border-slate-200 gap-3"
             >
-              기록된 식단이 없습니다.<br />
-              + 버튼을 눌러 기록해보세요!
+              <AlertCircle :size="32" class="text-slate-300" />
+              <div class="text-center text-sm font-medium">
+                  기록된 식단이 없습니다.<br />
+                  <span class="text-primary-600 font-bold">+ 버튼</span>을 눌러 기록해보세요!
+              </div>
             </div>
           </template>
         </div>
 
         <!-- FAB -->
-        <button
-          @click="goRecord"
-          class="absolute bottom-6 right-6 w-14 h-14 bg-black text-white rounded-full shadow-xl text-3xl flex items-center justify-center z-10 hover:scale-105 transition"
-        >
-          +
-        </button>
       </main>
+
+      <button
+        @click="goRecord"
+        class="absolute bottom-24 right-6 w-14 h-14 bg-slate-900 text-white rounded-2xl shadow-float flex items-center justify-center z-30 hover:bg-black transition-all active:scale-95 group"
+      >
+        <Plus :size="28" stroke-width="2.5" class="group-hover:rotate-90 transition-transform duration-300" />
+      </button>
 
       <BottomNav />
     </div>
@@ -317,16 +361,23 @@ const getMealIcon = (type: string) => {
 
 <style scoped>
 .animate-fade-in {
-  animation: fadeIn 0.15s ease-out;
+  animation: fadeIn 0.2s ease-out;
 }
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translate(-50%, -10px);
+    transform: translate(-50%, -8px);
   }
   to {
     opacity: 1;
     transform: translate(-50%, 0);
   }
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 </style>

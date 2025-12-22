@@ -10,6 +10,16 @@ import {
 
 import { useAuthStore } from '@/stores/auth';
 import { useToastStore } from '@/stores/toast';
+import { 
+  ArrowLeft, 
+  Megaphone, 
+  Utensils, 
+  HelpCircle, 
+  Lightbulb, 
+  Camera, 
+  X, 
+  Image as ImageIcon 
+} from 'lucide-vue-next'
 
 const route = useRoute();
 const router = useRouter();
@@ -38,14 +48,14 @@ const deletedFileIds = ref<number[]>([]);
 
 const categories = computed(() => {
   const list = [
-    { label: '🗣 자유', value: CommunityCategory.FREE },
-    { label: '🥗 식단', value: CommunityCategory.DIET },
-    { label: '❓ 질문', value: CommunityCategory.QNA },
-    { label: '💡 정보', value: CommunityCategory.INFO },
+    { label: '자유', value: CommunityCategory.FREE, icon: Megaphone },
+    { label: '식단', value: CommunityCategory.DIET, icon: Utensils },
+    { label: '질문', value: CommunityCategory.QNA, icon: HelpCircle },
+    { label: '정보', value: CommunityCategory.INFO, icon: Lightbulb },
   ];
 
   if (authStore.user?.role === 'ROLE_ADMIN') {
-    list.unshift({ label: '📢 공지', value: CommunityCategory.NOTICE });
+    list.unshift({ label: '공지', value: CommunityCategory.NOTICE, icon: Megaphone });
   }
 
   return list;
@@ -293,29 +303,38 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="bg-gray-200 min-h-screen flex items-center justify-center font-sans text-gray-800">
-    <div class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-800 flex flex-col">
+  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
+    <div class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col">
       
       <!-- Header -->
-      <header class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 shrink-0">
-        <button @click="goBack" class="text-2xl w-8">←</button>
-        <h1 class="font-bold text-lg truncate">{{ isEditMode ? '게시글 수정' : '새 게시글' }}</h1>
-        <button @click="submitPost" class="text-sm font-bold text-blue-600 w-8" :disabled="isLoading">완료</button>
+      <header class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0">
+        <button @click="goBack" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+            <ArrowLeft :size="24" />
+        </button>
+        <h1 class="font-bold text-lg truncate text-slate-800">{{ isEditMode ? '게시글 수정' : '새 게시글' }}</h1>
+        <button 
+            @click="submitPost" 
+            class="text-sm font-bold text-primary-600 hover:text-primary-700 w-8 transition disabled:opacity-50" 
+            :disabled="isLoading"
+        >
+            완료
+        </button>
       </header>
 
       <main class="flex-1 overflow-y-auto bg-white p-6 pb-20 no-scrollbar">
           
           <!-- Category Select -->
-          <div class="mb-4">
-              <label class="block text-xs font-bold text-gray-500 mb-2">카테고리</label>
+          <div class="mb-6">
+              <label class="block text-xs font-bold text-slate-500 mb-2">카테고리</label>
               <div class="flex flex-wrap gap-2">
                   <button 
                     v-for="cat in categories" 
                     :key="cat.value"
                     @click="category = cat.value"
-                    class="px-3 py-2 rounded-lg text-xs font-bold border transition"
-                    :class="category === cat.value ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-50 text-gray-600 border-gray-200'"
+                    class="px-3 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-1.5"
+                    :class="category === cat.value ? 'bg-primary-600 text-white border-primary-600 shadow-md' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'"
                   >
+                    <component :is="cat.icon" :size="14" />
                     {{ cat.label }}
                   </button>
               </div>
@@ -329,7 +348,7 @@ onMounted(() => {
                  name="postTitle"
                  id="postTitle"
                  autocomplete="off"
-                 class="w-full text-lg font-bold border-b border-gray-200 py-2 focus:outline-none focus:border-blue-500 placeholder-gray-300"
+                 class="w-full text-lg font-bold border-b border-slate-200 py-3 focus:outline-none focus:border-primary-500 placeholder-slate-300 transition-colors bg-transparent"
                  placeholder="제목을 입력하세요"
                >
           </div>
@@ -338,16 +357,18 @@ onMounted(() => {
           <div class="mb-6">
               <textarea 
                 v-model="content" 
-                class="w-full h-64 resize-none text-sm leading-relaxed focus:outline-none placeholder-gray-300"
+                class="w-full h-64 resize-none text-sm leading-relaxed focus:outline-none placeholder-slate-300 bg-transparent text-slate-700"
                 placeholder="내용을 입력하세요. (건강한 커뮤니티를 위해 서로 존중해주세요!)"
               ></textarea>
           </div>
 
           <!-- Image Upload -->
-          <div>
-              <div class="flex items-center justify-between mb-2">
-                  <label class="text-xs font-bold text-gray-500">사진/동영상 첨부</label>
-                  <button v-if="previewItems.length > 0 || existingItems.length > 0" @click="clearFiles" class="text-xs text-red-500">전체 삭제</button>
+          <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+              <div class="flex items-center justify-between mb-3">
+                  <label class="text-xs font-bold text-slate-600 flex items-center gap-1">
+                      <ImageIcon :size="14" /> 사진/동영상 첨부
+                  </label>
+                  <button v-if="previewItems.length > 0 || existingItems.length > 0" @click="clearFiles" class="text-xs text-rose-500 font-medium hover:underline">전체 삭제</button>
               </div>
 
               <!-- Horizontal Scroll for images -->
@@ -355,28 +376,28 @@ onMounted(() => {
                   <!-- Add Button -->
                   <div 
                     @click="triggerFileInput"
-                    class="w-20 h-20 bg-gray-50 rounded-xl border border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 cursor-pointer overflow-hidden flex-shrink-0"
+                    class="w-20 h-20 bg-white rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 cursor-pointer overflow-hidden flex-shrink-0 hover:bg-slate-50 hover:border-primary-300 hover:text-primary-500 transition-all group"
                   >
-                      <span class="text-xl">📷</span>
-                      <span class="text-[10px]">{{ previewItems.length }}/5</span>
+                      <Camera :size="24" class="mb-1 group-hover:scale-110 transition-transform" />
+                      <span class="text-[10px] font-bold">{{ previewItems.length + existingItems.length }}/5</span>
                   </div>
 
                   <!-- Existing Items (Edit Mode) -->
                   <div 
                     v-for="(item, index) in existingItems" 
                     :key="`existing-${index}`"
-                    class="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border"
+                    class="w-20 h-20 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-slate-200 shadow-sm group"
                   >
-                      <img v-if="item.type === 'image'" :src="item.url" class="w-full h-full object-cover opacity-70">
-                      <video v-else :src="item.url" class="w-full h-full object-cover opacity-70"></video>
-                      <div class="absolute inset-0 flex items-center justify-center text-[10px] text-white font-bold bg-black/30 pointer-events-none">기존</div>
+                      <img v-if="item.type === 'image'" :src="item.url" class="w-full h-full object-cover">
+                      <video v-else :src="item.url" class="w-full h-full object-cover"></video>
+                      <div class="absolute inset-0 flex items-center justify-center text-[10px] text-white font-bold bg-black/40 pointer-events-none backdrop-blur-[1px]">기존</div>
                       
                       <!-- Delete Button -->
                       <button 
                         @click="removeExistingFile(index)"
-                        class="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-red-500 transition z-10"
+                        class="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-rose-500 transition z-10 opacity-0 group-hover:opacity-100"
                       >
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                          <X :size="12" />
                       </button>
                   </div>
 
@@ -384,22 +405,22 @@ onMounted(() => {
                   <div 
                     v-for="(item, idx) in previewItems" 
                     :key="idx" 
-                    class="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 border relative"
+                    class="w-20 h-20 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200 shadow-sm relative group"
                   >
                       <img v-if="item.type === 'image'" :src="item.url" class="w-full h-full object-cover">
                       <video v-else :src="item.url" class="w-full h-full object-cover"></video>
                       
                       <!-- Video Indicator -->
-                      <div v-if="item.type === 'video'" class="absolute bottom-1 right-1 bg-black/50 text-white rounded-full p-0.5 pointer-events-none">
+                      <div v-if="item.type === 'video'" class="absolute bottom-1 right-1 bg-black/50 text-white rounded-md p-0.5 pointer-events-none">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" /></svg>
                       </div>
 
                       <!-- Delete Button -->
                       <button 
                         @click="removeNewFile(idx)"
-                        class="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-red-500 transition z-10"
+                        class="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-rose-500 transition z-10 opacity-0 group-hover:opacity-100"
                       >
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                          <X :size="12" />
                       </button>
                   </div>
               </div>
@@ -412,7 +433,7 @@ onMounted(() => {
                 class="hidden"
                 @change="handleFileChange"
               >
-              <p class="text-[10px] text-gray-400 mt-2">* 사진/동영상은 최대 5개, 동영상은 개당 50MB까지 가능합니다.</p>
+              <p class="text-[10px] text-slate-400 mt-2 font-medium">* 사진/동영상은 최대 5개, 동영상은 개당 50MB까지 가능합니다.</p>
           </div>
 
       </main>
