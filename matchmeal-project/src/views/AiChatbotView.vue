@@ -6,7 +6,10 @@
       <!-- Header -->
       <header class="bg-white border-b border-slate-100 sticky top-0 z-10">
         <div class="flex items-center h-14 px-4">
-          <button @click="$router.back()" class="mr-3 p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+          <button
+            @click="$router.back()"
+            class="mr-3 p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+          >
             <ArrowLeft :size="24" />
           </button>
           <h1 class="text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -22,7 +25,9 @@
             :key="tab.id"
             @click="currentTab = tab.id"
             class="flex-1 py-3 text-sm font-bold transition-all relative"
-            :class="currentTab === tab.id ? 'text-primary-600' : 'text-slate-400 hover:text-slate-600'"
+            :class="
+              currentTab === tab.id ? 'text-primary-600' : 'text-slate-400 hover:text-slate-600'
+            "
           >
             {{ tab.label }}
             <div
@@ -39,7 +44,7 @@
         <div v-if="currentTab === 'feedback'" class="space-y-6">
           <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
             <h2 class="text-lg font-bold mb-2 text-slate-800 flex items-center gap-2">
-                <BarChart3 :size="20" class="text-primary-500" /> 기간별 식단 분석
+              <BarChart3 :size="20" class="text-primary-500" /> 기간별 식단 분석
             </h2>
             <p class="text-xs text-slate-500 mb-6 leading-relaxed">
               최근 식사 기록을 바탕으로 영양 밸런스를 분석해드립니다.
@@ -83,7 +88,7 @@
         <div v-if="currentTab === 'recommend'" class="space-y-6">
           <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
             <h2 class="text-lg font-bold mb-2 text-slate-800 flex items-center gap-2">
-                <Utensils :size="20" class="text-orange-500" /> 맞춤 메뉴 추천
+              <Utensils :size="20" class="text-orange-500" /> 맞춤 메뉴 추천
             </h2>
             <p class="text-xs text-slate-500 mb-6 leading-relaxed">
               오늘 먹은 음식과 건강 상태를 고려해 딱 맞는 메뉴를 추천해드려요.
@@ -148,7 +153,9 @@
               >
                 {{ item.aiType === 'FEEDBACK' ? '식단 분석' : '메뉴 추천' }}
               </span>
-              <span class="text-[10px] text-slate-400 font-medium">{{ formatDate(item.createdAt) }}</span>
+              <span class="text-[10px] text-slate-400 font-medium">{{
+                formatDate(item.createdAt)
+              }}</span>
             </div>
 
             <div
@@ -171,7 +178,9 @@
           class="mt-6 bg-white rounded-3xl p-6 shadow-float border border-primary-100 animate-fade-in-up"
         >
           <div class="flex items-center mb-4 border-b border-slate-100 pb-3">
-            <div class="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center mr-3 text-primary-600 shadow-sm border border-primary-100">
+            <div
+              class="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center mr-3 text-primary-600 shadow-sm border border-primary-100"
+            >
               <Bot :size="24" />
             </div>
             <h3 class="font-bold text-slate-800 text-sm">AI 코치의 답변</h3>
@@ -184,14 +193,21 @@
       </div>
 
       <BottomNav />
+
+      <!-- 구독 유도 모달 -->
+      <SubscriptionRequiredModal
+        :is-open="isSubscriptionModalOpen"
+        @close="handleCloseSubscriptionModal"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import { useRouter } from 'vue-router'
 import {
   getPeriodFeedback,
   getMenuRecommendation,
@@ -201,8 +217,18 @@ import {
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import BottomNav from '@/components/common/BottomNav.vue'
-import { ArrowLeft, Bot, Loader2, BarChart3, Utensils, MessageSquare, Sparkles } from 'lucide-vue-next'
+import SubscriptionRequiredModal from '@/components/common/SubscriptionRequiredModal.vue'
+import {
+  ArrowLeft,
+  Bot,
+  Loader2,
+  BarChart3,
+  Utensils,
+  MessageSquare,
+  Sparkles,
+} from 'lucide-vue-next'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const toastStore = useToastStore()
 const currentTab = ref('feedback')
@@ -214,6 +240,27 @@ const tabs = [
 
 const loading = ref(false)
 const result = ref('')
+
+// 구독 모달 제어
+const isSubscriptionModalOpen = ref(false)
+
+onMounted(async () => {
+  // 1. 유저 정보 확인
+  if (!authStore.user && authStore.token) {
+    await authStore.fetchUser()
+  }
+
+  // 2. 권한 체크 (ROLE_SUBSCRIBER만 이용 가능)
+  if (authStore.user?.role !== 'ROLE_SUBSCRIBER') {
+    isSubscriptionModalOpen.value = true
+  }
+})
+
+// 모달 닫기 시 뒤로가기 (접근 차단)
+const handleCloseSubscriptionModal = () => {
+  isSubscriptionModalOpen.value = false
+  router.back()
+}
 
 // Initialize with options
 marked.use({

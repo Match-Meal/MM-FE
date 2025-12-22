@@ -9,19 +9,19 @@ import UserInfoModal from '@/components/UserInfoModal.vue'
 import PostListModal from '@/components/PostListModal.vue'
 import { getPosts, type PostListItem, type PostUser } from '@/services/communityService'
 import BottomNav from '@/components/common/BottomNav.vue'
-import { 
-  ArrowLeft, 
-  Settings, 
-  Edit2, 
-  User as UserIcon, 
-  FileText, 
-  Users, 
+import {
+  ArrowLeft,
+  Settings,
+  Edit2,
+  User as UserIcon,
+  FileText,
+  Users,
   UserPlus,
   Scale,
   Ruler,
   Stethoscope,
   Cake,
-  UtensilsCrossed
+  UtensilsCrossed,
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
@@ -209,8 +209,13 @@ const bmiPercent = computed(() => {
     <div
       class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
-      <header class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0">
-        <button @click="router.back()" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+      <header
+        class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0"
+      >
+        <button
+          @click="router.back()"
+          class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+        >
           <ArrowLeft :size="24" />
         </button>
         <h1 class="font-bold text-lg truncate text-slate-800">내 프로필</h1>
@@ -254,46 +259,64 @@ const bmiPercent = computed(() => {
 
             <h2 class="text-2xl font-bold mb-1 text-slate-900">
               {{ authStore.user?.userName || '회원' }}
+              <!-- 구독자 뱃지 (아이콘 + 텍스트) -->
+              <span
+                v-if="authStore.user?.role === 'ROLE_SUBSCRIBER'"
+                class="ml-2 inline-flex items-center gap-1 bg-yellow-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm align-middle"
+              >
+                PREMIUM
+              </span>
             </h2>
-            <p class="text-sm text-slate-500 mb-8 px-6 text-center break-keep leading-relaxed border-b border-transparent pb-1 font-medium">
+            <p
+              class="text-sm text-slate-500 mb-6 px-6 text-center break-keep leading-relaxed pb-1 font-medium"
+            >
               {{ authStore.user?.statusMessage || '오늘도 건강한 하루 되세요!' }}
             </p>
+
+            <!-- 구독 다음 결제일 표시 -->
 
             <!-- 통계 및 클릭 이벤트 -->
             <div class="flex gap-8 text-center w-full justify-center">
               <div class="cursor-pointer group" @click="openPostModal">
-                <span class="block font-bold text-xl text-slate-800 group-hover:text-primary-600 transition">{{ myPostCount }}</span>
-                <span class="text-xs text-gray-400 flex items-center justify-center gap-1 mt-1 group-hover:text-primary-500 transition">
-                    <FileText :size="12" /> 게시글
+                <span
+                  class="block font-bold text-xl text-slate-800 group-hover:text-primary-600 transition"
+                  >{{ myPostCount }}</span
+                >
+                <span
+                  class="text-xs text-gray-400 flex items-center justify-center gap-1 mt-1 group-hover:text-primary-500 transition"
+                >
+                  <FileText :size="12" /> 게시글
                 </span>
               </div>
               <div class="w-[1px] h-10 bg-gray-100"></div>
 
               <!-- 팔로워 -->
-              <div
-                class="cursor-pointer group"
-                @click="openFollowModal('follower')"
-              >
-                <span class="block font-bold text-xl text-slate-800 group-hover:text-primary-600 transition">
+              <div class="cursor-pointer group" @click="openFollowModal('follower')">
+                <span
+                  class="block font-bold text-xl text-slate-800 group-hover:text-primary-600 transition"
+                >
                   {{ authStore.user?.followerCount || 0 }}
                 </span>
-                <span class="text-xs text-gray-400 flex items-center justify-center gap-1 mt-1 group-hover:text-primary-500 transition">
-                    <Users :size="12" /> 팔로워
+                <span
+                  class="text-xs text-gray-400 flex items-center justify-center gap-1 mt-1 group-hover:text-primary-500 transition"
+                >
+                  <Users :size="12" /> 팔로워
                 </span>
               </div>
 
               <div class="w-[1px] h-10 bg-gray-100"></div>
 
               <!-- 팔로잉 -->
-              <div
-                class="cursor-pointer group"
-                @click="openFollowModal('following')"
-              >
-                <span class="block font-bold text-xl text-slate-800 group-hover:text-primary-600 transition">
+              <div class="cursor-pointer group" @click="openFollowModal('following')">
+                <span
+                  class="block font-bold text-xl text-slate-800 group-hover:text-primary-600 transition"
+                >
                   {{ authStore.user?.followingCount || 0 }}
                 </span>
-                <span class="text-xs text-gray-400 flex items-center justify-center gap-1 mt-1 group-hover:text-primary-500 transition">
-                    <UserPlus :size="12" /> 팔로잉
+                <span
+                  class="text-xs text-gray-400 flex items-center justify-center gap-1 mt-1 group-hover:text-primary-500 transition"
+                >
+                  <UserPlus :size="12" /> 팔로잉
                 </span>
               </div>
             </div>
@@ -305,10 +328,12 @@ const bmiPercent = computed(() => {
             <div class="flex justify-between items-end mb-4">
               <div>
                 <h3 class="font-bold text-slate-700 text-sm mb-1 flex items-center gap-1.5">
-                    <Scale :size="16" class="text-primary-500" /> 나의 BMI 지수
+                  <Scale :size="16" class="text-primary-500" /> 나의 BMI 지수
                 </h3>
                 <div class="flex items-center gap-2">
-                  <span class="text-3xl font-extrabold text-slate-800 tracking-tight">{{ bmi }}</span>
+                  <span class="text-3xl font-extrabold text-slate-800 tracking-tight">{{
+                    bmi
+                  }}</span>
                   <span
                     class="text-xs font-bold px-2.5 py-1 rounded-full border"
                     :class="[bmiInfo.text, 'border-current bg-opacity-10']"
@@ -318,9 +343,12 @@ const bmiPercent = computed(() => {
                   </span>
                 </div>
               </div>
-              <span class="text-xs text-slate-400 mb-1 font-medium bg-slate-50 px-2 py-1 rounded-lg">
+              <span
+                class="text-xs text-slate-400 mb-1 font-medium bg-slate-50 px-2 py-1 rounded-lg"
+              >
                 <Ruler :size="12" class="inline mr-1" />
-                {{ authStore.user?.heightCm || 0 }}cm / <Scale :size="12" class="inline mx-1" /> {{ authStore.user?.weightKg || 0 }}kg
+                {{ authStore.user?.heightCm || 0 }}cm / <Scale :size="12" class="inline mx-1" />
+                {{ authStore.user?.weightKg || 0 }}kg
               </span>
             </div>
             <div class="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden">
@@ -343,10 +371,12 @@ const bmiPercent = computed(() => {
             class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex justify-between items-center"
           >
             <span class="font-bold text-slate-700 text-sm flex items-center gap-2">
-                <div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-500">
-                    <Cake :size="18" />
-                </div>
-                생년월일
+              <div
+                class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-500"
+              >
+                <Cake :size="18" />
+              </div>
+              생년월일
             </span>
             <span class="text-slate-500 text-sm font-medium bg-slate-50 px-3 py-1.5 rounded-xl">{{
               authStore.user?.birthDate || '미입력'
@@ -355,7 +385,7 @@ const bmiPercent = computed(() => {
 
           <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
             <h3 class="font-bold text-slate-700 text-sm mb-3 flex items-center gap-2">
-                <UtensilsCrossed :size="18" class="text-rose-500" /> 알레르기 / 기피 음식
+              <UtensilsCrossed :size="18" class="text-rose-500" /> 알레르기 / 기피 음식
             </h3>
             <div v-if="authStore.user?.allergies?.length" class="flex flex-wrap gap-2">
               <span
@@ -371,7 +401,7 @@ const bmiPercent = computed(() => {
 
           <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
             <h3 class="font-bold text-slate-700 text-sm mb-3 flex items-center gap-2">
-                <Stethoscope :size="18" class="text-blue-500" /> 건강 고민 / 질병
+              <Stethoscope :size="18" class="text-blue-500" /> 건강 고민 / 질병
             </h3>
             <div v-if="authStore.user?.diseases?.length" class="flex flex-wrap gap-2">
               <span

@@ -104,18 +104,44 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // 구독 정보
+  const subscription = ref<{
+    status: string
+    nextBillingDate: string | null
+    itemName: string | null
+    amount: number | null
+  } | null>(null)
+
   // 내 정보 가져오기 (백엔드 API)
   async function fetchUser() {
     try {
-      // 백엔드 UserController (/user/me) 호출
-      // 백엔드 UserController (/user/me) 호출
+      // 1. 유저 정보 조회
       const response = await axios.get<{ data: User }>('http://localhost:8080/user/me')
       user.value = response.data.data
+
+      // 2. 구독자라면 구독 정보도 함께 조회
+      if (user.value.role === 'ROLE_SUBSCRIBER') {
+        const { paymentService } = await import('@/services/paymentService')
+        const subData = await paymentService.getMySubscription()
+        subscription.value = subData
+      } else {
+        subscription.value = null
+      }
     } catch (error) {
       console.error('Failed to fetch user', error)
       logout() // 토큰 만료 시 로그아웃
     }
   }
 
-  return { token, user, isAuthenticated, setToken, logout, fetchUser, withdraw, reactivate }
+  return {
+    token,
+    user,
+    subscription,
+    isAuthenticated,
+    setToken,
+    logout,
+    fetchUser,
+    withdraw,
+    reactivate,
+  }
 })
