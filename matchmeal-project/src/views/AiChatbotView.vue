@@ -219,7 +219,7 @@
             </div>
 
             <!-- Messages Loop -->
-            <div v-for="(item, idx) in processedMessages" :key="item.id">
+            <div v-for="item in processedMessages" :key="item.id">
               <!-- Date Header -->
               <div v-if="item.type === 'DATE'" class="flex justify-center mb-4">
                 <span class="bg-black/10 text-white text-[10px] px-3 py-1 rounded-full">
@@ -580,7 +580,7 @@ const processedMessages = computed(() => {
     }
 
     // 시간 표시 (오전/오후 h:mm)
-    let timeStr = item.date.toLocaleTimeString('ko-KR', {
+    const timeStr = item.date.toLocaleTimeString('ko-KR', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
