@@ -6,7 +6,6 @@ import { useToastStore } from '@/stores/toast'
 import { 
   ArrowLeft, 
   ChevronDown, 
-  Check, 
   Loader2 
 } from 'lucide-vue-next'
 

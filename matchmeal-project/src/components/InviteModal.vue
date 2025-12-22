@@ -5,7 +5,6 @@ import { useToastStore } from '@/stores/toast'
 import {
     X,
     User,
-    Mail,
     UserPlus,
     Loader2
 } from 'lucide-vue-next'

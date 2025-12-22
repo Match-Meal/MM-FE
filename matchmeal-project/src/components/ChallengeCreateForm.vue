@@ -8,7 +8,6 @@ import {
   FileText,
   Clock,
   Check,
-  ChevronDown,
   Settings,
   Sparkles
 } from 'lucide-vue-next'

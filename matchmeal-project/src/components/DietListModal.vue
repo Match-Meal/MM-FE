@@ -4,7 +4,6 @@ import dayjs from 'dayjs'
 import type { DailyDietResponseItem } from '@/services/dietService'
 import {
   Utensils,
-  X,
   Clock,
   CheckCircle2,
   AlertCircle

@@ -26,9 +26,10 @@ const emit = defineEmits<{
 
 const router = useRouter()
 
+import type { Component } from 'vue'
 // 타입 라벨 및 아이콘 매핑
 const typeInfo = computed(() => {
-  const map: Record<string, { label: string; icon: any; color: string }> = {
+  const map: Record<string, { label: string; icon: Component; color: string }> = {
     CALORIE_LIMIT: { label: '칼로리', icon: Flame, color: 'text-rose-500 bg-rose-50' },
     RECORD_FREQUENCY: { label: '습관', icon: FileText, color: 'text-primary-600 bg-primary-50' },
     TIME_RANGE: { label: '타임어택', icon: Clock, color: 'text-amber-500 bg-amber-50' },

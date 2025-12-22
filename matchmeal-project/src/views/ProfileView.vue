@@ -19,7 +19,6 @@ import {
   UserPlus,
   Scale,
   Ruler,
-  AlertCircle,
   Stethoscope,
   Cake,
   UtensilsCrossed

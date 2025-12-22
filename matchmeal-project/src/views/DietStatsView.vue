@@ -5,8 +5,6 @@ import { getDietStats, type DietStatsResponse, type DailyStat } from '@/services
 import dayjs from 'dayjs';
 import { 
     ArrowLeft, 
-    X,
-    ChevronDown,
     Activity,
     PieChart,
     BarChart3,

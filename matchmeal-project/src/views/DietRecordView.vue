@@ -24,7 +24,6 @@ import {
   PenLine, 
   X, 
   Check, 
-  Image as ImageIcon, 
   Trash2, 
   Sparkles, 
   Scan,

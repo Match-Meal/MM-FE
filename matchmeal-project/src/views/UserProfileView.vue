@@ -13,7 +13,6 @@ import BottomNav from '@/components/common/BottomNav.vue'
 import { 
     ArrowLeft, 
     User as UserIcon, 
-    MapPin, 
     Lock, 
     AlertCircle, 
     Activity,

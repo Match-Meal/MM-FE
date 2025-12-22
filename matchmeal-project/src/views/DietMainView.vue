@@ -160,8 +160,10 @@ const mealLabel = (type: string) => {
   return types[type] || type
 }
 
+import type { Component } from 'vue'
+
 const getMealIconInfo = (type: string) => {
-  const icons: Record<string, any> = {
+  const icons: Record<string, { icon: Component; color: string; bg: string }> = {
     BREAKFAST: { icon: Coffee, color: 'text-amber-500', bg: 'bg-amber-100' },
     LUNCH: { icon: Sun, color: 'text-orange-500', bg: 'bg-orange-100' },
     DINNER: { icon: Moon, color: 'text-indigo-500', bg: 'bg-indigo-100' },

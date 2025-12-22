@@ -32,8 +32,7 @@ import {
   Loader2, 
   ChevronLeft, 
   ChevronRight,
-  Database,
-  Check
+  Database
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -323,7 +322,7 @@ onActivated(() => {
         <div v-else class="flex-1 overflow-y-auto px-6 pb-6 bg-slate-50 no-scrollbar">
           <div v-if="foods.length > 0" class="space-y-4 pt-2">
             <h3 class="font-bold text-xs text-slate-500 uppercase tracking-wider mb-2">
-                <span v-if="keyword || selectedCategory">검색 결과 {{ pageInfo?.totalElements }}건</span>
+                <span v-if="keyword || selectedCategory">검색 결과 {{ pageInfo?.totalCount }}건</span>
                 <span v-else>전체 음식 목록</span>
             </h3>
             <div

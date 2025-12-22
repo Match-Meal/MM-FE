@@ -18,7 +18,6 @@ import {
   UserCircle2, 
   Heart, 
   MessageSquare, 
-  Calendar, 
   Eye,
   Filter,
   X

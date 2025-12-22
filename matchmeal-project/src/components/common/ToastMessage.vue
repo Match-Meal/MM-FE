@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   Info,
-  XCircle,
   AlertOctagon
 } from 'lucide-vue-next'
 

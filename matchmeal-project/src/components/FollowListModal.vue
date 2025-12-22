@@ -6,8 +6,7 @@ import {
   Users,
   Leaf,
   MinusCircle,
-  PlusCircle,
-  MessageCircle
+  PlusCircle
 } from 'lucide-vue-next'
 
 export interface FollowUser {

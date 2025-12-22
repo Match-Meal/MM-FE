@@ -18,7 +18,6 @@ import {
   Lightbulb, 
   Camera, 
   X, 
-  Check, 
   Image as ImageIcon 
 } from 'lucide-vue-next'
 
