@@ -3,16 +3,17 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useToastStore } from '@/stores/toast'
-import { 
-  ArrowLeft, 
-  Camera, 
-  User, 
-  Ruler, 
-  Weight, 
+import {
+  ArrowLeft,
+  Camera,
+  User,
+  Ruler,
+  Weight,
   AlertCircle,
   X,
   Plus,
-  Loader2
+  Loader2,
+  Activity,
 } from 'lucide-vue-next'
 import axios from 'axios'
 
@@ -41,6 +42,7 @@ const form = ref({
 })
 
 const customAllergy = ref('')
+const customDisease = ref('') // [Added]
 
 // [핵심 수정] 마운트 시 기존 유저 정보 불러와서 폼에 채워넣기
 onMounted(async () => {
@@ -100,6 +102,14 @@ const addCustomAllergy = () => {
   }
 }
 
+const addCustomDisease = () => {
+  const val = customDisease.value.trim()
+  if (val && !form.value.diseases.includes(val)) {
+    form.value.diseases.push(val)
+    customDisease.value = ''
+  }
+}
+
 const goBack = () => {
   router.back()
 }
@@ -135,7 +145,7 @@ const submitProfile = async () => {
     // 수정 후 최신 정보 다시 가져오기
     await authStore.fetchUser()
 
-  toastStore.show('프로필이 저장되었습니다.', 'success')
+    toastStore.show('프로필이 저장되었습니다.', 'success')
     router.replace('/profile') // 수정 완료 후 마이페이지로 이동
   } catch (e) {
     console.error(e)
@@ -154,8 +164,11 @@ const submitProfile = async () => {
       <header
         class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 sticky top-0"
       >
-        <button @click="goBack" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
-            <ArrowLeft :size="24" />
+        <button
+          @click="goBack"
+          class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+        >
+          <ArrowLeft :size="24" />
         </button>
         <h1 class="font-bold text-lg truncate text-slate-800">프로필 설정</h1>
         <div class="w-8"></div>
@@ -201,8 +214,8 @@ const submitProfile = async () => {
 
           <section>
             <h3 class="text-sm font-bold mb-4 flex items-center gap-2 text-slate-800">
-               <div class="w-1 h-4 bg-primary-600 rounded-full"></div>
-               기본 정보
+              <div class="w-1 h-4 bg-primary-600 rounded-full"></div>
+              기본 정보
             </h3>
 
             <div class="space-y-4">
@@ -240,7 +253,9 @@ const submitProfile = async () => {
                   <button
                     type="button"
                     class="flex-1 h-12 rounded-xl border border-slate-200 font-bold transition flex items-center justify-center gap-2 text-sm bg-slate-50 text-slate-400 hover:bg-slate-100"
-                    :class="{ '!bg-blue-50 !border-blue-500 !text-blue-600 shadow-sm': form.gender === 'M' }"
+                    :class="{
+                      '!bg-blue-50 !border-blue-500 !text-blue-600 shadow-sm': form.gender === 'M',
+                    }"
                     @click="form.gender = 'M'"
                   >
                     남성
@@ -248,7 +263,9 @@ const submitProfile = async () => {
                   <button
                     type="button"
                     class="flex-1 h-12 rounded-xl border border-slate-200 font-bold transition flex items-center justify-center gap-2 text-sm bg-slate-50 text-slate-400 hover:bg-slate-100"
-                    :class="{ '!bg-rose-50 !border-rose-500 !text-rose-600 shadow-sm': form.gender === 'F' }"
+                    :class="{
+                      '!bg-rose-50 !border-rose-500 !text-rose-600 shadow-sm': form.gender === 'F',
+                    }"
                     @click="form.gender = 'F'"
                   >
                     여성
@@ -260,27 +277,35 @@ const submitProfile = async () => {
                 <div class="flex-1">
                   <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">키 (cm)</label>
                   <div class="relative">
-                      <input
-                        type="number"
-                        step="0.1"
-                        v-model="form.heightCm"
-                        class="input-field text-center font-bold text-slate-800"
-                        placeholder="175"
-                      />
-                      <Ruler :size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="number"
+                      step="0.1"
+                      v-model="form.heightCm"
+                      class="input-field text-center font-bold text-slate-800"
+                      placeholder="175"
+                    />
+                    <Ruler
+                      :size="14"
+                      class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
                   </div>
                 </div>
                 <div class="flex-1">
-                  <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">체중 (kg)</label>
+                  <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1"
+                    >체중 (kg)</label
+                  >
                   <div class="relative">
-                      <input
-                        type="number"
-                        step="0.1"
-                        v-model="form.weightKg"
-                        class="input-field text-center font-bold text-slate-800"
-                        placeholder="70"
-                      />
-                      <Weight :size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="number"
+                      step="0.1"
+                      v-model="form.weightKg"
+                      class="input-field text-center font-bold text-slate-800"
+                      placeholder="70"
+                    />
+                    <Weight
+                      :size="14"
+                      class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
                   </div>
                 </div>
               </div>
@@ -290,9 +315,9 @@ const submitProfile = async () => {
           <div class="h-px bg-slate-100 my-2"></div>
 
           <section>
-             <h3 class="text-sm font-bold mb-4 flex items-center gap-2 text-slate-800">
-               <div class="w-1 h-4 bg-emerald-500 rounded-full"></div>
-               건강 정보
+            <h3 class="text-sm font-bold mb-4 flex items-center gap-2 text-slate-800">
+              <div class="w-1 h-4 bg-emerald-500 rounded-full"></div>
+              건강 정보
             </h3>
 
             <div class="mb-6">
@@ -314,6 +339,48 @@ const submitProfile = async () => {
                 >
                   {{ item }}
                 </button>
+              </div>
+
+              <!-- [Added] Custom Disease Input -->
+              <div class="flex gap-2 mb-3 mt-3">
+                <input
+                  v-model="customDisease"
+                  @keyup.enter="addCustomDisease"
+                  placeholder="직접 입력 (예: 허리디스크)"
+                  class="input-field h-11 text-sm"
+                />
+                <button
+                  type="button"
+                  @click="addCustomDisease"
+                  class="w-14 h-11 bg-slate-800 text-white rounded-xl text-sm font-bold shadow-md hover:bg-slate-900 active:scale-95 transition flex items-center justify-center"
+                >
+                  <Plus :size="20" />
+                </button>
+              </div>
+
+              <!-- [Added] Selected Disease Tags -->
+              <div
+                v-if="form.diseases.length > 0"
+                class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex flex-wrap gap-2"
+              >
+                <div
+                  class="w-full text-[10px] text-emerald-600 font-bold mb-1 flex items-center gap-1"
+                >
+                  <Activity :size="12" /> 선택된 건강 정보
+                </div>
+                <span
+                  v-for="tag in form.diseases"
+                  :key="tag"
+                  class="text-xs bg-white border border-emerald-200 px-2 py-1.5 rounded-lg text-emerald-600 font-bold shadow-sm flex items-center gap-1"
+                >
+                  {{ tag }}
+                  <button
+                    @click="toggleItem(form.diseases, tag)"
+                    class="hover:bg-emerald-100 rounded-full p-0.5 transition"
+                  >
+                    <X :size="12" />
+                  </button>
+                </span>
               </div>
             </div>
 
@@ -358,8 +425,10 @@ const submitProfile = async () => {
                 v-if="form.allergies.length > 0"
                 class="mt-3 p-3 bg-rose-50 rounded-xl border border-rose-100 flex flex-wrap gap-2"
               >
-                <div class="w-full text-[10px] text-rose-500 font-bold mb-1 flex items-center gap-1">
-                    <AlertCircle :size="12" /> 선택된 알레르기
+                <div
+                  class="w-full text-[10px] text-rose-500 font-bold mb-1 flex items-center gap-1"
+                >
+                  <AlertCircle :size="12" /> 선택된 알레르기
                 </div>
                 <span
                   v-for="tag in form.allergies"
@@ -367,8 +436,11 @@ const submitProfile = async () => {
                   class="text-xs bg-white border border-rose-200 px-2 py-1.5 rounded-lg text-rose-600 font-bold shadow-sm flex items-center gap-1"
                 >
                   {{ tag }}
-                  <button @click="toggleItem(form.allergies, tag)" class="hover:bg-rose-100 rounded-full p-0.5 transition">
-                      <X :size="12" />
+                  <button
+                    @click="toggleItem(form.allergies, tag)"
+                    class="hover:bg-rose-100 rounded-full p-0.5 transition"
+                  >
+                    <X :size="12" />
                   </button>
                 </span>
               </div>

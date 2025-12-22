@@ -158,8 +158,8 @@ const handleModalFollowToggle = async (targetUser: FollowUser) => {
     const result = response.data.data
 
     if (result && authStore.user) {
-      if (typeof result.myFollowingCount === 'number') {
-        authStore.user.followingCount = result.myFollowingCount
+      if (typeof result.followingCount === 'number') {
+        authStore.user.followingCount = result.followingCount
       }
       if (result.isFollowing !== undefined) {
         userItem.isFollowing = result.isFollowing

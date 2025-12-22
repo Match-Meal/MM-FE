@@ -10,14 +10,14 @@ import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { getPosts, type PostListItem, type PostUser } from '@/services/communityService'
 import { useToastStore } from '@/stores/toast'
 import BottomNav from '@/components/common/BottomNav.vue'
-import { 
-    ArrowLeft, 
-    User as UserIcon, 
-    Lock, 
-    AlertCircle, 
-    Activity,
-    UserCheck,
-    UserPlus
+import {
+  ArrowLeft,
+  User as UserIcon,
+  Lock,
+  AlertCircle,
+  Activity,
+  UserCheck,
+  UserPlus,
 } from 'lucide-vue-next'
 
 interface ApiFollowerDto {
@@ -174,8 +174,8 @@ const handleModalFollowToggle = async (targetUser: FollowUser) => {
           isFollowing.value = result.isFollowing
         }
       }
-      if (typeof result.myFollowingCount === 'number' && authStore.user) {
-        authStore.user.followingCount = result.myFollowingCount
+      if (typeof result.followingCount === 'number' && authStore.user) {
+        authStore.user.followingCount = result.followingCount
       }
     }
   } catch (e) {
@@ -290,8 +290,8 @@ const processFollowToggle = async () => {
       if (result.isFollowing !== undefined) {
         isFollowing.value = result.isFollowing
       }
-      if (typeof result.myFollowingCount === 'number' && authStore.user) {
-        authStore.user.followingCount = result.myFollowingCount
+      if (typeof result.followingCount === 'number' && authStore.user) {
+        authStore.user.followingCount = result.followingCount
       }
     }
   } catch (error) {
@@ -345,16 +345,23 @@ const goBack = () => router.back()
     <div
       class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
-      <header class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0">
-        <button @click="goBack" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
-             <ArrowLeft :size="24" />
+      <header
+        class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0"
+      >
+        <button
+          @click="goBack"
+          class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+        >
+          <ArrowLeft :size="24" />
         </button>
         <h1 class="font-bold text-lg truncate text-slate-800">{{ user?.userName || '프로필' }}</h1>
         <div class="w-8"></div>
       </header>
 
       <div v-if="isLoading" class="flex-1 flex items-center justify-center bg-white">
-        <div class="w-8 h-8 border-2 border-slate-200 border-t-primary-500 rounded-full animate-spin"></div>
+        <div
+          class="w-8 h-8 border-2 border-slate-200 border-t-primary-500 rounded-full animate-spin"
+        ></div>
       </div>
 
       <main v-else class="flex-1 overflow-y-auto bg-slate-50 scrollbar-hide pb-6">
@@ -375,10 +382,20 @@ const goBack = () => router.back()
 
             <h2 class="text-2xl font-bold mb-1 text-slate-800 flex items-center gap-1">
               {{ user?.userName }}
-              <span v-if="user?.gender === 'M'" class="text-xs font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded ml-1">MAN</span>
-              <span v-else-if="user?.gender === 'F'" class="text-xs font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded ml-1">WOMAN</span>
+              <span
+                v-if="user?.gender === 'M'"
+                class="text-xs font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded ml-1"
+                >MAN</span
+              >
+              <span
+                v-else-if="user?.gender === 'F'"
+                class="text-xs font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded ml-1"
+                >WOMAN</span
+              >
             </h2>
-            <p class="text-sm text-slate-500 mb-4 px-6 text-center break-keep leading-relaxed font-medium">
+            <p
+              class="text-sm text-slate-500 mb-4 px-6 text-center break-keep leading-relaxed font-medium"
+            >
               {{ user?.statusMessage || '상태 메시지가 없습니다.' }}
             </p>
 
@@ -430,64 +447,69 @@ const goBack = () => router.back()
         </div>
 
         <template v-if="isPublicProfile">
-            <div class="px-4 mb-4 animate-fade-in">
-                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
-                     <div class="flex justify-between items-end mb-4">
-                        <div>
-                             <h3 class="font-bold text-slate-800 text-sm mb-1 flex items-center gap-1.5">
-                                 <Activity :size="16" class="text-primary-500" /> BMI 지수
-                             </h3>
-                             <div class="flex items-center gap-2">
-                                <span class="text-3xl font-black text-slate-800 tracking-tight">{{ bmi }}</span>
-                                <span
-                                    class="text-[10px] font-bold px-2 py-0.5 rounded-full border"
-                                    :class="[bmiInfo.text, bmiInfo.color.replace('bg-', 'bg-opacity-10 border-')]"
-                                >{{ bmiInfo.label }}</span>
-                             </div>
-                        </div>
-                         <span class="text-xs text-slate-400 mb-1 font-medium bg-slate-50 px-2 py-1 rounded-lg">
-                            {{ user?.heightCm }}cm / {{ user?.weightKg }}kg
-                         </span>
-                     </div>
-                     <div class="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                            class="h-full rounded-full transition-all duration-1000 ease-out shadow-sm"
-                            :class="bmiInfo.color"
-                            :style="{ width: `${bmiPercent}%` }"
-                        ></div>
-                     </div>
+          <div class="px-4 mb-4 animate-fade-in">
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
+              <div class="flex justify-between items-end mb-4">
+                <div>
+                  <h3 class="font-bold text-slate-800 text-sm mb-1 flex items-center gap-1.5">
+                    <Activity :size="16" class="text-primary-500" /> BMI 지수
+                  </h3>
+                  <div class="flex items-center gap-2">
+                    <span class="text-3xl font-black text-slate-800 tracking-tight">{{ bmi }}</span>
+                    <span
+                      class="text-[10px] font-bold px-2 py-0.5 rounded-full border"
+                      :class="[bmiInfo.text, bmiInfo.color.replace('bg-', 'bg-opacity-10 border-')]"
+                      >{{ bmiInfo.label }}</span
+                    >
+                  </div>
                 </div>
+                <span
+                  class="text-xs text-slate-400 mb-1 font-medium bg-slate-50 px-2 py-1 rounded-lg"
+                >
+                  {{ user?.heightCm }}cm / {{ user?.weightKg }}kg
+                </span>
+              </div>
+              <div class="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  class="h-full rounded-full transition-all duration-1000 ease-out shadow-sm"
+                  :class="bmiInfo.color"
+                  :style="{ width: `${bmiPercent}%` }"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="px-4 space-y-4 animate-fade-in">
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
+              <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center gap-1.5">
+                <AlertCircle :size="18" class="text-rose-500" /> 알레르기 / 기피 음식
+              </h3>
+              <div v-if="user?.allergies?.length" class="flex flex-wrap gap-2">
+                <span
+                  v-for="tag in user.allergies"
+                  :key="tag"
+                  class="text-xs bg-rose-50 text-rose-600 px-3 py-1.5 rounded-xl font-bold border border-rose-100"
+                  >{{ tag }}</span
+                >
+              </div>
+              <p v-else class="text-xs text-slate-400 font-medium">등록된 정보가 없습니다.</p>
             </div>
 
-            <div class="px-4 space-y-4 animate-fade-in">
-                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
-                    <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center gap-1.5">
-                        <AlertCircle :size="18" class="text-rose-500" /> 알레르기 / 기피 음식
-                    </h3>
-                    <div v-if="user?.allergies?.length" class="flex flex-wrap gap-2">
-                        <span
-                            v-for="tag in user.allergies"
-                            :key="tag"
-                            class="text-xs bg-rose-50 text-rose-600 px-3 py-1.5 rounded-xl font-bold border border-rose-100"
-                        >{{ tag }}</span>
-                    </div>
-                    <p v-else class="text-xs text-slate-400 font-medium">등록된 정보가 없습니다.</p>
-                </div>
-
-                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
-                    <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center gap-1.5">
-                        <Activity :size="18" class="text-blue-500" /> 건강 고민
-                    </h3>
-                    <div v-if="user?.diseases?.length" class="flex flex-wrap gap-2">
-                        <span
-                            v-for="tag in user.diseases"
-                            :key="tag"
-                            class="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-xl font-bold border border-blue-100"
-                        >{{ tag }}</span>
-                    </div>
-                    <p v-else class="text-xs text-slate-400 font-medium">등록된 정보가 없습니다.</p>
-                </div>
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
+              <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center gap-1.5">
+                <Activity :size="18" class="text-blue-500" /> 건강 고민
+              </h3>
+              <div v-if="user?.diseases?.length" class="flex flex-wrap gap-2">
+                <span
+                  v-for="tag in user.diseases"
+                  :key="tag"
+                  class="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-xl font-bold border border-blue-100"
+                  >{{ tag }}</span
+                >
+              </div>
+              <p v-else class="text-xs text-slate-400 font-medium">등록된 정보가 없습니다.</p>
             </div>
+          </div>
         </template>
 
         <template v-else>

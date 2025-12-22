@@ -48,6 +48,25 @@ export const useAuthStore = defineStore('auth', () => {
     },
   )
 
+  // [Adding] Response Interceptor for 401 Handling
+  axios.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      // 401 Unauthorized Error Check
+      if (error.response && error.response.status === 401) {
+        console.warn('Session expired or unauthorized. Redirecting to login.')
+        // Prevent infinite loop if logout fails or redirect loops
+        if (token.value) {
+          await logout()
+        } else {
+          // Token is already gone, just ensure we redirect
+          window.location.href = '/login'
+        }
+      }
+      return Promise.reject(error)
+    },
+  )
+
   // 1. 토큰 저장 액션
   function setToken(newToken: string) {
     token.value = newToken
