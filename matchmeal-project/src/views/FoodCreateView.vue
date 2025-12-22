@@ -304,7 +304,7 @@ const goBack = () => {
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="w-full h-12 bg-primary-600 text-white font-bold rounded-2xl hover:bg-primary-700 transition flex items-center justify-center disabled:bg-slate-300 disabled:cursor-not-allowed shadow-lg shadow-primary-200"
+              class="w-full h-12 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-bold rounded-2xl hover:brightness-110 transition flex items-center justify-center disabled:bg-slate-300 disabled:cursor-not-allowed shadow-lg shadow-primary-200"
             >
               <Loader2 v-if="isSubmitting" class="animate-spin mr-2" :size="20" />
               <span v-else>저장하기</span>

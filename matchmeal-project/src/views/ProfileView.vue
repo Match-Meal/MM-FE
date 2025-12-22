@@ -222,7 +222,7 @@ const bmiPercent = computed(() => {
             <div class="w-32 h-32 relative mb-4">
               <!-- 프로필 이미지 표시 -->
               <div
-                class="w-full h-full bg-slate-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-inner cursor-pointer"
+                class="w-full h-full bg-gradient-to-br from-primary-50 to-primary-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-inner cursor-pointer"
                 @click="goToEditProfile"
               >
                 <!-- 이미지가 있으면 이미지 표시, 없으면 이모지 -->

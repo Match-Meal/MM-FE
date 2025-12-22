@@ -234,7 +234,7 @@ const mealLabel = (type: string) => {
         </button>
         <button
           @click="goEdit"
-          class="flex-[2] h-12 bg-primary-600 text-white font-bold rounded-2xl shadow-lg shadow-primary-200 hover:bg-primary-700 transition flex items-center justify-center gap-1.5"
+          class="flex-[2] h-12 bg-gradient-to-r from-primary-500 to-primary-700 text-white font-bold rounded-2xl shadow-lg shadow-primary-200 hover:brightness-110 transition flex items-center justify-center gap-1.5"
         >
           <Edit2 :size="18" /> 수정하기
         </button>

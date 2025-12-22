@@ -89,7 +89,7 @@ const handleSubmit = () => {
     class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in p-4"
   >
     <div
-      class="bg-white w-full max-w-[340px] max-h-[85vh] rounded-[32px] flex flex-col shadow-float overflow-hidden border border-slate-100"
+      class="bg-white w-full max-w-[340px] max-h-[80%] rounded-[32px] flex flex-col shadow-float overflow-hidden border border-slate-100"
     >
       <div
         class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-white z-10"
@@ -219,7 +219,7 @@ const handleSubmit = () => {
       <div class="p-4 border-t border-slate-100 bg-white pb-6">
         <button
           @click="handleSubmit"
-          class="w-full h-12 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-black transition shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"
+          class="w-full h-12 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-2xl font-bold text-sm hover:brightness-110 transition shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"
         >
           <Check v-if="isEditMode" :size="18" />
           <Flame v-else :size="18" class="text-orange-500 fill-orange-500" />

@@ -139,17 +139,17 @@ const getXPosPercent = (index: number, length: number) => {
                     <button 
                         @click="changePeriod('WEEKLY')"
                         class="flex-1 py-2 text-xs font-bold rounded-lg transition"
-                        :class="periodType === 'WEEKLY' ? 'bg-white shadow-sm text-primary-600' : 'text-slate-400'"
+                        :class="periodType === 'WEEKLY' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:bg-white'"
                     >1주일</button>
                     <button 
                         @click="changePeriod('MONTHLY')"
                         class="flex-1 py-2 text-xs font-bold rounded-lg transition"
-                        :class="periodType === 'MONTHLY' ? 'bg-white shadow-sm text-primary-600' : 'text-slate-400'"
+                        :class="periodType === 'MONTHLY' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:bg-white'"
                     >1개월</button>
                     <button 
                         @click="changePeriod('CUSTOM')"
                         class="flex-1 py-2 text-xs font-bold rounded-lg transition"
-                        :class="periodType === 'CUSTOM' ? 'bg-white shadow-sm text-primary-600' : 'text-slate-400'"
+                        :class="periodType === 'CUSTOM' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:bg-white'"
                     >직접입력</button>
                 </div>
 

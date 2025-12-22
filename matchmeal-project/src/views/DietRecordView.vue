@@ -597,19 +597,19 @@ const cancelAnalysis = () => {
         </button>
         <button
           @click="saveDiet"
-          class="flex-[2] h-12 bg-primary-600 text-white font-bold rounded-2xl hover:bg-primary-700 shadow-lg shadow-primary-200 transition active:scale-[0.98]"
+          class="flex-[2] h-12 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-bold rounded-2xl hover:brightness-110 shadow-lg shadow-primary-200 transition active:scale-[0.98]"
         >
           저장하기
         </button>
       </div>
-    </div>
+
 
     <!-- 직접 입력 모달 -->
     <div
       v-if="showManualInput"
-      class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
+      class="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
     >
-      <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-float animate-scale-up">
+      <div class="bg-white rounded-3xl w-full max-w-sm max-h-[80%] overflow-y-auto no-scrollbar p-6 shadow-float animate-scale-up">
         <h3 class="font-bold text-lg mb-6 flex items-center gap-2">
             <PenLine :size="20" class="text-primary-500" /> 음식 직접 입력
         </h3>
@@ -719,7 +719,7 @@ const cancelAnalysis = () => {
     <!-- AI Analysis Unified Modal -->
     <div
       v-if="showAnalysisModal"
-      class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
+      class="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
     >
       <!-- Scanning State -->
       <div v-if="isAnalyzing" class="flex flex-col items-center justify-center w-full max-w-sm">
@@ -768,7 +768,7 @@ const cancelAnalysis = () => {
       <!-- Result State -->
       <div
         v-else-if="analysisResult"
-        class="bg-white rounded-3xl w-full max-w-sm max-h-[80vh] flex flex-col shadow-float animate-scale-up overflow-hidden"
+        class="bg-white rounded-3xl w-full max-w-sm max-h-[80%] flex flex-col shadow-float animate-scale-up overflow-hidden"
       >
         <div class="p-5 border-b border-slate-100 bg-white flex justify-between items-center shrink-0">
           <h3 class="font-bold text-lg flex items-center gap-2 text-slate-800">
@@ -840,6 +840,7 @@ const cancelAnalysis = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </template>

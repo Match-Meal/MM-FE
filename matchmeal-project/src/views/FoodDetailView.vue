@@ -190,7 +190,7 @@ const addToDiet = () => {
               <button
                 v-if="isSelectMode"
                 @click="addToDiet"
-                class="w-full h-14 bg-primary-600 text-white font-bold rounded-2xl shadow-lg shadow-primary-200 hover:bg-primary-700 transition flex items-center justify-center gap-2 text-lg active:scale-[0.98]"
+                class="w-full h-14 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-bold rounded-2xl shadow-lg shadow-primary-200 hover:brightness-110 transition flex items-center justify-center gap-2 text-lg active:scale-[0.98]"
               >
                 <Utensils :size="20" stroke-width="2.5" /> 이 음식 추가하기
               </button>

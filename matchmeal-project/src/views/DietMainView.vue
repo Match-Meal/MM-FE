@@ -164,10 +164,10 @@ import type { Component } from 'vue'
 
 const getMealIconInfo = (type: string) => {
   const icons: Record<string, { icon: Component; color: string; bg: string }> = {
-    BREAKFAST: { icon: Coffee, color: 'text-amber-500', bg: 'bg-amber-100' },
-    LUNCH: { icon: Sun, color: 'text-orange-500', bg: 'bg-orange-100' },
-    DINNER: { icon: Moon, color: 'text-indigo-500', bg: 'bg-indigo-100' },
-    SNACK: { icon: Cookie, color: 'text-pink-500', bg: 'bg-pink-100' },
+    BREAKFAST: { icon: Coffee, color: 'text-primary-600', bg: 'bg-primary-100' },
+    LUNCH: { icon: Sun, color: 'text-white', bg: 'bg-primary-400' },
+    DINNER: { icon: Moon, color: 'text-white', bg: 'bg-primary-600' },
+    SNACK: { icon: Cookie, color: 'text-amber-900', bg: 'bg-accent' },
   }
   return icons[type] || { icon: Utensils, color: 'text-primary-500', bg: 'bg-primary-100' }
 }
@@ -191,7 +191,7 @@ const getMealIconInfo = (type: string) => {
         </div>
       </header>
 
-      <!-- Main Content -->
+      <!-- MainContent -->
       <main class="flex-1 overflow-y-auto bg-slate-50 pb-20 relative no-scrollbar">
         <div class="p-6 flex justify-between items-center bg-white shadow-sm mb-2 z-10 relative">
           <h2 class="font-bold text-xl text-slate-800">오늘의 식단</h2>
@@ -349,7 +349,7 @@ const getMealIconInfo = (type: string) => {
 
       <button
         @click="goRecord"
-        class="absolute bottom-24 right-6 w-14 h-14 bg-slate-900 text-white rounded-2xl shadow-float flex items-center justify-center z-30 hover:bg-black transition-all active:scale-95 group"
+        class="absolute bottom-24 right-6 w-14 h-14 bg-accent text-slate-900 rounded-2xl shadow-float flex items-center justify-center z-30 hover:brightness-105 transition-all active:scale-95 group"
       >
         <Plus :size="28" stroke-width="2.5" class="group-hover:rotate-90 transition-transform duration-300" />
       </button>

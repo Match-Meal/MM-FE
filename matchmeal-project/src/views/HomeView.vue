@@ -132,7 +132,7 @@ const maxStreak = computed(() => {
     >
       <div class="flex-1 overflow-y-auto scrollbar-hide bg-slate-50 pb-6">
         <!-- Header Section -->
-        <div class="bg-primary-600 p-6 pb-12 text-white rounded-b-[2.5rem] shadow-lg relative overflow-hidden">
+        <div class="bg-gradient-to-br from-primary-500 to-primary-700 p-6 pb-12 text-white rounded-b-[2.5rem] shadow-lg relative overflow-hidden">
             <!-- Background Decoration -->
             <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl"></div>
             
@@ -183,7 +183,7 @@ const maxStreak = computed(() => {
             
             <div class="w-full h-3 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm">
               <div
-                class="h-full bg-gradient-to-r from-green-300 to-emerald-400 rounded-full shadow-[0_0_15px_rgba(52,211,153,0.6)] transition-all duration-700 ease-out relative"
+                class="h-full bg-gradient-to-r from-primary-300 to-accent rounded-full shadow-[0_0_15px_rgba(255,229,134,0.4)] transition-all duration-700 ease-out relative"
                 :style="{ width: Math.min((todayCalories / targetCalories) * 100, 100) + '%' }"
               >
                 <div class="absolute right-0 top-0 bottom-0 w-2 bg-white/50 blur-[2px]"></div>
@@ -243,7 +243,7 @@ const maxStreak = computed(() => {
           <!-- Statistics Dashboard -->
           <div v-if="challengeStore.myChallenges.length > 0" class="grid grid-cols-2 gap-3">
             <!-- Active Count -->
-            <div class="bg-white p-5 rounded-3xl shadow-smooth flex flex-col items-center justify-center gap-1 border border-primary-50">
+            <div class="bg-white p-5 rounded-3xl shadow-smooth flex flex-col items-center justify-center gap-1 border border-primary-100">
               <span class="text-xs text-primary-500 font-bold flex items-center gap-1">
                 <Activity :size="12" /> 진행 중
               </span>
@@ -254,8 +254,8 @@ const maxStreak = computed(() => {
             </div>
 
             <!-- Avg Progress -->
-            <div class="bg-white p-5 rounded-3xl shadow-smooth flex flex-col items-center justify-center gap-1 border border-orange-50">
-              <span class="text-xs text-orange-500 font-bold flex items-center gap-1">
+            <div class="bg-white p-5 rounded-3xl shadow-smooth flex flex-col items-center justify-center gap-1 border border-primary-200">
+              <span class="text-xs text-primary-600 font-bold flex items-center gap-1">
                 <Trophy :size="12" /> 평균 달성률
               </span>
               <div class="flex items-baseline gap-1 mt-1">
@@ -265,8 +265,8 @@ const maxStreak = computed(() => {
             </div>
 
             <!-- Total Success -->
-            <div class="bg-white p-5 rounded-3xl shadow-smooth flex flex-col items-center justify-center gap-1 border border-green-50">
-              <span class="text-xs text-green-500 font-bold flex items-center gap-1">
+            <div class="bg-white p-5 rounded-3xl shadow-smooth flex flex-col items-center justify-center gap-1 border border-primary-300">
+              <span class="text-xs text-primary-700 font-bold flex items-center gap-1">
                 <CheckCircle2 :size="12" /> 총 성공
               </span>
               <div class="flex items-baseline gap-1 mt-1">
@@ -276,8 +276,8 @@ const maxStreak = computed(() => {
             </div>
 
             <!-- Max Streak -->
-            <div class="bg-white p-5 rounded-3xl shadow-smooth flex flex-col items-center justify-center gap-1 border border-purple-50">
-              <span class="text-xs text-purple-500 font-bold flex items-center gap-1">
+            <div class="bg-white p-5 rounded-3xl shadow-smooth flex flex-col items-center justify-center gap-1 border border-yellow-100">
+              <span class="text-xs text-yellow-500 font-bold flex items-center gap-1">
                 <Flame :size="12" /> 최장 연속
               </span>
               <div class="flex items-baseline gap-1 mt-1">
