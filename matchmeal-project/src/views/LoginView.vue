@@ -28,7 +28,7 @@ const handleKakaoLogin = () => {
       <div id="screen-login" class="screen flex flex-col h-full p-8 justify-center bg-white">
         <div class="flex flex-col items-center mb-12">
           <div
-            class="w-24 h-24 bg-primary-600 text-white rounded-3xl mb-6 flex items-center justify-center shadow-lg transform rotate-3"
+            class="w-24 h-24 bg-gradient-to-br from-primary-400 to-primary-600 text-white rounded-3xl mb-6 flex items-center justify-center shadow-lg transform rotate-3"
           >
             <Leaf :size="48" fill="white" />
           </div>
@@ -36,7 +36,7 @@ const handleKakaoLogin = () => {
           <p class="text-gray-500 font-medium">AI 식단 분석부터 챌린지까지</p>
         </div>
 
-        <h2 class="text-lg font-bold mb-6 text-center text-gray-400 uppercase tracking-widest text-[10px]">Simple Login</h2>
+
 
         <div class="w-full space-y-4">
           <!-- 구글 로그인 버튼 (실제 작동) -->

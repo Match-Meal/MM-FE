@@ -264,7 +264,7 @@ const handleCodeSubmit = async (code: string) => {
 
       <button
         @click="showCreateModal = true"
-        class="absolute bottom-24 right-5 w-14 h-14 bg-slate-900 text-white rounded-2xl shadow-float flex items-center justify-center z-30 hover:bg-black transition-all active:scale-95 group"
+        class="absolute bottom-24 right-5 w-14 h-14 bg-accent text-slate-900 rounded-2xl shadow-float flex items-center justify-center z-30 hover:brightness-105 transition-all active:scale-95 group"
       >
         <Plus :size="28" stroke-width="2.5" class="group-hover:rotate-90 transition-transform duration-300" />
       </button>

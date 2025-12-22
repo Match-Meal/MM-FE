@@ -235,7 +235,7 @@ onBeforeRouteLeave((to, from, next) => {
       </transition>
 
       <!-- Category Filter & Sort -->
-      <div class="bg-white border-b border-gray-50 z-10 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+      <div class="bg-white border-b border-gray-50 z-10 shadow-sm">
         <div class="px-6 py-4 flex flex-col gap-4">
           <!-- Categories -->
           <div class="flex overflow-x-auto no-scrollbar whitespace-nowrap gap-2 w-full pb-1">
@@ -246,7 +246,7 @@ onBeforeRouteLeave((to, from, next) => {
               class="px-4 py-2 rounded-full text-xs font-bold transition-all border shrink-0"
               :class="
                 selectedCategory === cat.value
-                  ? 'bg-slate-800 text-white border-slate-800 shadow-lg shadow-slate-200'
+                  ? 'bg-primary-600 text-white border-primary-600 shadow-md shadow-primary-200'
                   : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
               "
             >
@@ -391,7 +391,7 @@ onBeforeRouteLeave((to, from, next) => {
       <!-- FAB (Write Button) -->
       <button
         @click="goWrite"
-        class="absolute bottom-24 right-6 w-14 h-14 bg-slate-800 text-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.3)] flex items-center justify-center z-30 hover:bg-slate-900 hover:scale-105 transition-all duration-300 active:scale-95 group"
+        class="absolute bottom-24 right-6 w-14 h-14 bg-accent text-slate-900 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.3)] flex items-center justify-center z-30 hover:brightness-105 hover:scale-105 transition-all duration-300 active:scale-95 group"
       >
         <PenSquare :size="24" class="group-hover:-rotate-12 transition-transform duration-300" />
       </button>

@@ -315,7 +315,7 @@ const handleJoin = async () => {
 
         <!-- Colored Banner (Now strictly below header) -->
         <div
-          class="h-[200px] flex flex-col justify-end p-6 text-white relative overflow-hidden shrink-0"
+          class="h-[200px] flex flex-col justify-end px-6 pt-6 pb-10 text-white relative overflow-hidden shrink-0"
           :class="{
             'bg-gradient-to-br from-orange-400 to-red-500': challenge.type === 'CALORIE_LIMIT',
             'bg-gradient-to-br from-blue-400 to-indigo-500': challenge.type === 'RECORD_FREQUENCY',
@@ -351,7 +351,7 @@ const handleJoin = async () => {
         </div>
 
         <div
-          class="flex-1 bg-white -mt-6 rounded-t-[30px] relative z-0 p-6 overflow-y-auto scrollbar-hide space-y-6 animate-slide-up-delayed"
+          class="flex-1 bg-white -mt-6 rounded-t-[30px] relative z-0 p-6 overflow-y-auto scrollbar-hide space-y-8 animate-slide-up-delayed"
         >
           <div class="text-center p-5 bg-slate-50 rounded-2xl border border-slate-100">
             <div class="text-xs text-slate-500 font-bold mb-1">현재 달성률</div>
@@ -360,7 +360,7 @@ const handleJoin = async () => {
             </div>
             <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
               <div
-                class="h-full bg-primary-500 rounded-full transition-all duration-1000 ease-out"
+                class="h-full bg-gradient-to-r from-primary-400 to-primary-600 rounded-full transition-all duration-1000 ease-out"
                 :style="{ width: `${challenge.progressPercent}%` }"
               ></div>
             </div>
@@ -446,7 +446,7 @@ const handleJoin = async () => {
                   </div>
                   <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                      class="h-full bg-primary-500 rounded-full"
+                      class="h-full bg-primary-400 rounded-full"
                       :style="{ width: `${p.progressPercent || 0}%` }"
                     ></div>
                   </div>
@@ -459,9 +459,9 @@ const handleJoin = async () => {
             <div v-if="!challenge.isJoined && !isOwner" class="mt-8">
               <button
                 @click="handleJoin"
-                class="w-full h-14 bg-primary-600 text-white font-bold rounded-2xl shadow-lg shadow-primary-200 hover:bg-primary-700 transition active:scale-[0.98] flex items-center justify-center gap-2"
+                class="w-full h-14 bg-accent text-slate-900 font-bold rounded-2xl shadow-lg shadow-yellow-100 hover:brightness-105 transition active:scale-[0.98] flex items-center justify-center gap-2"
               >
-                <Flame :size="20" class="fill-white" /> 챌린지 참여하기
+                <Flame :size="20" class="fill-slate-900" /> 챌린지 참여하기
               </button>
             </div>
           </div>

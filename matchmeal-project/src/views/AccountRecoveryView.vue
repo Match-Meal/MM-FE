@@ -61,7 +61,7 @@ const handleCancel = () => {
         <button
           @click="handleRestore"
           :disabled="isProcessing"
-          class="w-full py-4 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-2xl transition shadow-lg shadow-primary-200 active:scale-95 flex items-center justify-center gap-2"
+          class="w-full py-4 bg-gradient-to-r from-primary-600 to-primary-700 hover:brightness-110 text-white font-bold rounded-2xl transition shadow-lg shadow-primary-200 active:scale-95 flex items-center justify-center gap-2"
         >
           <Loader2
             v-if="isProcessing"

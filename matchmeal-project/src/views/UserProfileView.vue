@@ -388,7 +388,7 @@ const goBack = () => router.back()
               :class="
                 isFollowing
                   ? 'bg-slate-100 text-slate-600 border border-slate-200 shadow-sm'
-                  : 'bg-primary-600 text-white shadow-primary-200'
+                  : 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-primary-200 hover:brightness-110'
               "
             >
               <UserCheck v-if="isFollowing" :size="16" />

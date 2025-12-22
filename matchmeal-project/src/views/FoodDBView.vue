@@ -297,7 +297,7 @@ onActivated(() => {
 
                 <button
                 type="submit"
-                class="w-full h-11 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition shadow-md shadow-primary-200"
+                class="w-full h-11 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-bold rounded-xl hover:brightness-110 transition shadow-md shadow-primary-200"
                 >
                 검색하기
                 </button>
