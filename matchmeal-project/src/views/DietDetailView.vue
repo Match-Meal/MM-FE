@@ -5,6 +5,16 @@ import { getDietDetail, deleteDiet, type DailyDietResponseItem } from '@/service
 import dayjs from 'dayjs'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { useToastStore } from '@/stores/toast'
+import { 
+  ArrowLeft, 
+  Trash2, 
+  Edit2, 
+  Utensils, 
+  Clock, 
+  FileText,
+  Calendar,
+  Flame
+} from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,16 +29,9 @@ const initData = async () => {
   try {
     isLoading.value = true
     const response = await getDietDetail(dietId)
-    // response 구조가 {code, message, data: {...}} 라면 response.data가 실제 데이터
-    // dietService.ts에서 response.data를 리턴했으므로, 여기서 response.data가 실제 데이터 객체일 수 있음.
-    // 하지만 service 코드에서 response.data를 리턴했는지, response.data.data인지 확실치 않을 땐,
-    // 보통 { data: ... } 구조를 가정.
-    // 일단 안전하게:
-    // 만약 response.data 가 존재하면 그것을 사용.
     if (response.data) {
       dietData.value = response.data
     } else {
-      // 혹시 response 자체가 데이터라면? (드물지만)
       dietData.value = response as unknown as DailyDietResponseItem
     }
   } catch (e) {
@@ -95,112 +98,129 @@ const mealLabel = (type: string) => {
 </script>
 
 <template>
-  <div class="bg-gray-200 min-h-screen flex items-center justify-center font-sans text-gray-800">
+  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
     <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-800 flex flex-col"
+      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
       <!-- Header -->
-      <header class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 shrink-0">
-        <button @click="goBack" class="text-2xl w-8">←</button>
-        <h1 class="font-bold text-lg truncate">식단 상세</h1>
+      <header class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0">
+        <button @click="goBack" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+            <ArrowLeft :size="24" />
+        </button>
+        <h1 class="font-bold text-lg truncate text-slate-800">식단 상세</h1>
         <div class="w-8"></div>
       </header>
 
-      <main v-if="isLoading" class="flex-1 flex items-center justify-center">Loading...</main>
+      <main v-if="isLoading" class="flex-1 flex items-center justify-center text-slate-400">
+         <div class="flex flex-col items-center gap-2">
+             <div class="w-6 h-6 border-2 border-slate-200 border-t-primary-500 rounded-full animate-spin"></div>
+             <span class="text-xs">불러오는 중...</span>
+         </div>
+      </main>
 
-      <main v-else-if="dietData" class="flex-1 overflow-y-auto bg-gray-50 pb-20 no-scrollbar">
+      <main v-else-if="dietData" class="flex-1 overflow-y-auto bg-slate-50 pb-20 no-scrollbar">
         <!-- Diet Image -->
-        <div v-if="dietData.dietImgUrl" class="w-full h-64 bg-gray-100 relative">
-          <img :src="dietData.dietImgUrl" class="w-full h-full object-cover" />
-        </div>
-
-        <!-- Date / Time / Type Info -->
-        <div
-          class="bg-white p-6 mb-2 rounded-b-2xl shadow-sm"
-          :class="{ 'rounded-t-2xl': !dietData.dietImgUrl }"
-        >
-          <div class="flex justify-between items-end mb-4">
-            <div>
-              <div class="text-2xl font-bold">{{ formatDate(dietData.eatDate) }}</div>
-              <div class="text-gray-500 font-medium mt-1">
-                <span class="text-blue-600 font-bold mr-2">{{ mealLabel(dietData.mealType) }}</span>
-                {{ formatTime(dietData.eatTime) }}
-              </div>
-            </div>
-            <div class="text-right">
-              <div class="text-3xl font-bold text-gray-800">
-                {{ totalCalories }} <span class="text-sm font-normal text-gray-500">kcal</span>
-              </div>
-            </div>
+        <div class="w-full h-72 bg-slate-100 relative group">
+          <img 
+            v-if="dietData.dietImgUrl" 
+            :src="dietData.dietImgUrl" 
+            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+          />
+          <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-300 gap-2 bg-slate-100">
+              <Utensils :size="48" />
+              <span class="text-xs font-bold">이미지 없음</span>
           </div>
-
-          <!-- Total Macros -->
-          <div class="flex bg-gray-50 rounded-xl p-3 justify-around text-center">
-            <div>
-              <div class="text-xs text-gray-400 mb-1">탄수화물</div>
-              <div class="font-bold">{{ Math.round(dietData.totalCarbohydrate || 0) }}g</div>
-            </div>
-            <div class="w-px bg-gray-200"></div>
-            <div>
-              <div class="text-xs text-gray-400 mb-1">단백질</div>
-              <div class="font-bold">{{ Math.round(dietData.totalProtein || 0) }}g</div>
-            </div>
-            <div class="w-px bg-gray-200"></div>
-            <div>
-              <div class="text-xs text-gray-400 mb-1">지방</div>
-              <div class="font-bold">{{ Math.round(dietData.totalFat || 0) }}g</div>
-            </div>
-          </div>
-
-          <!-- Additional Macros (Sugars, Sodium) -->
-          <div class="flex bg-gray-50 rounded-xl p-3 justify-around text-center mt-2">
-            <div>
-              <div class="text-xs text-gray-400 mb-1">당류</div>
-              <div class="font-bold">
-                {{ dietData.totalSugars ? Math.round(dietData.totalSugars) : '-' }}g
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+              <div class="text-white w-full">
+                   <div class="flex justify-between items-end">
+                       <div>
+                            <span class="inline-block px-2.5 py-1 bg-primary-600 text-white text-[10px] font-bold rounded-full mb-2 shadow-sm">
+                                {{ mealLabel(dietData.mealType) }}
+                            </span>
+                            <h2 class="text-3xl font-bold flex items-baseline gap-1">
+                                {{ totalCalories }} <span class="text-sm font-normal opacity-80">kcal</span>
+                            </h2>
+                       </div>
+                       <div class="text-right">
+                           <div class="flex items-center gap-1.5 text-sm font-medium opacity-90 mb-0.5">
+                               <Calendar :size="14" /> {{ formatDate(dietData.eatDate) }}
+                           </div>
+                           <div class="flex items-center gap-1.5 text-sm font-medium opacity-90 justify-end">
+                               <Clock :size="14" /> {{ formatTime(dietData.eatTime) }}
+                           </div>
+                       </div>
+                   </div>
               </div>
-            </div>
-            <div class="w-px bg-gray-200"></div>
-            <div>
-              <div class="text-xs text-gray-400 mb-1">나트륨</div>
-              <div class="font-bold">
-                {{ dietData.totalSodium ? Math.round(dietData.totalSodium) : '-' }}mg
-              </div>
-            </div>
           </div>
         </div>
 
-        <!-- Food List -->
-        <div
-          class="bg-white p-6 mb-2 shadow-sm"
-          v-if="dietData.details && dietData.details.length > 0"
-        >
-          <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span>🍽️</span> 섭취 메뉴
-          </h3>
-          <div class="space-y-4">
-            <div
-              v-for="food in dietData.details"
-              :key="food.dietDetailId"
-              class="flex justify-between items-center border-b pb-3 last:border-0 last:pb-0"
-            >
-              <div>
-                <div class="font-bold text-sm">{{ food.foodName }}</div>
-                <div class="text-xs text-gray-400 mt-0.5">{{ food.quantity }}{{ food.unit }}</div>
-              </div>
-              <div class="text-sm font-bold text-gray-600">
-                {{ Math.round(food.calories) }} kcal
-              </div>
+        <div class="px-5 py-6 space-y-4 -mt-6 relative z-10">
+            <!-- Total Macros -->
+            <div class="bg-white rounded-3xl shadow-float p-5 border border-slate-100">
+                <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm">
+                    <Flame :size="16" class="text-orange-500 fill-orange-500" /> 영양 성분 요약
+                </h3>
+                <div class="flex justify-between text-center divide-x divide-slate-100">
+                    <div class="flex-1 px-2">
+                        <div class="text-xs font-bold text-slate-400 mb-1">탄수화물</div>
+                        <div class="font-bold text-lg text-slate-800">{{ Math.round(dietData.totalCarbohydrate || 0) }}<span class="text-xs font-normal text-slate-400 ml-0.5">g</span></div>
+                    </div>
+                    <div class="flex-1 px-2">
+                        <div class="text-xs font-bold text-slate-400 mb-1">단백질</div>
+                        <div class="font-bold text-lg text-slate-800">{{ Math.round(dietData.totalProtein || 0) }}<span class="text-xs font-normal text-slate-400 ml-0.5">g</span></div>
+                    </div>
+                    <div class="flex-1 px-2">
+                        <div class="text-xs font-bold text-slate-400 mb-1">지방</div>
+                        <div class="font-bold text-lg text-slate-800">{{ Math.round(dietData.totalFat || 0) }}<span class="text-xs font-normal text-slate-400 ml-0.5">g</span></div>
+                    </div>
+                </div>
+                
+                 <div class="mt-4 pt-4 border-t border-slate-50 flex justify-around text-center">
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 mb-1">당류</div>
+                        <div class="font-bold text-sm text-slate-600">{{ dietData.totalSugars ? Math.round(dietData.totalSugars) : '-' }}g</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 mb-1">나트륨</div>
+                        <div class="font-bold text-sm text-slate-600">{{ dietData.totalSodium ? Math.round(dietData.totalSodium) : '-' }}mg</div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Memo -->
-        <div class="bg-white p-6 shadow-sm" v-if="dietData.memo">
-          <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><span>📝</span> 메모</h3>
-          <p class="text-gray-600 text-sm whitespace-pre-wrap leading-relaxed">
-            {{ dietData.memo }}
-          </p>
+            <!-- Food List -->
+            <div class="bg-white rounded-3xl shadow-sm p-5 border border-slate-100">
+                <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm">
+                    <Utensils :size="16" class="text-primary-500" /> 섭취 메뉴
+                </h3>
+                <div class="space-y-3" v-if="dietData.details && dietData.details.length > 0">
+                    <div
+                        v-for="food in dietData.details"
+                        :key="food.dietDetailId"
+                        class="flex justify-between items-center bg-slate-50 p-3 rounded-2xl"
+                    >
+                        <div>
+                            <div class="font-bold text-sm text-slate-800">{{ food.foodName }}</div>
+                            <div class="text-xs text-slate-500 mt-0.5 font-medium">{{ food.quantity }}{{ food.unit }}</div>
+                        </div>
+                        <div class="text-sm font-bold text-slate-700">
+                            {{ Math.round(food.calories) }} kcal
+                        </div>
+                    </div>
+                </div>
+                <div v-else class="text-center py-4 text-slate-400 text-xs">
+                    등록된 메뉴가 없습니다.
+                </div>
+            </div>
+
+            <!-- Memo -->
+            <div class="bg-white rounded-3xl shadow-sm p-5 border border-slate-100" v-if="dietData.memo">
+                <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2 text-sm">
+                    <FileText :size="16" class="text-slate-400" /> 메모
+                </h3>
+                <p class="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed">
+                    {{ dietData.memo }}
+                </p>
+            </div>
         </div>
       </main>
 
@@ -208,15 +228,15 @@ const mealLabel = (type: string) => {
       <div v-if="!isLoading && dietData" class="p-4 border-t bg-white flex gap-3 z-10">
         <button
           @click="handleDeleteClick"
-          class="flex-1 h-12 border border-red-200 text-red-500 font-bold rounded-xl hover:bg-red-50 transition"
+          class="flex-1 h-12 border border-rose-100 text-rose-500 font-bold rounded-2xl hover:bg-rose-50 transition flex items-center justify-center gap-1.5"
         >
-          삭제
+          <Trash2 :size="18" /> 삭제
         </button>
         <button
           @click="goEdit"
-          class="flex-[2] h-12 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition"
+          class="flex-[2] h-12 bg-primary-600 text-white font-bold rounded-2xl shadow-lg shadow-primary-200 hover:bg-primary-700 transition flex items-center justify-center gap-1.5"
         >
-          수정하기
+          <Edit2 :size="18" /> 수정하기
         </button>
       </div>
     </div>

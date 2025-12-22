@@ -4,12 +4,12 @@ import { useRoute, useRouter } from 'vue-router'
 import { useChallengeStore } from '@/stores/challenge'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
-import { useConfirmStore } from '@/stores/confirm' // Added
+import { useConfirmStore } from '@/stores/confirm'
 import type { ChallengeCreateRequest } from '@/services/challengeService'
 
 import ChallengeCreateForm from '@/components/ChallengeCreateForm.vue'
 import InviteModal from '@/components/InviteModal.vue'
-import UserInfoModal from '@/components/UserInfoModal.vue' // Added
+import UserInfoModal from '@/components/UserInfoModal.vue'
 import dayjs from 'dayjs'
 import DietListModal from '@/components/DietListModal.vue'
 import {
@@ -24,13 +24,25 @@ import {
   type DailyDietResponseItem,
   type DietDetailItem,
 } from '@/services/dietService'
+import { 
+  ArrowLeft, 
+  Mail, 
+  MoreVertical, 
+  Settings, 
+  Trash2, 
+  LogOut, 
+  Target, 
+  Flame,
+  User as UserIcon,
+  ChevronRight
+} from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
 const challengeStore = useChallengeStore()
 const authStore = useAuthStore()
 const toastStore = useToastStore()
-const confirmStore = useConfirmStore() // Added
+const confirmStore = useConfirmStore()
 
 const challengeId = Number(route.params.id)
 
@@ -41,7 +53,7 @@ const showEditModal = ref(false)
 const showInviteModal = ref(false)
 const showUserModal = ref(false)
 const selectedUser = ref<ChallengeParticipantDto | null>(null)
-const isMenuOpen = ref(false) // Added for header menu
+const isMenuOpen = ref(false)
 
 // 챌린지 식단 기록 관련
 const isDietListModalOpen = ref(false)
@@ -71,26 +83,18 @@ const openChallengeLog = async () => {
       challenge.value.endDate,
       selectedUser.value.userId,
     )
-    // 리스트가 null일 경우 대비
     console.log('Diet List from Period API:', list)
 
-    // API 응답 필드 불일치 가능성 처리 (details vs dietDetails)
     let mappedList =
       list?.map((item: DailyDietResponseItem & { dietDetails?: DietDetailItem[] }) => ({
         ...item,
         details: item.details || item.dietDetails || [],
       })) || []
 
-    // details가 비어있다면, 상세 조회를 통해 채워넣기 시도 (임시 워크어라운드)
-    // 주의: 기간이 길면 요청이 많아질 수 있음
     if (mappedList.length > 0 && mappedList.some((d) => d.details.length === 0 && d.memo === '')) {
       try {
         const detailPromises = mappedList.map(async (diet) => {
-          // 이미 details가 있으면 스킵
           if (diet.details && diet.details.length > 0) return diet
-
-          // 상세 조회 API 호출 (getDietDetail은 { data: item } 형태 반환 가정)
-          // dietService.ts에 getDietDetail(dietId)가 있음
           const detailRes = await getDietDetail(diet.dietId)
           return detailRes.data
         })
@@ -99,7 +103,6 @@ const openChallengeLog = async () => {
         mappedList = detailedResults
       } catch (err) {
         console.warn('Failed to fetch individual diet details', err)
-        // 실패해도 기존 리스트라도 보여줌
       }
     }
 
@@ -114,13 +117,6 @@ const openChallengeLog = async () => {
 const handleDietModalClose = () => {
   isDietListModalOpen.value = false
 }
-
-// [Added] 프론트엔드 진행률 재계산 로직
-// [Modified] 로컬 계산 로직 제거 -> Store의 updateChallengeProgress 사용
-// const realProgressPercent = ref(0)
-// const realSuccessCount = ref(0)
-
-// const fetchAndCalculateProgress = ... (removed)
 
 const handleEditClick = () => {
   showEditModal.value = true
@@ -157,7 +153,6 @@ onActivated(async () => {
 
 // 방장 여부 확인 (내 ID와 챌린지 Owner ID 비교)
 const isOwner = computed(() => {
-  // challenge가 로드되지 않았거나 user 정보가 없으면 false
   if (!challenge.value || !authStore.user) return false
   return challenge.value.ownerId === authStore.user.id
 })
@@ -247,7 +242,7 @@ const handleJoin = async () => {
   try {
     const result = await joinChallenge(challengeId)
     if (result) {
-      toastStore.show('챌린지에 참여했습니다! 🔥', 'success')
+      toastStore.show('챌린지에 참여했습니다.', 'success')
       // 정보 갱신
       await challengeStore.fetchChallengeDetail(challengeId)
     }
@@ -259,53 +254,59 @@ const handleJoin = async () => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center text-gray-800">
+  <div class="bg-gray-100 min-h-screen flex items-center justify-center text-slate-800">
     <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-900 flex flex-col"
+      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
       <div
         v-if="challengeStore.isLoading || !challenge"
         class="flex-1 flex items-center justify-center"
       >
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
       </div>
 
       <template v-else>
         <!-- Standard Header -->
-        <header class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 shrink-0">
-          <button @click="router.back()" class="text-2xl w-8">←</button>
-          <h1 class="font-bold text-lg truncate">챌린지 상세</h1>
+        <header class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0">
+          <button @click="router.back()" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+            <ArrowLeft :size="24" />
+          </button>
+          <h1 class="font-bold text-lg truncate text-slate-800">챌린지 상세</h1>
           <div class="flex gap-2 relative">
-            <button @click="showInviteModal = true" class="text-xl px-1">💌</button>
+            <button @click="showInviteModal = true" class="p-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+                <Mail :size="20" />
+            </button>
 
             <!-- Menu Button -->
-            <button @click="isMenuOpen = !isMenuOpen" class="text-xl px-1">⋮</button>
+            <button @click="isMenuOpen = !isMenuOpen" class="p-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+                <MoreVertical :size="20" />
+            </button>
 
             <!-- Dropdown Menu -->
             <div
               v-if="isMenuOpen"
-              class="absolute top-8 right-0 bg-white border shadow-lg rounded-lg w-28 z-50 overflow-hidden flex flex-col"
+              class="absolute top-12 right-0 bg-white border border-slate-100 shadow-xl rounded-xl w-32 z-50 overflow-hidden flex flex-col"
             >
               <template v-if="isOwner">
                 <button
                   @click="handleEditClick"
-                  class="text-left text-xs px-3 py-2 hover:bg-gray-50 border-b"
+                  class="text-left text-xs px-4 py-3 hover:bg-slate-50 border-b border-slate-50 font-bold text-slate-600 flex items-center gap-2"
                 >
-                  설정 ⚙️
+                  <Settings :size="14" /> 설정
                 </button>
                 <button
                   @click="handleDeleteClick"
-                  class="text-left text-xs px-3 py-2 hover:bg-gray-50 text-red-500"
+                  class="text-left text-xs px-4 py-3 hover:bg-rose-50 text-rose-500 font-bold flex items-center gap-2"
                 >
-                  삭제 🗑️
+                  <Trash2 :size="14" /> 삭제
                 </button>
               </template>
               <template v-if="challenge.isJoined && !isOwner">
                 <button
                   @click="handleLeaveClick"
-                  class="text-left text-xs px-3 py-2 hover:bg-gray-50 text-gray-500"
+                  class="text-left text-xs px-4 py-3 hover:bg-slate-50 text-slate-500 font-bold flex items-center gap-2"
                 >
-                  나가기 👋
+                  <LogOut :size="14" /> 나가기
                 </button>
               </template>
             </div>
@@ -321,8 +322,6 @@ const handleJoin = async () => {
             'bg-gradient-to-br from-green-400 to-teal-500': challenge.type === 'TIME_RANGE',
           }"
         >
-          <!-- Loading Spinner override inside banner if needed, but we check isLoading outer -->
-
           <div class="relative z-10 animate-slide-up">
             <span
               class="inline-block px-2 py-1 bg-white/20 backdrop-blur rounded text-[10px] font-bold mb-2"
@@ -330,14 +329,14 @@ const handleJoin = async () => {
               {{ dDay }}
             </span>
             <h1 class="text-2xl font-black leading-tight mb-1">{{ challenge.title }}</h1>
-            <p class="text-white/80 text-xs mb-2">
+            <p class="text-white/80 text-xs mb-2 font-medium">
               {{ challenge.startDate }} ~ {{ challenge.endDate }}
             </p>
 
             <div
-              class="inline-flex items-center gap-1 bg-black/20 px-2 py-1 rounded-lg backdrop-blur-sm"
+              class="inline-flex items-center gap-1 bg-black/20 px-2.5 py-1.5 rounded-lg backdrop-blur-sm"
             >
-              <span class="text-sm">🎯</span>
+              <Target :size="14" />
               <span class="text-[11px] font-bold">
                 {{
                   challenge.type === 'CALORIE_LIMIT'
@@ -354,18 +353,18 @@ const handleJoin = async () => {
         <div
           class="flex-1 bg-white -mt-6 rounded-t-[30px] relative z-0 p-6 overflow-y-auto scrollbar-hide space-y-6 animate-slide-up-delayed"
         >
-          <div class="text-center p-5 bg-gray-50 rounded-2xl border border-gray-100">
-            <div class="text-xs text-gray-500 font-bold mb-1">현재 달성률</div>
-            <div class="text-3xl font-black text-blue-600 mb-3">
-              {{ challenge.progressPercent }}%
+          <div class="text-center p-5 bg-slate-50 rounded-2xl border border-slate-100">
+            <div class="text-xs text-slate-500 font-bold mb-1">현재 달성률</div>
+            <div class="text-3xl font-black text-primary-600 mb-3 tracking-tight">
+              {{ challenge.progressPercent }}<span class="text-lg text-primary-400 align-top">%</span>
             </div>
-            <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+            <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
               <div
-                class="h-full bg-blue-500 rounded-full transition-all duration-1000"
+                class="h-full bg-primary-500 rounded-full transition-all duration-1000 ease-out"
                 :style="{ width: `${challenge.progressPercent}%` }"
               ></div>
             </div>
-            <div class="flex justify-between mt-2 text-[10px] text-gray-400 font-bold">
+            <div class="flex justify-between mt-2 text-[10px] text-slate-400 font-bold">
               <span>0%</span>
               <span>성공 {{ challenge.currentCount }} / {{ challenge.goalCount }}회</span>
               <span>100%</span>
@@ -373,16 +372,18 @@ const handleJoin = async () => {
           </div>
 
           <div>
-            <h3 class="text-sm font-bold text-gray-800 mb-2">챌린지 소개</h3>
-            <p class="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-xl min-h-[80px]">
+            <h3 class="text-sm font-bold text-slate-800 mb-2">챌린지 소개</h3>
+            <p class="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl min-h-[80px] border border-slate-100 font-medium">
               {{ challenge.description || '설명이 없습니다.' }}
             </p>
           </div>
 
           <div>
-            <h3 class="text-sm font-bold text-gray-800 mb-2">
-              참여 멤버 ({{ challenge.currentHeadCount || 0 }}/{{ challenge.maxParticipants }})
-            </h3>
+            <div class="flex items-end justify-between mb-3">
+                 <h3 class="text-sm font-bold text-slate-800">
+                    참여 멤버 <span class="text-primary-600 text-xs ml-1">{{ challenge.currentHeadCount || 0 }}/{{ challenge.maxParticipants }}</span>
+                </h3>
+            </div>
 
             <!-- 아바타 그룹 (기존 유지) -->
             <div class="flex -space-x-3 overflow-hidden py-2 px-1 mb-4">
@@ -397,20 +398,20 @@ const handleJoin = async () => {
                   v-if="p.profileImage"
                   :src="p.profileImage"
                   :alt="p.userName"
-                  class="w-10 h-10 rounded-full border-2 border-white object-cover transition-transform hover:scale-110 hover:z-10"
+                  class="w-10 h-10 rounded-full border-2 border-white object-cover transition-transform hover:scale-110 hover:z-10 shadow-sm"
                 />
                 <div
                   v-else
-                  class="w-10 h-10 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs transition-transform hover:scale-110 hover:z-10"
+                  class="w-10 h-10 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-xs transition-transform hover:scale-110 hover:z-10 shadow-sm text-slate-400"
                 >
-                  {{ p.userName.charAt(0) }}
+                  <UserIcon :size="16" />
                 </div>
               </div>
 
               <!-- 참여자가 없을 경우 -->
               <div
                 v-if="!challenge.participants || challenge.participants.length === 0"
-                class="text-xs text-gray-400 py-2"
+                class="text-xs text-slate-400 py-2"
               >
                 아직 참여자가 없습니다. 첫 번째 도전자가 되어보세요!
               </div>
@@ -421,35 +422,36 @@ const handleJoin = async () => {
               <div
                 v-for="p in challenge.participants || []"
                 :key="`list-${p.userId}`"
-                class="bg-gray-50 p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-gray-100 transition"
+                class="bg-white border border-slate-100 p-3 rounded-2xl flex items-center gap-3 cursor-pointer hover:border-primary-200 hover:shadow-md transition group"
                 @click="openUserModal(p)"
               >
                 <img
                   v-if="p.profileImage"
                   :src="p.profileImage"
-                  class="w-10 h-10 rounded-full object-cover border border-gray-200"
+                  class="w-10 h-10 rounded-full object-cover border border-slate-100"
                 />
                 <div
                   v-else
-                  class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs"
+                  class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-xs text-slate-300"
                 >
-                  {{ p.userName.charAt(0) }}
+                  <UserIcon :size="16" />
                 </div>
 
                 <div class="flex-1">
                   <div class="flex justify-between items-center mb-1">
-                    <span class="text-xs font-bold text-gray-700">{{ p.userName }}</span>
-                    <span class="text-xs text-blue-600 font-bold"
+                    <span class="text-xs font-bold text-slate-700 group-hover:text-primary-700 transition">{{ p.userName }}</span>
+                    <span class="text-xs text-primary-600 font-bold"
                       >{{ p.progressPercent || 0 }}%</span
                     >
                   </div>
-                  <div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                      class="h-full bg-blue-500 rounded-full"
+                      class="h-full bg-primary-500 rounded-full"
                       :style="{ width: `${p.progressPercent || 0}%` }"
                     ></div>
                   </div>
                 </div>
+                <ChevronRight :size="16" class="text-slate-300 group-hover:text-primary-400" />
               </div>
             </div>
 
@@ -457,9 +459,9 @@ const handleJoin = async () => {
             <div v-if="!challenge.isJoined && !isOwner" class="mt-8">
               <button
                 @click="handleJoin"
-                class="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg hover:bg-blue-700 transition active:scale-95 flex items-center justify-center gap-2"
+                class="w-full h-14 bg-primary-600 text-white font-bold rounded-2xl shadow-lg shadow-primary-200 hover:bg-primary-700 transition active:scale-[0.98] flex items-center justify-center gap-2"
               >
-                <span>🔥</span> 챌린지 참여하기
+                <Flame :size="20" class="fill-white" /> 챌린지 참여하기
               </button>
             </div>
           </div>
