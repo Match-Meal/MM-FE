@@ -21,7 +21,7 @@ const getBaseUrl = () => {
 // Common streaming fetcher
 const streamRequest = async (
     url: string, 
-    body: any, 
+    body: unknown, 
     onChunk?: (chunk: string) => void
 ): Promise<string> => {
     const token = getAuthHeader()
@@ -155,7 +155,7 @@ export const getPeriodFeedback = async (startDate: string, endDate: string, onCh
   let totalCal = 0
   let totalSod = 0
   let totalSug = 0
-  let menuList: string[] = []
+  const menuList: string[] = []
   
   diets.forEach(d => {
       totalCal += d.totalCalories || 0

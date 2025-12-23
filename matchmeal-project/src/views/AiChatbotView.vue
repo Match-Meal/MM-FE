@@ -482,8 +482,7 @@ import {
   Sparkles,
   Send,
   Calendar,
-  ChevronDown,
-  ChevronUp
+
 } from 'lucide-vue-next'
 
 const router = useRouter()
