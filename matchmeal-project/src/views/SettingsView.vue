@@ -230,6 +230,7 @@ const handleWithdraw = async () => {
           </div>
 
           <div
+            @click="router.push('/badges')"
             class="p-4 px-6 flex justify-between items-center hover:bg-slate-50 cursor-pointer border-b border-slate-50 transition"
           >
             <span class="text-sm font-bold text-slate-700 flex items-center gap-2"

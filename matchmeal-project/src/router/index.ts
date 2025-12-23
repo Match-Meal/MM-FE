@@ -191,6 +191,12 @@ const router = createRouter({
       component: () => import('@/views/payment/PaymentSuccessView.vue'),
       meta: { requiresAuth: true }, // 로그인 상태에서만 접근 가능하도록 설정
     },
+    {
+      path: '/badges',
+      name: 'badge-collection',
+      component: () => import('@/views/BadgeCollection.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 })
 
