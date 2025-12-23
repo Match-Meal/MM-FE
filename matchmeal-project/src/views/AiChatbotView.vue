@@ -88,7 +88,7 @@
 
           <!-- Result Area (Inside Scrollable) -->
           <div
-            v-if="feedbackResult && currentTab === 'feedback'"
+            v-if="(feedbackResult || mealPlanLoading) && currentTab === 'feedback'"
             class="bg-white rounded-3xl p-6 shadow-float border border-primary-100 animate-fade-in-up"
           >
             <div class="flex items-center mb-4 border-b border-slate-100 pb-3">
@@ -99,12 +99,41 @@
               </div>
               <h3 class="font-bold text-slate-800 text-sm">AI 코치의 답변</h3>
             </div>
-            <div
-              class="text-xs text-slate-700 leading-relaxed result-markdown"
-              v-html="renderMarkdown(feedbackResult)"
-            ></div>
+            
+             <!-- Loading State -->
+            <div v-if="mealPlanLoading" class="flex flex-col items-center justify-center py-8 text-primary-600 animate-pulse">
+                <Loader2 class="animate-spin mb-3" :size="32" />
+                <span class="text-sm font-bold">맞춤 식단표를 생성하고 있습니다...</span>
+                <span class="text-xs text-slate-400 mt-1">잠시만 기다려주세요</span>
+            </div>
 
-            <div class="mt-8 pt-6 border-t border-slate-100">
+            <div v-else class="flex flex-col gap-2">
+               <!-- Summary -->
+               <div
+                 class="text-xs text-slate-700 leading-relaxed result-markdown"
+                 v-html="renderMarkdown(feedbackResult ? feedbackResult.split('---')[0] : '')"
+               ></div>
+
+               <!-- Expand Button & Details -->
+               <div v-if="feedbackResult && feedbackResult.includes('---')" class="border-t border-slate-100 pt-2 mt-2">
+                 <button
+                   @click="isFeedbackExpanded = !isFeedbackExpanded"
+                   class="flex items-center text-[10px] font-bold text-primary-600 hover:text-primary-700 transition-colors w-full justify-center py-1"
+                 >
+                   <span v-if="!isFeedbackExpanded">상세 분석 내용 보기</span>
+                   <span v-else>상세 내용 접기</span>
+                   <component :is="isFeedbackExpanded ? 'ChevronUp' : 'ChevronDown'" :size="14" class="ml-1" />
+                 </button>
+                 
+                 <div
+                   v-if="isFeedbackExpanded"
+                   class="result-markdown animate-fade-in-down pt-3 text-xs text-slate-700 leading-relaxed"
+                   v-html="renderMarkdown(feedbackResult.split('---')[1])"
+                 ></div>
+               </div>
+            </div>
+
+            <div v-if="!mealPlanLoading" class="mt-8 pt-6 border-t border-slate-100">
               <button
                 @click="isPeriodModalOpen = true"
                 class="w-full py-4 bg-white border-2 border-primary-500 text-primary-600 rounded-xl font-bold hover:bg-primary-50 transition-all flex justify-center items-center shadow-sm active:scale-[0.98]"
@@ -112,14 +141,6 @@
                 <Calendar :size="18" class="mr-2" />
                 이 기간에 맞는 식단표 받기
               </button>
-
-              <div
-                v-if="mealPlanLoading"
-                class="mt-4 flex flex-col items-center text-primary-600 animate-pulse"
-              >
-                <Loader2 class="animate-spin mb-2" :size="24" />
-                <span class="text-xs font-bold">식단을 분석하고 있습니다...</span>
-              </div>
             </div>
           </div>
         </div>
@@ -199,12 +220,36 @@
               </div>
               <h3 class="font-bold text-slate-800 text-sm">AI 코치의 답변</h3>
             </div>
-            <div
-              class="text-xs text-slate-700 leading-relaxed result-markdown"
-              v-html="renderMarkdown(recommendResult)"
-            ></div>
+            
+            <div class="flex flex-col gap-2">
+               <!-- Summary -->
+               <div
+                 class="text-xs text-slate-700 leading-relaxed result-markdown"
+                 v-html="renderMarkdown(recommendResult ? recommendResult.split('---')[0] : '')"
+               ></div>
+
+               <!-- Expand Button & Details -->
+               <div v-if="recommendResult && recommendResult.includes('---')" class="border-t border-slate-100 pt-2 mt-2">
+                 <button
+                   @click="isRecommendExpanded = !isRecommendExpanded"
+                   class="flex items-center text-[10px] font-bold text-primary-600 hover:text-primary-700 transition-colors w-full justify-center py-1"
+                 >
+                   <span v-if="!isRecommendExpanded">상세 추천 사유 보기</span>
+                   <span v-else>상세 내용 접기</span>
+                   <component :is="isRecommendExpanded ? 'ChevronUp' : 'ChevronDown'" :size="14" class="ml-1" />
+                 </button>
+                 
+                 <div
+                   v-if="isRecommendExpanded"
+                   class="result-markdown animate-fade-in-down pt-3 text-xs text-slate-700 leading-relaxed"
+                   v-html="renderMarkdown(recommendResult.split('---')[1])"
+                 ></div>
+               </div>
+            </div>
           </div>
         </div>
+
+
 
         <!-- 3. Chat Tab -->
         <div v-if="currentTab === 'chat'" class="flex-1 flex flex-col h-full overflow-hidden">
@@ -257,7 +302,27 @@
                       ]"
                     >
                       <span v-if="item.type === 'USER'">{{ item.text }}</span>
-                      <div v-else class="result-markdown" v-html="renderMarkdown(item.text)"></div>
+                      
+                      <!-- AI Message Structure -->
+                      <div v-else class="flex flex-col gap-2">
+                        <!-- Summary (Always Visible) -->
+                        <div class="result-markdown" v-html="renderMarkdown(item.summary || item.text)"></div>
+                        
+                        <!-- Expand Toggle Button -->
+                         <div v-if="item.details" class="border-t border-slate-100 pt-2 mt-1">
+                          <button 
+                            @click="toggleExpand(item.id)"
+                            class="flex items-center text-[10px] font-bold text-primary-600 hover:text-primary-700 transition-colors"
+                          >
+                            <span v-if="!expandedMessages.has(item.id)">상세내용 보기</span>
+                            <span v-else>상세내용 접기</span>
+                            <component :is="expandedMessages.has(item.id) ? 'ChevronUp' : 'ChevronDown'" :size="14" class="ml-1" />
+                          </button>
+                        </div>
+
+                        <!-- Details (Collapsible) -->
+                         <div v-if="item.details && expandedMessages.has(item.id)" class="result-markdown animate-fade-in-down pt-1" v-html="renderMarkdown(item.details)"></div>
+                      </div>
                     </div>
 
                     <!-- Time -->
@@ -346,10 +411,24 @@
               Q. {{ item.question }}
             </div>
 
-            <div
-              class="text-xs text-slate-800 leading-relaxed result-markdown"
-              v-html="renderMarkdown(item.answer)"
-            ></div>
+            <!-- History Item Display Logic -->
+             <div class="flex flex-col gap-2">
+                <div
+                  class="text-xs text-slate-800 leading-relaxed result-markdown"
+                  v-html="renderMarkdown(item.answer ? item.answer.split('---')[0] : '')"
+                ></div>
+                 <div v-if="item.answer && item.answer.includes('---')" class="border-t border-slate-100 pt-2 mt-1">
+                     <button
+                        @click="toggleExpand(`history-${index}`)"
+                        class="flex items-center text-[10px] font-bold text-primary-600 hover:text-primary-700 transition-colors"
+                      >
+                        <span v-if="!expandedMessages.has(`history-${index}`)">상세내용 보기</span>
+                        <span v-else>상세내용 접기</span>
+                        <component :is="expandedMessages.has(`history-${index}`) ? 'ChevronUp' : 'ChevronDown'" :size="14" class="ml-1" />
+                      </button>
+                      <div v-if="expandedMessages.has(`history-${index}`)" class="result-markdown animate-fade-in-down pt-1 text-xs text-slate-800 leading-relaxed" v-html="renderMarkdown(item.answer.split('---')[1])"></div>
+                 </div>
+            </div>
           </div>
         </div>
       </div>
@@ -403,6 +482,8 @@ import {
   Sparkles,
   Send,
   Calendar,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -437,6 +518,19 @@ const isSubscriptionModalOpen = ref(false)
 // 식단 추천 모달 제어
 const isPeriodModalOpen = ref(false)
 const mealPlanLoading = ref(false)
+const isFeedbackExpanded = ref(false)
+const isRecommendExpanded = ref(false)
+
+// Expanded Messages State
+const expandedMessages = ref(new Set<string>())
+
+const toggleExpand = (id: string) => {
+  if (expandedMessages.value.has(id)) {
+    expandedMessages.value.delete(id)
+  } else {
+    expandedMessages.value.add(id)
+  }
+}
 
 const handlePeriodMealPlan = async ({ start, end }: { start: string; end: string }) => {
   mealPlanLoading.value = true
@@ -495,8 +589,11 @@ const reqFeedback = async () => {
   feedbackResult.value = ''
 
   try {
-    const res = await getPeriodFeedback(feedbackDate.value.start, feedbackDate.value.end)
-    feedbackResult.value = res
+    // Streaming callback
+    await getPeriodFeedback(feedbackDate.value.start, feedbackDate.value.end, (chunk) => {
+        feedbackResult.value += chunk
+        // Auto scroll if needed? The user is scrolling inside `result-markdown` container
+    })
   } catch (e) {
     console.error(e)
     toastStore.show('분석 요청 중 오류가 발생했습니다.', 'error')
@@ -522,8 +619,11 @@ const reqRecommend = async () => {
   recommendResult.value = ''
 
   try {
-    const res = await getMenuRecommendation(selectedMealType.value, selectedFlavors.value)
-    recommendResult.value = res
+    await getMenuRecommendation(selectedMealType.value, selectedFlavors.value, (chunk) => {
+        recommendResult.value += chunk
+    })
+    // 추론 완료 후 취향 초기화
+    selectedFlavors.value = []
   } catch (e) {
     console.error(e)
     toastStore.show('추천 요청 중 오류가 발생했습니다.', 'error')
@@ -540,6 +640,8 @@ interface ChatItem {
   id: string
   type: 'DATE' | 'USER' | 'AI'
   text?: string
+  summary?: string
+  details?: string
   date?: Date
   displayTime?: string
   fullDate?: string
@@ -584,12 +686,24 @@ const processedMessages = computed(() => {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
+      
     })
+
+    // Split logic
+    let summary = item.text
+    let details = ''
+    if (item.type === 'AI' && item.text.includes('---')) {
+        const parts = item.text.split('---')
+        summary = parts[0] ?? ''
+        details = parts.slice(1).join('---').trim() // Re-join if multiple ---, though usually just one
+    }
 
     items.push({
       id: `msg-${idx}-${item.type}`,
       type: item.type,
       text: item.text,
+      summary,
+      details,
       displayTime: timeStr,
     })
   })
@@ -611,22 +725,42 @@ const handleSendMessage = async () => {
   const messageToSend = chatInput.value
   chatInput.value = ''
   chatLoading.value = true
+  
+  // Create placeholder for AI response
+  const aiMsgPayload: AiResponse = {
+      answer: '',
+      createdAt: new Date().toISOString(),
+      aiType: 'CHAT'
+  }
+  chatMessages.value.push(aiMsgPayload)
+  
+  // Find the reference to the last message to update it
+  // Since chatMessages.value is reactive array, we can index it.
+  const aiMsgIndex = chatMessages.value.length - 1
 
   // Scroll to bottom
   scrollToBottom()
 
   try {
-    const res = await chatWithAi(messageToSend)
-    const aiMsg: AiResponse = {
-      answer: res,
-      createdAt: new Date().toISOString(),
-      aiType: 'CHAT',
-    }
-    chatMessages.value.push(aiMsg)
+    await chatWithAi(messageToSend, (chunk) => {
+        // Update the message in place
+        // Note: Direct array mutation chatMessages.value[i].answer += chunk is usually reactive in Vue 3
+        if (chatMessages.value[aiMsgIndex]) {
+            const current = chatMessages.value[aiMsgIndex].answer || ''
+            chatMessages.value[aiMsgIndex].answer = current + chunk
+            
+            // Scroll to bottom periodically or on large chunks?
+            // scrollToBottom() // Maybe too frequent, but okay for now
+        }
+    })
+    
+    // Final scroll
     scrollToBottom()
   } catch (e) {
     console.error(e)
     toastStore.show('메시지 전송 실패', 'error')
+    // Remove the empty message on failure?
+    chatMessages.value.splice(aiMsgIndex, 1)
   } finally {
     chatLoading.value = false
   }
@@ -749,6 +883,21 @@ const labelForType = (type?: string) => {
   from {
     opacity: 0;
     transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.5s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
