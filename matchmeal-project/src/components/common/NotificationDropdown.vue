@@ -23,10 +23,10 @@ const toggleDropdown = () => {
   isOpen.value = !isOpen.value
 }
 
-const handleNotificationClick = (noti: NotificationDto) => {
+const handleNotificationClick = async (noti: NotificationDto) => {
   // 1. 읽음 처리
   if (!noti.isRead) {
-    notificationStore.markAsRead(noti.notificationId)
+    await notificationStore.markAsRead(noti.notificationId)
   }
 
   // 2. 페이지 이동
@@ -97,10 +97,10 @@ onUnmounted(() => {
         </div>
         <button 
             v-if="sortedNotifications.length > 0"
-            @click="notificationStore.deleteReadNotifications()"
+            @click="notificationStore.deleteAllNotifications()"
             class="text-xs text-slate-400 hover:text-slate-600 transition underline underline-offset-2"
         >
-            읽은 알림 삭제
+            전체 알림 삭제
         </button>
       </div>
 

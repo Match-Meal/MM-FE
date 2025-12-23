@@ -48,11 +48,26 @@ export const useNotificationStore = defineStore('notification', () => {
       const listPayload = listRes.data as unknown as CommonResponse<NotificationDto[]>
       const countPayload = countRes.data as unknown as CommonResponse<number>
 
+      // 1. 기존 로컬 상태에서 '읽음'으로 처리된 ID 목록 백업 (서버 데이터보다 우선순위 높임)
+      const locallyReadIds = new Set(
+        notifications.value.filter(n => n.isRead).map(n => n.notificationId)
+      )
+
+      let newItems: NotificationDto[] = []
+
       if (listPayload && Array.isArray(listPayload.data)) {
-        notifications.value = listPayload.data
+        newItems = listPayload.data
       } else if (Array.isArray(listPayload)) {
-        notifications.value = listPayload
+        newItems = listPayload
       }
+
+      // 2. 서버 데이터에 로컬 읽음 상태 병합
+      notifications.value = newItems.map(item => {
+        if (locallyReadIds.has(item.notificationId)) {
+          return { ...item, isRead: true }
+        }
+        return item
+      })
 
       if (countPayload && typeof countPayload.data === 'number') {
         unreadCount.value = countPayload.data
@@ -147,19 +162,23 @@ export const useNotificationStore = defineStore('notification', () => {
     }
   }
 
-  const deleteReadNotifications = async () => {
+  const deleteAllNotifications = async () => {
     // Optimistic Update: 선제적 UI 반영
     const originalNotifications = [...notifications.value]
-    notifications.value = notifications.value.filter(n => !n.isRead)
-    toastStore.show('읽은 알림이 삭제되었습니다.', 'success')
+    const originalUnreadCount = unreadCount.value
+
+    notifications.value = []
+    unreadCount.value = 0
+    toastStore.show('모든 알림이 삭제되었습니다.', 'success')
 
     try {
       await notificationService.deleteAll()
     } catch (e) {
-      console.error('Failed to delete read notifications:', e)
+      console.error('Failed to delete all notifications:', e)
       toastStore.show('알림 삭제 실패', 'error')
       // 실패 시 롤백
       notifications.value = originalNotifications
+      unreadCount.value = originalUnreadCount
     }
   }
 
@@ -172,6 +191,6 @@ export const useNotificationStore = defineStore('notification', () => {
     disconnect,
     fetchInitialData,
     markAsRead,
-    deleteReadNotifications
+    deleteAllNotifications
   }
 })
