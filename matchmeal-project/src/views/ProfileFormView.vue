@@ -116,7 +116,7 @@ const goBack = () => {
 
 const submitProfile = async () => {
   if (!form.value.userName) return toastStore.show('닉네임을 입력해주세요.', 'warning')
-  if (!form.value.birthDate) return toastStore.show('생년월일을 입력해주세요.', 'warning')
+  // if (!form.value.birthDate) return toastStore.show('생년월일을 입력해주세요.', 'warning')
 
   try {
     isLoading.value = true
@@ -244,7 +244,7 @@ const submitProfile = async () => {
 
               <div>
                 <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">생년월일</label>
-                <input type="date" v-model="form.birthDate" class="input-field" required />
+                <input type="date" v-model="form.birthDate" class="input-field" />
               </div>
 
               <div>

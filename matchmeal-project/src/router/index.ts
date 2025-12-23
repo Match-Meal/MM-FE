@@ -191,6 +191,18 @@ const router = createRouter({
       component: () => import('@/views/payment/PaymentSuccessView.vue'),
       meta: { requiresAuth: true }, // 로그인 상태에서만 접근 가능하도록 설정
     },
+    {
+      path: '/terms',
+      name: 'terms',
+      component: () => import('@/views/TermsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/about',
+      name: 'about',
+      component: () => import('@/views/AboutView.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 })
 

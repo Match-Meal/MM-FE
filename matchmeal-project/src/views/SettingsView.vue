@@ -7,8 +7,19 @@ import { useConfirmStore } from '@/stores/confirm'
 import SubscriptionModal from '@/components/payment/SubscriptionModal.vue'
 import SubscriptionCancelModal from '@/components/payment/SubscriptionCancelModal.vue'
 import SubscriptionReactivateModal from '@/components/payment/SubscriptionReactivateModal.vue'
+import NotificationSettingsModal from '@/components/settings/NotificationSettingsModal.vue'
 
-import { ArrowLeft, ChevronRight, LogOut, Award, Bell, Info, UserX } from 'lucide-vue-next'
+import {
+  ArrowLeft,
+  ChevronRight,
+  ogOut,
+  Award,
+  Bell,
+  Info,
+  UserX,
+  FileText,
+  Users,
+} from 'lucide-vue-next'
 
 import axios from 'axios'
 
@@ -24,6 +35,7 @@ const isPublic = ref(true)
 const isSubscriptionModalOpen = ref(false)
 const isCancelModalOpen = ref(false)
 const isReactivateModalOpen = ref(false)
+const isNotificationModalOpen = ref(false)
 
 const handleSubscriptionReactivated = async () => {
   await authStore.fetchUser()
@@ -229,14 +241,27 @@ const handleWithdraw = async () => {
             </div>
           </div>
 
+          <!-- 알림 설정 -->
           <div
+            @click="isNotificationModalOpen = true"
             class="p-4 px-6 flex justify-between items-center hover:bg-slate-50 cursor-pointer border-b border-slate-50 transition"
           >
             <span class="text-sm font-bold text-slate-700 flex items-center gap-2"
-              ><Award :size="18" class="text-amber-500" /> 내 뱃지 컬렉션</span
+              ><Bell :size="18" class="text-slate-400" /> 알림 설정</span
             >
             <ChevronRight :size="16" class="text-slate-300" />
           </div>
+
+          <!-- 회원 탈퇴 -->
+          <button
+            @click="handleWithdraw"
+            class="w-full p-4 px-6 flex justify-between items-center hover:bg-slate-50 cursor-pointer border-b border-slate-50 transition text-left"
+          >
+            <span class="text-sm font-bold text-slate-700 flex items-center gap-2"
+              ><UserX :size="18" class="text-slate-400" /> 회원 탈퇴</span
+            >
+            <ChevronRight :size="16" class="text-slate-300" />
+          </button>
         </div>
 
         <!-- 설정 그룹: 앱 정보 -->
@@ -247,10 +272,20 @@ const handleWithdraw = async () => {
             앱 정보
           </h3>
           <div
+            @click="router.push('/terms')"
             class="p-4 px-6 flex justify-between items-center hover:bg-slate-50 cursor-pointer border-b border-slate-50 transition"
           >
             <span class="text-sm font-bold text-slate-700 flex items-center gap-2"
-              ><Bell :size="18" class="text-slate-400" /> 공지사항</span
+              ><FileText :size="18" class="text-slate-400" /> 이용약관</span
+            >
+            <ChevronRight :size="16" class="text-slate-300" />
+          </div>
+          <div
+            @click="router.push('/about')"
+            class="p-4 px-6 flex justify-between items-center hover:bg-slate-50 cursor-pointer border-b border-slate-50 transition"
+          >
+            <span class="text-sm font-bold text-slate-700 flex items-center gap-2"
+              ><Users :size="18" class="text-slate-400" /> 만든이들</span
             >
             <ChevronRight :size="16" class="text-slate-300" />
           </div>
@@ -273,13 +308,6 @@ const handleWithdraw = async () => {
             <LogOut :size="20" />
             로그아웃
           </button>
-
-          <button
-            @click="handleWithdraw"
-            class="w-full py-4 text-xs text-slate-400 font-medium underline hover:text-rose-500 transition flex items-center justify-center gap-1"
-          >
-            <UserX :size="12" /> 회원 탈퇴
-          </button>
         </div>
       </main>
 
@@ -301,6 +329,11 @@ const handleWithdraw = async () => {
         :next-billing-date="authStore.subscription?.nextBillingDate || ''"
         @close="isReactivateModalOpen = false"
         @reactivated="handleSubscriptionReactivated"
+      />
+
+      <NotificationSettingsModal
+        :is-open="isNotificationModalOpen"
+        @close="isNotificationModalOpen = false"
       />
     </div>
   </div>
