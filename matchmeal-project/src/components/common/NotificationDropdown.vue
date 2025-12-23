@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { Bell, Check, X, User } from 'lucide-vue-next'
+import { Bell, User } from 'lucide-vue-next'
 import { useNotificationStore } from '@/stores/notification'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'

@@ -22,6 +22,12 @@ export const useNotificationStore = defineStore('notification', () => {
     )
   })
 
+  interface CommonResponse<T> {
+    status: number;
+    message: string;
+    data: T;
+  }
+
   // 초기 데이터 로드
   const fetchInitialData = async () => {
     try {
@@ -37,21 +43,21 @@ export const useNotificationStore = defineStore('notification', () => {
       // Since we typed apiClient.get<NotificationDto[]> in service, 
       // TS thinks listRes.data is NotificationDto[].
       // But actually it will be the CommonResponse object at runtime.
-      // So we cast to any to safely access potentially nested .data
+      // So we cast to CommonResponse to safely access potentially nested .data
       
-      const listData = listRes.data as any
-      const countData = countRes.data as any
+      const listPayload = listRes.data as unknown as CommonResponse<NotificationDto[]>
+      const countPayload = countRes.data as unknown as CommonResponse<number>
 
-      if (listData && Array.isArray(listData.data)) {
-        notifications.value = listData.data
-      } else if (Array.isArray(listData)) {
-        notifications.value = listData
+      if (listPayload && Array.isArray(listPayload.data)) {
+        notifications.value = listPayload.data
+      } else if (Array.isArray(listPayload)) {
+        notifications.value = listPayload
       }
 
-      if (countData && typeof countData.data === 'number') {
-        unreadCount.value = countData.data
-      } else if (typeof countData === 'number') {
-        unreadCount.value = countData
+      if (countPayload && typeof countPayload.data === 'number') {
+        unreadCount.value = countPayload.data
+      } else if (typeof countPayload === 'number') {
+        unreadCount.value = countPayload
       }
 
     } catch (e) {
@@ -73,7 +79,7 @@ export const useNotificationStore = defineStore('notification', () => {
         Authorization: `Bearer ${authStore.token}` 
       },
       debug: (str) => {
-        // console.log(str)
+        console.log(str)
       },
       onConnect: () => {
         isConnected.value = true
@@ -106,11 +112,8 @@ export const useNotificationStore = defineStore('notification', () => {
     })
   }
 
-  const handleNotification = (payload: any) => {
-    // payload structure depends on backend sending NotificationDto
-    const newNoti: NotificationDto = payload
-    
-    // 리스트에 추가
+  const handleNotification = (newNoti: NotificationDto) => {
+    // 리스트 최상단 추가
     notifications.value.unshift(newNoti)
     unreadCount.value++
 
