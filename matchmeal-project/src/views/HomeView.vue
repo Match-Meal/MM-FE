@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { useChallengeStore } from '@/stores/challenge'
 import { useConfirmStore } from '@/stores/confirm'
+import { useNotificationStore } from '@/stores/notification'
 import { useRouter } from 'vue-router'
 import { getDailyDiets } from '@/services/dietService'
 import dayjs from 'dayjs'
 import BottomNav from '@/components/common/BottomNav.vue'
+import NotificationDropdown from '@/components/common/NotificationDropdown.vue'
 import { 
   LogOut, 
   Edit3, 
@@ -28,6 +30,7 @@ const authStore = useAuthStore()
 const toastStore = useToastStore()
 const challengeStore = useChallengeStore()
 const confirmStore = useConfirmStore()
+const notificationStore = useNotificationStore()
 const router = useRouter()
 
 const todayCalories = ref(0)
@@ -41,6 +44,12 @@ onMounted(async () => {
   // 유저 정보 로드
   if (authStore.token && !authStore.user) {
     await authStore.fetchUser()
+  }
+
+  // 알림 초기화
+  if (authStore.user) {
+    notificationStore.fetchInitialData()
+    notificationStore.connect()
   }
 
   // 로컬 스토리지에서 목표 칼로리 불러오기
@@ -123,6 +132,10 @@ const maxStreak = computed(() => {
   if (challengeStore.myChallenges.length === 0) return 0
   return Math.max(...challengeStore.myChallenges.map((c) => c.currentStreak))
 })
+
+onUnmounted(() => {
+  notificationStore.disconnect()
+})
 </script>
 
 <template>
@@ -132,11 +145,13 @@ const maxStreak = computed(() => {
     >
       <div class="flex-1 overflow-y-auto scrollbar-hide bg-slate-50 pb-6">
         <!-- Header Section -->
-        <div class="bg-gradient-to-br from-primary-500 to-primary-700 p-6 pb-12 text-white rounded-b-[2.5rem] shadow-lg relative overflow-hidden">
-            <!-- Background Decoration -->
-            <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl"></div>
+        <div class="bg-gradient-to-br from-primary-500 to-primary-700 p-6 pb-12 text-white rounded-b-[2.5rem] shadow-lg relative">
+            <!-- Background Decoration Container (Clipped) -->
+            <div class="absolute inset-0 overflow-hidden rounded-b-[2.5rem] pointer-events-none">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl"></div>
+            </div>
             
-          <div class="flex justify-between items-start mb-8 relative z-10">
+          <div class="flex justify-between items-start mb-8 relative z-20">
             <div>
               <span class="font-bold text-xl block mb-1">
                 안녕하세요, {{ authStore.user?.userName || '회원' }}님
@@ -151,12 +166,15 @@ const maxStreak = computed(() => {
               </div>
             </div>
 
-            <button
-              @click="handleLogout"
-              class="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition text-white backdrop-blur-sm"
-            >
-              <LogOut :size="18" />
-            </button>
+            <div class="flex items-center gap-2">
+              <NotificationDropdown />
+              <button
+                @click="handleLogout"
+                class="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition text-white backdrop-blur-sm"
+              >
+                <LogOut :size="18" />
+              </button>
+            </div>
           </div>
 
           <!-- Calorie Card -->

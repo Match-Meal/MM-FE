@@ -642,7 +642,7 @@ onMounted(() => {
             placeholder="따뜻한 댓글을 남겨주세요..."
             name="commentBody"
             autocomplete="off"
-            @keyup.enter="handleSubmitComment"
+            @keydown.enter.prevent="!$event.isComposing && handleSubmitComment()"
           />
           <button
             @click="handleSubmitComment"
