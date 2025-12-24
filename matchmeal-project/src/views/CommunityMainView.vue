@@ -160,11 +160,7 @@ onBeforeRouteLeave((to, from, next) => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
-    <div
-      id="mobile-frame"
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
-    >
+  <div class="flex-1 flex flex-col relative overflow-hidden bg-white">
       <!-- Header -->
       <header class="relative bg-white border-b border-slate-100 h-14 flex items-center px-4 sticky top-0 z-20 shrink-0 justify-between">
         <button @click="goBack" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600 z-10 relative">
@@ -402,7 +398,6 @@ onBeforeRouteLeave((to, from, next) => {
       <!-- Bottom Nav -->
       <BottomNav />
     </div>
-  </div>
 </template>
 
 <style scoped>
@@ -416,6 +411,7 @@ onBeforeRouteLeave((to, from, next) => {
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

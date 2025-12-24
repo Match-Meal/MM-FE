@@ -1,10 +1,6 @@
 <template>
-  <!-- 전체 배경 (중앙 정렬용) -->
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
-    <!-- 모바일 프레임 -->
-    <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col items-center justify-center p-8 text-center"
-    >
+  <div class="flex-1 flex flex-col items-center justify-center bg-white relative overflow-hidden p-8 text-center">
+    <!-- 모바일 프레임 내부 콘텐츠 -->
       <div v-if="success" class="animate-bounce mb-8">
         <div class="rounded-3xl bg-green-100 p-6 shadow-md">
           <svg
@@ -57,7 +53,6 @@
       >
         홈으로 돌아가기
       </router-link>
-    </div>
   </div>
 </template>
 

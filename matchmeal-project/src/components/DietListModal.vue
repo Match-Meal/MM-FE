@@ -35,27 +35,84 @@ const filteredDietList = computed(() => {
 })
 
 const groupedDiets = computed(() => {
-  const groups: Record<string, { items: DailyDietResponseItem[]; dailyTotal: number }> = {}
+  const groups: Record<
+    string,
+    {
+      items: DailyDietResponseItem[]
+      dailyTotal: number
+      count: number
+      isSuccess: boolean
+      hasTimedMorning: boolean
+    }
+  > = {}
 
-  // props.dietList 대신 filteredDietList 사용
   filteredDietList.value.forEach((diet) => {
     const dateKey = diet.eatDate
     if (!groups[dateKey]) {
-      groups[dateKey] = { items: [], dailyTotal: 0 }
+      groups[dateKey] = {
+        items: [],
+        dailyTotal: 0,
+        count: 0,
+        isSuccess: false,
+        hasTimedMorning: false,
+      }
     }
-    groups[dateKey].items.push(diet)
-    groups[dateKey].dailyTotal += diet.totalCalories
+
+    const group = groups[dateKey]
+    group.items.push(diet)
+    group.dailyTotal += diet.totalCalories || 0
+    group.count += 1
+
+    // TIME_RANGE 체크
+    if (
+      props.challengeType === 'TIME_RANGE' &&
+      diet.mealType === 'BREAKFAST' &&
+      diet.eatTime
+    ) {
+      const hour = parseInt((diet.eatTime ?? '0:0').split(':')[0] ?? '0')
+      if (hour < (props.targetValue || 0)) {
+        group.hasTimedMorning = true
+      }
+    }
+  })
+
+  // 날짜별 성공 여부 최종 판정
+  Object.values(groups).forEach((group) => {
+    if (props.challengeType === 'CALORIE_LIMIT') {
+      group.isSuccess = group.dailyTotal <= (props.targetValue || 0)
+    } else if (props.challengeType === 'RECORD_FREQUENCY') {
+      group.isSuccess = group.count >= (props.targetValue || 0)
+    } else if (props.challengeType === 'TIME_RANGE') {
+      group.isSuccess = group.hasTimedMorning
+    }
   })
 
   // 날짜 내림차순 정렬
   const sortedKeys = Object.keys(groups).sort((a, b) => dayjs(b).diff(dayjs(a)))
+  const sortedGroupsArray: Array<{
+    date: string
+    dailyTotal: number
+    count: number
+    isSuccess: boolean
+    hasTimedMorning: boolean
+    items: DailyDietResponseItem[]
+  }> = []
 
-  const sortedGroups: typeof groups = {}
   sortedKeys.forEach((key) => {
-    if (groups[key]) sortedGroups[key] = groups[key]
+    const rawGroup = groups[key]
+    if (rawGroup) {
+      sortedGroupsArray.push({
+        date: key,
+        items: rawGroup.items,
+        dailyTotal: rawGroup.dailyTotal,
+        count: rawGroup.count,
+        isSuccess: rawGroup.isSuccess,
+        hasTimedMorning: rawGroup.hasTimedMorning,
+      })
+    }
   })
 
-  return sortedGroups
+  return sortedGroupsArray
 })
 </script>
 
@@ -94,29 +151,65 @@ const groupedDiets = computed(() => {
         </div>
 
         <!-- 일별 그룹핑 리스트 -->
-        <div v-for="(group, date) in groupedDiets" :key="String(date)" class="space-y-3">
+        <div v-for="group in groupedDiets" :key="group.date" class="space-y-3">
           <!-- 날짜 헤더 -->
           <div class="flex items-center justify-between px-2">
             <div class="flex items-center gap-2">
               <span class="text-sm font-bold text-slate-800">{{
-                dayjs(String(date)).format('YYYY.MM.DD (ddd)')
+                dayjs(group.date).format('YYYY.MM.DD (ddd)')
               }}</span>
 
-              <!-- 뱃지 -->
+              <!-- 뱃지 (CALORIE_LIMIT) -->
               <div v-if="challengeType === 'CALORIE_LIMIT'">
                 <span
-                  v-if="group.dailyTotal > (targetValue || 0)"
+                  v-if="!group.isSuccess"
                   class="text-[10px] bg-rose-50 text-rose-500 px-2 py-0.5 rounded-lg font-bold flex items-center gap-1 border border-rose-100"
                 >
                   <AlertCircle :size="10" />
-                  기준 초과 ({{ Math.round(group.dailyTotal) }} / {{ targetValue }})
+                  실패 ({{ Math.round(group.dailyTotal) }} / {{ targetValue }})
                 </span>
                 <span
                   v-else
                   class="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-lg font-bold flex items-center gap-1 border border-emerald-100"
                 >
                   <CheckCircle2 :size="10" />
-                  성공 ({{ Math.round(group.dailyTotal) }} / {{ targetValue }})
+                   성공 ({{ Math.round(group.dailyTotal) }} / {{ targetValue }})
+                </span>
+              </div>
+
+              <!-- 뱃지 (RECORD_FREQUENCY) -->
+              <div v-else-if="challengeType === 'RECORD_FREQUENCY'">
+                <span
+                  v-if="!group.isSuccess"
+                  class="text-[10px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-lg font-bold flex items-center gap-1 border border-amber-100"
+                >
+                  <AlertCircle :size="10" />
+                  기록 중 ({{ group.count }} / {{ targetValue }})
+                </span>
+                <span
+                  v-else
+                  class="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-lg font-bold flex items-center gap-1 border border-emerald-100"
+                >
+                  <CheckCircle2 :size="10" />
+                   성공 ({{ group.count }} / {{ targetValue }})
+                </span>
+              </div>
+
+              <!-- 뱃지 (TIME_RANGE) -->
+              <div v-else-if="challengeType === 'TIME_RANGE'">
+                <span
+                  v-if="!group.isSuccess"
+                  class="text-[10px] bg-rose-50 text-rose-500 px-2 py-0.5 rounded-lg font-bold flex items-center gap-1 border border-rose-100"
+                >
+                  <AlertCircle :size="10" />
+                  미달성 ({{ targetValue }}시 이전 아침 없음)
+                </span>
+                <span
+                  v-else
+                  class="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-lg font-bold flex items-center gap-1 border border-emerald-100"
+                >
+                  <CheckCircle2 :size="10" />
+                   성공 (아침 완료)
                 </span>
               </div>
             </div>
@@ -154,6 +247,22 @@ const groupedDiets = computed(() => {
                   <Clock :size="10" />
                   {{ diet.eatTime }}
                 </span>
+
+                <!-- 개별 식단 챌린지 뱃지 (TIME_RANGE) -->
+                <template v-if="challengeType === 'TIME_RANGE' && diet.mealType === 'BREAKFAST'">
+                  <span
+                    v-if="parseInt((diet.eatTime ?? '24:00').split(':')[0] || '0') < (targetValue || 0)"
+                    class="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-md font-bold"
+                  >
+                    성공
+                  </span>
+                  <span
+                    v-else
+                    class="text-[9px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded-md font-bold"
+                  >
+                    지각
+                  </span>
+                </template>
               </div>
               <div class="text-right">
                 <span class="font-bold text-slate-700 text-sm"

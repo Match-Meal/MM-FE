@@ -405,10 +405,7 @@ const cancelAnalysis = () => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
-    <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
-    >
+  <div class="flex-1 flex flex-col relative overflow-hidden bg-white">
       <!-- Header -->
       <header class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0">
         <button @click="goBack" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
@@ -630,12 +627,12 @@ const cancelAnalysis = () => {
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="text-xs font-bold text-slate-500 mb-1 block">섭취량</label>
-              <input type="number" v-model.number="manualFood.quantity" class="input-field h-11" />
+              <input type="number" v-model.number="manualFood.quantity" class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm" />
             </div>
             <div>
               <label class="text-xs font-bold text-slate-500 mb-1 block">단위</label>
               <div class="relative">
-                  <select v-model="manualFood.unit" class="input-field h-11 bg-white appearance-none">
+                  <select v-model="manualFood.unit" class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm bg-white appearance-none">
                     <option value="g">g</option>
                     <option value="ml">ml</option>
                   </select>
@@ -649,34 +646,34 @@ const cancelAnalysis = () => {
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="text-xs font-bold text-slate-500 mb-1 block">칼로리 (kcal)</label>
-              <input type="number" v-model.number="manualFood.calories" class="input-field h-11" />
+              <input type="number" v-model.number="manualFood.calories" class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm" />
             </div>
             <div>
               <label class="text-xs font-bold text-slate-500 mb-1 block">탄수화물 (g)</label>
               <input
                 type="number"
                 v-model.number="manualFood.carbohydrate"
-                class="input-field h-11"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
             <div>
               <label class="text-xs font-bold text-slate-500 mb-1 block">단백질 (g)</label>
-              <input type="number" v-model.number="manualFood.protein" class="input-field h-11" />
+              <input type="number" v-model.number="manualFood.protein" class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm" />
             </div>
             <div>
               <label class="text-xs font-bold text-slate-500 mb-1 block">지방 (g)</label>
-              <input type="number" v-model.number="manualFood.fat" class="input-field h-11" />
+              <input type="number" v-model.number="manualFood.fat" class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm" />
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3 mt-1">
             <div>
               <label class="text-xs font-bold text-slate-500 mb-1 block">당류 (g)</label>
-              <input type="number" v-model.number="manualFood.sugars" class="input-field h-11" />
+              <input type="number" v-model.number="manualFood.sugars" class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm" />
             </div>
             <div>
               <label class="text-xs font-bold text-slate-500 mb-1 block">나트륨 (mg)</label>
-              <input type="number" v-model.number="manualFood.sodium" class="input-field h-11" />
+              <input type="number" v-model.number="manualFood.sodium" class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm" />
             </div>
           </div>
 
@@ -840,7 +837,6 @@ const cancelAnalysis = () => {
           </div>
         </div>
       </div>
-    </div>
     </div>
   </div>
 </template>

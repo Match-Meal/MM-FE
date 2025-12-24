@@ -98,11 +98,7 @@ const mealLabel = (type: string) => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
-    <div
-      id="mobile-frame"
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
-    >
+  <div class="flex-1 flex flex-col relative overflow-hidden bg-slate-50">
       <!-- Header -->
       <header class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0">
         <button @click="goBack" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
@@ -241,7 +237,6 @@ const mealLabel = (type: string) => {
         </button>
       </div>
     </div>
-  </div>
 
   <ConfirmModal
     :is-open="isDeleteModalOpen"

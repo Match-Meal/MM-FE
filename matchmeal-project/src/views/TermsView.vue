@@ -10,10 +10,7 @@ const goBack = () => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
-    <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
-    >
+  <div class="flex-1 flex flex-col relative overflow-hidden bg-white">
       <header
         class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0"
       >
@@ -72,7 +69,6 @@ const goBack = () => {
           시행일자: 2025년 1월 1일
         </p>
       </main>
-    </div>
   </div>
 </template>
 

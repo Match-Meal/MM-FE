@@ -9,11 +9,7 @@ const start = () => router.push('/profile-form')
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
-    <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
-    >
-      <div class="flex-1 flex flex-col h-full relative overflow-hidden bg-white">
+  <div class="flex-1 flex flex-col relative overflow-hidden bg-white">
         <!-- Bubbles -->
         <div
           class="absolute top-[-50px] right-[-50px] w-64 h-64 bg-primary-100 rounded-full opacity-50 z-0"
@@ -53,8 +49,6 @@ const start = () => router.push('/profile-form')
             </button>
           </div>
         </div>
-      </div>
-    </div>
   </div>
 </template>
 

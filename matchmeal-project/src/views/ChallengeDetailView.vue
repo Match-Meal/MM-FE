@@ -256,10 +256,7 @@ const handleJoin = async () => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center text-slate-800">
-    <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
-    >
+  <div class="flex-1 flex flex-col relative overflow-hidden bg-white">
       <div
         v-if="challengeStore.isLoading || !challenge"
         class="flex-1 flex items-center justify-center"
@@ -549,7 +546,6 @@ const handleJoin = async () => {
         :challenge-type="challenge?.type"
         :target-value="challenge?.targetValue"
       />
-    </div>
   </div>
 </template>
 
