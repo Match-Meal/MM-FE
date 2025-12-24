@@ -480,7 +480,7 @@ import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { getDailyDiets, type DailyDietResponseItem } from '@/services/dietService'
+import { getDailyDiets, type DailyDietResponseItem, type DailyDietListResponse } from '@/services/dietService'
 import dayjs from 'dayjs'
 import {
   getPeriodFeedback,
@@ -670,9 +670,9 @@ const reqRecommend = async () => {
             currentIntake.sodium += d.totalSodium || 0
             currentIntake.sugar += d.totalSugars || 0
         })
-    } else if (diets && (diets as any).diets) {
+    } else if (diets && 'diets' in diets) {
         // DailyDietListResponse case
-        const list = (diets as any).diets as DailyDietResponseItem[]
+        const list = (diets as DailyDietListResponse).diets
         list.forEach((d) => {
             currentIntake.calories += d.totalCalories || 0
             currentIntake.sodium += d.totalSodium || 0
