@@ -1,20 +1,20 @@
 <template>
   <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
     <div
+      id="mobile-frame"
       class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
       <!-- Header -->
       <header class="bg-white border-b border-slate-100 sticky top-0 z-10">
-        <div class="flex items-center h-14 px-4">
+        <div class="relative h-14 flex items-center px-4">
           <button
             @click="$router.back()"
-            class="mr-3 p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+            class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600 z-10 relative"
           >
             <ArrowLeft :size="24" />
           </button>
-          <h1 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <Bot :size="24" class="text-primary-600" />
-            AI 영양 코치
+          <h1 class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-lg font-bold text-slate-800 flex items-center gap-2">
+            AI 챗봇
           </h1>
         </div>
 
@@ -133,13 +133,20 @@
                </div>
             </div>
 
-            <div v-if="!mealPlanLoading" class="mt-8 pt-6 border-t border-slate-100">
+            <div v-if="!mealPlanLoading" class="mt-8 pt-6 border-t border-slate-100 flex flex-col gap-3">
               <button
                 @click="isPeriodModalOpen = true"
-                class="w-full py-4 bg-white border-2 border-primary-500 text-primary-600 rounded-xl font-bold hover:bg-primary-50 transition-all flex justify-center items-center shadow-sm active:scale-[0.98]"
+                class="w-full py-3.5 bg-white border-2 border-primary-500 text-primary-600 rounded-xl font-bold hover:bg-primary-50 transition-all flex justify-center items-center shadow-sm active:scale-[0.98]"
               >
                 <Calendar :size="18" class="mr-2" />
                 이 기간에 맞는 식단표 받기
+              </button>
+              <button
+                @click="goToChat"
+                class="w-full py-3.5 bg-primary-50 border-2 border-primary-50 text-primary-600 rounded-xl font-bold hover:bg-primary-100 hover:border-primary-100 transition-all flex justify-center items-center active:scale-[0.98]"
+              >
+                <MessageSquare :size="18" class="mr-2" />
+                이어서 대화하기
               </button>
             </div>
           </div>
@@ -246,6 +253,16 @@
                  ></div>
                </div>
             </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100">
+              <button
+                @click="goToChat"
+                class="w-full py-3.5 bg-primary-50 border-2 border-primary-50 text-primary-600 rounded-xl font-bold hover:bg-primary-100 hover:border-primary-100 transition-all flex justify-center items-center active:scale-[0.98]"
+              >
+                <MessageSquare :size="18" class="mr-2" />
+                이어서 대화하기
+              </button>
+            </div>
           </div>
         </div>
 
@@ -253,6 +270,24 @@
 
         <!-- 3. Chat Tab -->
         <div v-if="currentTab === 'chat'" class="flex-1 flex flex-col h-full overflow-hidden">
+          <!-- Persona Selector Header -->
+          <div class="bg-white border-b border-slate-100 p-2 flex justify-center gap-2 flex-shrink-0 z-10 shadow-sm">
+             <button 
+              @click="selectedPersona = 'coach'"
+              class="px-4 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 border"
+              :class="selectedPersona === 'coach' ? 'bg-primary-50 text-primary-600 border-primary-200' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'"
+             >
+               <Bot :size="14" /> AI 코치
+             </button>
+             <button 
+              @click="selectedPersona = 'friend'"
+              class="px-4 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 border"
+              :class="selectedPersona === 'friend' ? 'bg-orange-50 text-orange-600 border-orange-200' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'"
+             >
+               <Smile :size="14" /> 30년 찐친
+             </button>
+          </div>
+
           <div ref="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
             <!-- Welcome -->
             <div
@@ -283,7 +318,8 @@
                   <div
                     class="w-8 h-8 rounded-[12px] bg-white overflow-hidden shadow-sm flex items-center justify-center border border-black/5"
                   >
-                    <Bot :size="20" class="text-slate-800" />
+                   <Bot v-if="selectedPersona === 'coach'" :size="20" class="text-slate-800" />
+                   <Smile v-else :size="20" class="text-slate-800" />
                   </div>
                 </div>
 
@@ -335,18 +371,7 @@
             </div>
 
             <!-- Loading Bubble -->
-            <div v-if="chatLoading" class="flex justify-start w-full mt-2">
-              <div class="mr-2 flex-shrink-0">
-                <div
-                  class="w-8 h-8 rounded-[12px] bg-white overflow-hidden shadow-sm flex items-center justify-center border border-black/5"
-                >
-                  <Bot :size="20" class="text-slate-800" />
-                </div>
-              </div>
-              <div class="bg-white px-4 py-3 rounded-[12px] rounded-tl-[2px] shadow-sm">
-                <Loader2 class="animate-spin text-slate-400" :size="14" />
-              </div>
-            </div>
+
           </div>
 
           <!-- Fixed Input -->
@@ -482,6 +507,7 @@ import {
   Sparkles,
   Send,
   Calendar,
+  Smile,
 
 } from 'lucide-vue-next'
 
@@ -586,12 +612,18 @@ const reqFeedback = async () => {
 
   loading.value = true
   feedbackResult.value = ''
+  
+  // Clear any previous chat context or set persona?
+  // Currently Analysis uses 'coach' default implicitly via agent tool selection logic or just general prompt.
+  // We don't necessarily need persona for feedback, but consistency is good.
+  // For now, feedback/recommendation use default system prompt which we modified to use {persona_instruction}.
+  // But those APIs (period_feedback, recommend) don't take 'persona' in DTO yet.
+  // They use the default value in Agent.stream_agent_response ("coach").
+  // So they will remain formal. This is expected behavior.
 
   try {
-    // Streaming callback
     await getPeriodFeedback(feedbackDate.value.start, feedbackDate.value.end, (chunk) => {
-        feedbackResult.value += chunk
-        // Auto scroll if needed? The user is scrolling inside `result-markdown` container
+      feedbackResult.value += chunk
     })
   } catch (e) {
     console.error(e)
@@ -600,6 +632,9 @@ const reqFeedback = async () => {
     loading.value = false
   }
 }
+
+const selectedPersona = ref('coach') // 'coach' | 'friend'
+
 
 // Menu Recommendation
 const mealTypes = ['아침', '점심', '저녁', '간식']
@@ -630,6 +665,26 @@ const reqRecommend = async () => {
     loading.value = false
   }
 }
+
+
+const pendingContext = ref<{ question: string; answer: string; type: 'FEEDBACK' | 'RECOMMENDATION' | 'CHAT' } | null>(null)
+
+const goToChat = () => {
+  // Inject context if moving from result tabs to chat
+  if (currentTab.value === 'recommend' && recommendResult.value) {
+    const userText = `${selectedMealType.value} 메뉴 추천 결과 (${
+      selectedFlavors.value.join(', ') || '전체'
+    })`
+    pendingContext.value = { question: userText, answer: recommendResult.value, type: 'RECOMMENDATION' }
+  } else if (currentTab.value === 'feedback' && feedbackResult.value) {
+    const userText = `${feedbackDate.value.start} ~ ${feedbackDate.value.end} 식단 기간 분석 결과`
+    pendingContext.value = { question: userText, answer: feedbackResult.value, type: 'FEEDBACK' }
+  }
+
+  currentTab.value = 'chat'
+}
+
+// remove addContextToChat helper as it's logic is moved to watch
 
 // Chat Logic
 const chatLoading = ref(false)
@@ -741,7 +796,8 @@ const handleSendMessage = async () => {
   scrollToBottom()
 
   try {
-    await chatWithAi(messageToSend, (chunk) => {
+    // Pass selectedPersona here
+    await chatWithAi(messageToSend, selectedPersona.value, (chunk) => {
         // Update the message in place
         // Note: Direct array mutation chatMessages.value[i].answer += chunk is usually reactive in Vue 3
         if (chatMessages.value[aiMsgIndex]) {
@@ -801,34 +857,29 @@ watch(currentTab, (newTab) => {
   } else if (newTab === 'chat') {
     // 채팅 탭 진입 시 히스토리 불러오기
     fetchHistory().then(() => {
-      // 과거 기록을 채팅방에 로드 (중복 체크 필요)
-      // historyList의 항목들이 chatMessages에 이미 있는지 확인해야 함
-      // 간단하게: chatMessages가 비어있을 때만 로드하거나,
-      // 또는 messageIds 체크. 지금은 ID가 없으므로...
-      // Store를 쓰므로 chatMessages가 유지됨.
-      // 만약 나갔다 들어왔는데 history를 다시 fetch하면 중복될 수 있음.
-      // 따라서 chatMessages가 비어있을 때만 history를 병합하거나,
-      // store에 'historyLoaded' flag를 둘 수도 있음.
-      // 일단 간단히: chatMessages가 비어있으면 로드.
+      // 1. 기존 히스토리 로드 (비어있을 경우에만)
       if (chatMessages.value.length === 0 && historyList.value.length > 0) {
-        // historyList의 모든 항목을 추가?
-        // historyList는 전체 히스토리.
-        // 채팅방은 'CHAT' 타입만 보여줄지, 전체 다 보여줄지?
-        // 기존 코드는 map해서 다 넣었음.
-        // 하지만 사용자는 '대화하기' 탭에서 이전 대화를 보고 싶어함.
-        // 여기선 historyList의 'CHAT' 타입만 필터링해서 넣는 게 낫지만
-        // 기존 로직 유지: map all to CHAT type (UI display hack)
-        // Better: Just merge unique items? Without IDs it's hard.
-        // For persistence: If store has messages, don't overwrite?
-        // But if user chatted on another device? (Not scope now).
-        // Let's rely on store persistence. If store has data, don't re-fetch/re-populate.
-        if (chatMessages.value.length === 0) {
-          chatMessages.value = historyList.value.map((h) => ({
-            ...h,
-            aiType: 'CHAT',
-          }))
-        }
+        chatMessages.value = historyList.value.map((h) => ({
+          ...h,
+          aiType: 'CHAT',
+        }))
       }
+      
+      // 2. Pending Context가 있으면 추가 (중복 체크)
+      if (pendingContext.value) {
+        const lastMsg = chatMessages.value[chatMessages.value.length - 1]
+        // 중복 방지: 마지막 메시지와 답변이 같으면 스킵
+        if (!lastMsg || lastMsg.answer !== pendingContext.value.answer) {
+             chatMessages.value.push({
+                question: pendingContext.value.question,
+                answer: pendingContext.value.answer,
+                createdAt: new Date().toISOString(),
+                aiType: pendingContext.value.type
+            })
+        }
+        pendingContext.value = null // 처리가 끝났으므로 초기화
+      }
+
       nextTick(() => scrollToBottom())
     })
   } else {
@@ -850,6 +901,8 @@ const classObjectForType = (type?: string) => {
       return 'bg-green-50 text-green-600 border-green-100'
     case 'CHAT':
       return 'bg-purple-50 text-purple-600 border-purple-100'
+    case 'MEAL_PLAN':
+      return 'bg-orange-50 text-orange-600 border-orange-100'
     default:
       return 'bg-slate-50 text-slate-500 border-slate-100'
   }
@@ -863,6 +916,8 @@ const labelForType = (type?: string) => {
       return '메뉴 추천'
     case 'CHAT':
       return '자유 대화'
+    case 'MEAL_PLAN':
+      return '식단 계획'
     default:
       return '기타'
   }

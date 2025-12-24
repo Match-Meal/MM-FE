@@ -15,12 +15,16 @@ defineEmits<{ (e: 'close'): void }>()
 const challengeStore = useChallengeStore()
 const toastStore = useToastStore()
 const invitingId = ref<number | null>(null)
+const sentInvites = ref(new Set<number>())
 
 watch(
   () => props.isOpen,
   (newVal) => {
     if (newVal) {
       challengeStore.fetchFollowings()
+      // 모달이 열릴 때마다 초대 상태를 초기화하고 싶다면:
+      // sentInvites.value.clear()
+      // 하지만 '이미 보낸' 상태를 유지하고 싶다면 초기화하지 않음.
     }
   },
   { immediate: true },
@@ -31,9 +35,12 @@ const handleInvite = async (userId: number) => {
   try {
     await challengeStore.inviteFriend(props.challengeId, userId)
     toastStore.show('초대장을 보냈습니다!', 'success')
+    sentInvites.value.add(userId)
   } catch (e) {
     console.log(e)
     toastStore.show('이미 초대했거나 참여 중인 유저입니다.', 'error')
+    // 실패했더라도 '이미 초대'라면 상태 변경
+    sentInvites.value.add(userId) 
   } finally {
     invitingId.value = null
   }
@@ -93,16 +100,19 @@ const handleInvite = async (userId: number) => {
 
           <button
             @click="handleInvite(user.userId)"
-            :disabled="invitingId === user.userId || participantIds?.includes(user.userId)"
+            :disabled="invitingId === user.userId || participantIds?.includes(user.userId) || sentInvites.has(user.userId)"
             class="px-3 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-1 min-w-[60px] justify-center"
             :class="
               participantIds?.includes(user.userId)
                 ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                : 'bg-primary-100 text-primary-600 hover:bg-primary-200'
+                : sentInvites.has(user.userId)
+                  ? 'bg-blue-50 text-blue-400 cursor-not-allowed'
+                  : 'bg-primary-100 text-primary-600 hover:bg-primary-200'
             "
           >
             <Loader2 v-if="invitingId === user.userId" :size="14" class="animate-spin" />
             <span v-else-if="participantIds?.includes(user.userId)">참여중</span>
+            <span v-else-if="sentInvites.has(user.userId)">초대중</span>
             <span v-else>초대</span>
           </button>
         </div>

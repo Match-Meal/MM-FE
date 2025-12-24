@@ -204,8 +204,8 @@ export const getMenuRecommendation = async (
   return streamRequest('/ai/recommend', { meal_type: mealType, flavors, user_profile: getUserProfile(), current_intake: null }, onChunk)
 }
 
-export const chatWithAi = async (message: string, onChunk?: (chunk: string) => void): Promise<string> => {
-  return streamRequest('/ai/chat', { message, user_profile: getUserProfile(), history: [] }, onChunk)
+export const chatWithAi = async (message: string, persona: string = 'coach', onChunk?: (chunk: string) => void): Promise<string> => {
+  return streamRequest('/ai/chat', { message, persona, user_profile: getUserProfile(), history: [] }, onChunk)
 }
 
 export const getAiHistory = async (userId: number): Promise<AiResponse[]> => {
@@ -219,6 +219,11 @@ export const getPeriodMealPlan = async (
   flavors: string[] = [],
   onChunk?: (chunk: string) => void
 ): Promise<string> => {
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+  const diffTime = Math.abs(end.getTime() - start.getTime())
+  const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 
+
   // Use nested period_info to match MealPlanRequest DTO
-  return streamRequest('/ai/meal-plan', { period_info: { start_date: startDate, end_date: endDate, total_days: 0, recorded_meals: 0 }, flavors, user_profile: getUserProfile() }, onChunk)
+  return streamRequest('/ai/meal-plan', { period_info: { start_date: startDate, end_date: endDate, total_days: totalDays, recorded_meals: 0 }, flavors, user_profile: getUserProfile() }, onChunk)
 }

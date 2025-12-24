@@ -162,19 +162,22 @@ onBeforeRouteLeave((to, from, next) => {
 <template>
   <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
     <div
+      id="mobile-frame"
       class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
       <!-- Header -->
-      <header class="h-16 flex items-center justify-between px-6 bg-white z-20 shrink-0 border-b border-gray-100">
-        <button @click="goBack" class="p-2 -ml-2 rounded-full hover:bg-gray-100 transition text-gray-600">
+      <header class="relative bg-white border-b border-slate-100 h-14 flex items-center px-4 sticky top-0 z-20 shrink-0 justify-between">
+        <button @click="goBack" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600 z-10 relative">
           <ArrowLeft :size="24" />
         </button>
-        <h1 class="font-bold text-lg truncate">커뮤니티</h1>
-        <div class="w-8 flex justify-end">
+        <h1 class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg text-slate-800">
+          커뮤니티
+        </h1>
+        <div class="flex justify-end z-10 relative">
           <button 
             @click="isSearchOpen = !isSearchOpen" 
-            class="p-2 -mr-2 rounded-full hover:bg-gray-100 transition"
-            :class="isSearchOpen ? 'text-primary-600 bg-primary-50' : 'text-gray-600'"
+            class="p-2 -mr-2 rounded-full hover:bg-slate-50 transition"
+            :class="isSearchOpen ? 'text-primary-600 bg-primary-50' : 'text-slate-600'"
           >
             <Search v-if="!isSearchOpen" :size="24" />
             <X v-else :size="24" />

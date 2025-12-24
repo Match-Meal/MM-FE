@@ -10,20 +10,20 @@ const goBack = () => {
 
 const developers = [
   {
-    name: '김세호',
-    role: 'Project Lead / Backend / AI',
+    name: '박지우',
+    role: 'Project Leader / Full Stack',
     image: '',
     github: 'https://github.com/kimseho',
     description:
-      'MatchMeal의 전체 아키텍처를 설계하고, 음식 인식을 위한 AI 모델 Serving 및 학습 파이프라인을 구축했습니다.',
+      '음식 데이터 관리 및 식단 기록, AI VQA, 커뮤니티, 알림, 랭킹 서비스를 구현했습니다.',
   },
   {
-    name: 'Mobile PWA Team',
-    role: 'Frontend / UI/UX',
+    name: '정세호',
+    role: 'Project Developer / Full Stack',
     image: '',
-    github: '#',
+    github: 'https://github.com/seho1278',
     description:
-      '사용자 경험(UX)을 최우선으로 고려하여, 모바일 환경에 최적화된 직관적이고 아름다운 인터페이스를 구현했습니다.',
+      '소셜 로그인 및 토큰/프로필 관리, 카카오페이 구독, 식단 챌린지, RAG/LangChain 기반 AI 챗봇을 구현했습니다.',
   },
 ]
 </script>
@@ -31,19 +31,19 @@ const developers = [
 <template>
   <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
     <div
+      id="mobile-frame"
       class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
-      <header
-        class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0"
-      >
+      <header class="relative bg-white border-b border-slate-100 h-14 flex items-center px-4 sticky top-0 z-10 shrink-0">
         <button
           @click="goBack"
-          class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+          class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600 z-10 relative"
         >
           <ArrowLeft :size="24" />
         </button>
-        <h1 class="font-bold text-lg truncate text-slate-800">만든이들</h1>
-        <div class="w-8"></div>
+        <h1 class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-lg font-bold text-slate-800">
+          만든이들
+        </h1>
       </header>
 
       <main class="flex-1 overflow-y-auto p-6 no-scrollbar bg-slate-50">

@@ -12,7 +12,7 @@ import NotificationSettingsModal from '@/components/settings/NotificationSetting
 import {
   ArrowLeft,
   ChevronRight,
-  ogOut,
+  LogOut,
   Award,
   Bell,
   Info,
@@ -118,20 +118,20 @@ const handleWithdraw = async () => {
 <template>
   <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
     <div
+      id="mobile-frame"
       class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
       <!-- 헤더 -->
-      <header
-        class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0"
-      >
+      <header class="relative bg-white border-b border-slate-100 h-14 flex items-center px-4 sticky top-0 z-10 shrink-0">
         <button
-          @click="goBack"
-          class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+          @click="router.back()"
+          class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600 z-10 relative"
         >
           <ArrowLeft :size="24" />
         </button>
-        <h1 class="font-bold text-lg truncate text-slate-800">설정</h1>
-        <div class="w-8"></div>
+        <h1 class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-lg font-bold text-slate-800">
+          설정
+        </h1>
       </header>
 
       <main class="flex-1 overflow-y-auto bg-white no-scrollbar">
