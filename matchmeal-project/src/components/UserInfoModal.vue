@@ -135,8 +135,7 @@ const close = () => emit('close')
       </div>
 
       <!-- Name -->
-      <h3 class="text-xl font-bold text-slate-800 mb-1">{{ user.userName }}</h3>
-      <p class="text-xs text-slate-400 font-medium mb-6">MatchMeal User</p>
+      <h3 class="text-xl font-bold text-slate-800 mb-3">{{ user.userName }}</h3>
 
       <!-- Status / Action -->
       <div class="w-full space-y-2.5">

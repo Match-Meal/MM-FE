@@ -100,6 +100,7 @@ const mealLabel = (type: string) => {
 <template>
   <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
     <div
+      id="mobile-frame"
       class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
       <!-- Header -->
@@ -156,7 +157,7 @@ const mealLabel = (type: string) => {
 
         <div class="px-5 py-6 space-y-4 -mt-6 relative z-10">
             <!-- Total Macros -->
-            <div class="bg-white rounded-3xl shadow-float p-5 border border-slate-100">
+            <div class="bg-white rounded-3xl shadow-float p-5 border border-slate-100 mt-2">
                 <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm">
                     <Flame :size="16" class="text-orange-500 fill-orange-500" /> 영양 성분 요약
                 </h3>

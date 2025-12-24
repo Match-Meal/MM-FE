@@ -125,16 +125,22 @@ const handleCodeSubmit = async (code: string) => {
 <template>
   <div class="bg-gray-100 min-h-screen flex items-center justify-center text-slate-800">
     <div
+      id="mobile-frame"
       class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
       <!-- Header -->
-      <header class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0">
-        <button v-if="activeTab === 'my'" @click="router.push('/home')" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
-          <ArrowLeft :size="24" />
-        </button>
-        <div v-else class="w-8"></div>
-        <h1 class="font-bold text-lg truncate text-slate-800">챌린지</h1>
-        <div class="flex gap-2">
+      <header class="relative bg-white border-b border-slate-100 h-14 flex items-center px-4 sticky top-0 z-20 shrink-0 justify-between">
+        <div class="z-10 relative">
+          <button v-if="activeTab === 'my'" @click="router.push('/home')" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+            <ArrowLeft :size="24" />
+          </button>
+        </div>
+
+        <h1 class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg text-slate-800">
+          챌린지
+        </h1>
+
+        <div class="flex gap-2 z-10 relative">
           <button @click="showCodeModal = true" class="relative p-2 rounded-full hover:bg-slate-50 transition text-slate-600">
             <Lock :size="20" />
           </button>

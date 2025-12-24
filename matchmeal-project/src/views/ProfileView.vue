@@ -197,29 +197,58 @@ const bmiInfo = computed(() => {
 const bmiPercent = computed(() => {
   const val = bmi.value
   if (!val) return 0
-  const min = 10,
-    max = 35
-  const percent = ((val - min) / (max - min)) * 100
-  return Math.min(100, Math.max(0, percent))
+  
+  // Piecewise linear mapping for better visual representation
+  // 0% ~ 25%: Underweight (~18.5)
+  if (val < 18.5) {
+    // Map 13 ~ 18.5 to 0 ~ 25% (Min BMI 13 for display)
+    return Math.max(0, ((val - 13) / (18.5 - 13)) * 25)
+  }
+  // 25% ~ 50%: Normal (18.5 ~ 23)
+  else if (val < 23) {
+    return 25 + ((val - 18.5) / (23 - 18.5)) * 25
+  }
+  // 50% ~ 75%: Overweight (23 ~ 25) - Expanded range!
+  else if (val < 25) {
+    return 50 + ((val - 23) / (25 - 23)) * 25
+  }
+  // 75% ~ 100%: Obese (25 ~ 35)
+  else {
+    return Math.min(100, 75 + ((val - 25) / (35 - 25)) * 25)
+  }
 })
 </script>
 
 <template>
   <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
     <div
+      id="mobile-frame"
       class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
-      <header
-        class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0"
-      >
+      <header class="relative bg-white border-b border-slate-100 h-14 flex items-center px-4 sticky top-0 z-10 shrink-0 justify-between">
         <button
           @click="router.back()"
-          class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+          class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600 z-10 relative"
         >
           <ArrowLeft :size="24" />
         </button>
-        <h1 class="font-bold text-lg truncate text-slate-800">내 프로필</h1>
-        <div class="w-8"></div>
+        <h1 class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-lg font-bold text-slate-800">
+          내 프로필
+        </h1>
+        <div class="flex gap-1 z-10 relative">
+          <button
+            @click="goToEditProfile"
+            class="p-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+          >
+            <Edit2 :size="20" />
+          </button>
+          <button
+            @click="goToSettings"
+            class="p-2 -mr-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+          >
+            <Settings :size="20" />
+          </button>
+        </div>
       </header>
       <main class="flex-1 overflow-y-auto bg-slate-50 scrollbar-hide pb-6">
         <div class="bg-white pb-8 rounded-b-[2.5rem] shadow-sm mb-4">
@@ -240,32 +269,17 @@ const bmiPercent = computed(() => {
                 <UserIcon v-else :size="64" class="text-slate-300" />
               </div>
 
-              <!-- 설정 버튼 -->
-              <button
-                @click.stop="goToSettings"
-                class="absolute bottom-0 left-0 w-10 h-10 bg-white text-slate-600 rounded-full flex items-center justify-center shadow-md border border-slate-100 hover:bg-slate-50 transition active:scale-90"
+              <!-- 구독자 뱃지 (우측 하단 아이콘) -->
+              <div
+                v-if="authStore.user?.role === 'ROLE_SUBSCRIBER'"
+                class="absolute bottom-0 right-0 bg-yellow-400 text-white text-[10px] font-bold px-2 py-1 rounded-full border-2 border-white shadow-md flex items-center gap-0.5"
               >
-                <Settings :size="20" />
-              </button>
-
-              <!-- 수정 버튼 -->
-              <button
-                @click.stop="goToEditProfile"
-                class="absolute bottom-0 right-0 w-10 h-10 bg-slate-800 text-white rounded-full flex items-center justify-center shadow-md border border-white hover:bg-black transition active:scale-90"
-              >
-                <Edit2 :size="18" />
-              </button>
+                PREMIUM
+              </div>
             </div>
 
             <h2 class="text-2xl font-bold mb-1 text-slate-900">
               {{ authStore.user?.userName || '회원' }}
-              <!-- 구독자 뱃지 (아이콘 + 텍스트) -->
-              <span
-                v-if="authStore.user?.role === 'ROLE_SUBSCRIBER'"
-                class="ml-2 inline-flex items-center gap-1 bg-yellow-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm align-middle"
-              >
-                PREMIUM
-              </span>
             </h2>
             <p
               class="text-sm text-slate-500 mb-6 px-6 text-center break-keep leading-relaxed pb-1 font-medium"
@@ -360,8 +374,11 @@ const bmiPercent = computed(() => {
                 <div class="absolute right-0 top-0 bottom-0 w-2 bg-white/30 blur-[1px]"></div>
               </div>
             </div>
-            <div class="flex justify-between text-[10px] text-gray-400 mt-2 px-1 font-medium">
-              <span>저체중</span><span>정상</span><span>비만</span>
+            <div class="grid grid-cols-4 text-center text-[10px] text-gray-400 mt-2 font-medium">
+              <span class="text-left">저체중</span>
+              <span>정상</span>
+              <span>과체중</span>
+              <span class="text-right">비만</span>
             </div>
           </div>
         </div>
@@ -385,13 +402,13 @@ const bmiPercent = computed(() => {
 
           <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
             <h3 class="font-bold text-slate-700 text-sm mb-3 flex items-center gap-2">
-              <UtensilsCrossed :size="18" class="text-rose-500" /> 알레르기 / 기피 음식
+              <Stethoscope :size="18" class="text-blue-500" /> 건강 고민 / 질병
             </h3>
-            <div v-if="authStore.user?.allergies?.length" class="flex flex-wrap gap-2">
+            <div v-if="authStore.user?.diseases?.length" class="flex flex-wrap gap-2">
               <span
-                v-for="tag in authStore.user.allergies"
+                v-for="tag in authStore.user.diseases"
                 :key="tag"
-                class="text-xs bg-rose-50 text-rose-600 px-3 py-1.5 rounded-xl font-bold border border-rose-100 flex items-center gap-1"
+                class="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-xl font-bold border border-blue-100 flex items-center gap-1"
               >
                 {{ tag }}
               </span>
@@ -401,13 +418,13 @@ const bmiPercent = computed(() => {
 
           <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
             <h3 class="font-bold text-slate-700 text-sm mb-3 flex items-center gap-2">
-              <Stethoscope :size="18" class="text-blue-500" /> 건강 고민 / 질병
+              <UtensilsCrossed :size="18" class="text-rose-500" /> 알레르기 / 기피 음식
             </h3>
-            <div v-if="authStore.user?.diseases?.length" class="flex flex-wrap gap-2">
+            <div v-if="authStore.user?.allergies?.length" class="flex flex-wrap gap-2">
               <span
-                v-for="tag in authStore.user.diseases"
+                v-for="tag in authStore.user.allergies"
                 :key="tag"
-                class="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-xl font-bold border border-blue-100 flex items-center gap-1"
+                class="text-xs bg-rose-50 text-rose-600 px-3 py-1.5 rounded-xl font-bold border border-rose-100 flex items-center gap-1"
               >
                 {{ tag }}
               </span>

@@ -12,6 +12,7 @@ import BottomNav from '@/components/common/BottomNav.vue'
 import NotificationDropdown from '@/components/common/NotificationDropdown.vue'
 import RankingTicker from '@/components/home/RankingTicker.vue'
 import RankingModal from '@/components/home/RankingModal.vue'
+import OnboardingModal from '@/components/common/OnboardingModal.vue'
 import { useRankingStore } from '@/stores/rankingStore'
 import { 
   LogOut, 
@@ -25,7 +26,6 @@ import {
   CheckCircle2, 
   Flame, 
   PlusCircle, 
-  Megaphone,
   X
 } from 'lucide-vue-next'
 
@@ -46,12 +46,36 @@ const editingTarget = ref(2000)
 
 // 랭킹 모달 상태
 const showRankingModal = ref(false)
+// 온보딩 모달 상태
+const showOnboarding = ref(false)
+
+const checkOnboarding = () => {
+  const userId = authStore.user?.id || 'guest'
+  const hasSeen = localStorage.getItem(`hasSeenOnboarding_${userId}`)
+  console.log('[HomeView] Onboarding Check:', { userId, hasSeen })
+  
+  if (!hasSeen || hasSeen !== 'true') {
+    console.log('[HomeView] Showing Onboarding Modal')
+    showOnboarding.value = true
+  } else {
+    console.log('[HomeView] Onboarding already seen')
+  }
+}
+
+const handleCloseOnboarding = () => {
+  showOnboarding.value = false
+  const userId = authStore.user?.id || 'guest'
+  localStorage.setItem(`hasSeenOnboarding_${userId}`, 'true')
+  console.log('[HomeView] Onboarding Closed & Saved')
+}
 
 onMounted(async () => {
   // 유저 정보 로드
   if (authStore.token && !authStore.user) {
     await authStore.fetchUser()
   }
+
+  rankingStore.connect() // 랭킹 웹소켓 연결
 
   // 알림 초기화
   if (authStore.user) {
@@ -64,6 +88,9 @@ onMounted(async () => {
   if (savedTarget) {
     targetCalories.value = Number(savedTarget)
   }
+
+  // 온보딩 체크
+  checkOnboarding()
 
   // 데이터 로드 병렬 처리 (오늘 칼로리 + 내 챌린지 목록)
   await Promise.all([
@@ -140,6 +167,10 @@ const maxStreak = computed(() => {
   return Math.max(...challengeStore.myChallenges.map((c) => c.currentStreak))
 })
 
+const isGoalAchieved = computed(() => {
+  return targetCalories.value > 0 && todayCalories.value >= targetCalories.value
+})
+
 onUnmounted(() => {
   notificationStore.disconnect()
   rankingStore.disconnect()
@@ -149,29 +180,25 @@ onUnmounted(() => {
 <template>
   <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
     <div
+      id="mobile-frame"
       class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
     >
       <div class="flex-1 overflow-y-auto scrollbar-hide bg-slate-50 pb-6">
         <!-- Header Section -->
-        <div class="bg-gradient-to-br from-primary-500 to-primary-700 p-6 pb-12 text-white rounded-b-[2.5rem] shadow-lg relative">
+        <div class="bg-gradient-to-br from-primary-500 to-primary-700 p-6 pb-12 text-white rounded-b-[2.5rem] shadow-lg relative transition-all duration-500 custom-card">
             <!-- Background Decoration Container (Clipped) -->
             <div class="absolute inset-0 overflow-hidden rounded-b-[2.5rem] pointer-events-none">
                 <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl"></div>
             </div>
             
           <div class="flex justify-between items-start mb-8 relative z-20">
-            <div>
-              <span class="font-bold text-xl block mb-1">
-                안녕하세요, {{ authStore.user?.userName || '회원' }}님
+            <div class="flex items-center gap-2">
+              <div class="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+                <Utensils :size="24" class="text-white" />
+              </div>
+              <span class="font-extrabold text-2xl tracking-tight text-white">
+                Match Meal
               </span>
-              
-              <div v-if="authStore.user?.statusMessage" class="flex items-center gap-1.5 text-blue-100 text-sm bg-primary-700/50 px-3 py-1 rounded-full w-fit">
-                <Megaphone :size="14" />
-                <span class="truncate max-w-[180px]">{{ authStore.user?.statusMessage }}</span>
-              </div>
-              <div v-else class="text-blue-100 text-sm opacity-80">
-                오늘도 건강한 하루 되세요!
-              </div>
             </div>
 
             <div class="flex items-center gap-2">
@@ -186,7 +213,10 @@ onUnmounted(() => {
           </div>
 
           <!-- Calorie Card -->
-          <div class="bg-white/10 p-6 rounded-3xl backdrop-blur-md border border-white/20 shadow-inner relative z-10">
+          <div
+            class="bg-white/10 p-6 rounded-3xl backdrop-blur-md border border-white/20 shadow-inner relative z-10 transition-transform duration-500"
+            :class="{ 'animate-celebrate-card': isGoalAchieved }"
+          >
             <div class="flex justify-between items-center mb-2">
               <p class="text-blue-50 text-sm font-medium">오늘의 섭취량</p>
               <button
@@ -223,30 +253,35 @@ onUnmounted(() => {
           <div class="grid grid-cols-3 gap-4">
             <div
               @click="router.push('/diet')"
-              class="bg-white p-4 h-32 rounded-3xl shadow-smooth flex flex-col items-center justify-center gap-3 cursor-pointer hover:-translate-y-1 transition-all duration-300 active:scale-95 group"
+              class="bg-white p-4 h-32 rounded-[2rem] shadow-[0_8px_20px_rgb(0,0,0,0.04)] flex flex-col items-center justify-center gap-3 cursor-pointer hover:-translate-y-1 transition-all duration-300 active:scale-95 group border border-slate-50 relative overflow-hidden"
             >
-              <div class="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center group-hover:bg-orange-100 transition-colors text-orange-500">
-                <Utensils :size="24" stroke-width="2.5" />
+              <div class="absolute inset-0 bg-gradient-to-b from-transparent to-orange-50/30 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div class="w-14 h-14 bg-orange-50 rounded-[1.2rem] flex items-center justify-center group-hover:bg-orange-100 transition-colors text-orange-500 shadow-sm relative z-10">
+                <Utensils :size="26" stroke-width="2" />
               </div>
-              <span class="font-bold text-xs text-gray-600 group-hover:text-gray-900">식단 기록</span>
+              <span class="font-bold text-xs text-slate-600 group-hover:text-slate-800 relative z-10">식단 기록</span>
             </div>
+
             <div
               @click="router.push('/ai-chatbot')"
-              class="bg-white p-4 h-32 rounded-3xl shadow-smooth flex flex-col items-center justify-center gap-3 cursor-pointer hover:-translate-y-1 transition-all duration-300 active:scale-95 group"
+              class="bg-white p-4 h-32 rounded-[2rem] shadow-[0_8px_20px_rgb(0,0,0,0.04)] flex flex-col items-center justify-center gap-3 cursor-pointer hover:-translate-y-1 transition-all duration-300 active:scale-95 group border border-slate-50 relative overflow-hidden"
             >
-              <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center group-hover:bg-blue-100 transition-colors text-blue-500">
-                <Bot :size="24" stroke-width="2.5" />
+              <div class="absolute inset-0 bg-gradient-to-b from-transparent to-blue-50/30 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div class="w-14 h-14 bg-blue-50 rounded-[1.2rem] flex items-center justify-center group-hover:bg-blue-100 transition-colors text-blue-500 shadow-sm relative z-10">
+                <Bot :size="26" stroke-width="2" />
               </div>
-              <span class="font-bold text-xs text-gray-600 group-hover:text-gray-900">AI 영양사</span>
+              <span class="font-bold text-xs text-slate-600 group-hover:text-slate-800 relative z-10">AI 챗봇</span>
             </div>
+
             <div
               @click="router.push('/food-db')"
-              class="bg-white p-4 h-32 rounded-3xl shadow-smooth flex flex-col items-center justify-center gap-3 cursor-pointer hover:-translate-y-1 transition-all duration-300 active:scale-95 group"
+              class="bg-white p-4 h-32 rounded-[2rem] shadow-[0_8px_20px_rgb(0,0,0,0.04)] flex flex-col items-center justify-center gap-3 cursor-pointer hover:-translate-y-1 transition-all duration-300 active:scale-95 group border border-slate-50 relative overflow-hidden"
             >
-              <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center group-hover:bg-green-100 transition-colors text-green-500">
-                <Apple :size="24" stroke-width="2.5" />
+              <div class="absolute inset-0 bg-gradient-to-b from-transparent to-green-50/30 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div class="w-14 h-14 bg-green-50 rounded-[1.2rem] flex items-center justify-center group-hover:bg-green-100 transition-colors text-green-500 shadow-sm relative z-10">
+                <Apple :size="26" stroke-width="2" />
               </div>
-              <span class="font-bold text-xs text-gray-600 group-hover:text-gray-900">음식 사전</span>
+              <span class="font-bold text-xs text-slate-600 group-hover:text-slate-800 relative z-10">음식 사전</span>
             </div>
           </div>
         </div>
@@ -257,63 +292,75 @@ onUnmounted(() => {
         </div>
 
         <!-- Challenge Section -->
-        <div class="px-6">
-          <div class="flex justify-between items-center mb-4">
+        <div class="px-6 mb-8">
+          <div class="flex justify-between items-center mb-5">
             <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
                 <Flame :size="20" class="text-orange-500 fill-orange-500" />
-                진행 중인 챌린지
+                나의 챌린지 기록
             </h3>
             <button
               @click="router.push('/challenge')"
-              class="text-xs text-gray-400 flex items-center gap-0.5 hover:text-primary-600 transition"
+              class="text-xs text-slate-400 flex items-center gap-0.5 hover:text-primary-600 transition bg-slate-100 px-2 py-1 rounded-full"
             >
-              더보기 <ChevronRight :size="12" />
+              전체보기 <ChevronRight :size="12" />
             </button>
           </div>
 
-          <!-- Statistics Dashboard -->
+          <!-- Statistics Dashboard (Bento Style) -->
           <div v-if="challengeStore.myChallenges.length > 0" class="grid grid-cols-2 gap-3">
             <!-- Active Count -->
-            <div class="bg-white p-5 rounded-3xl shadow-smooth flex flex-col items-center justify-center gap-1 border border-primary-100">
-              <span class="text-xs text-primary-500 font-bold flex items-center gap-1">
-                <Activity :size="12" /> 진행 중
+            <div class="bg-emerald-50/80 p-5 rounded-[1.5rem] flex flex-col items-start justify-between h-28 relative overflow-hidden group">
+              <div class="absolute right-0 top-0 opacity-10 -rotate-12 translate-x-2 -translate-y-2">
+                <Activity :size="60" />
+              </div>
+              <span class="text-xs text-emerald-600 font-bold flex items-center gap-1 bg-white/60 px-2 py-0.5 rounded-full backdrop-blur-sm z-10">
+                <Activity :size="10" /> 진행 중
               </span>
-              <div class="flex items-baseline gap-1 mt-1">
-                <span class="text-2xl font-black text-slate-800">{{ challengeStore.myChallenges.length }}</span>
-                <span class="text-xs text-gray-400">개</span>
+              <div class="flex items-baseline gap-1 z-10">
+                <span class="text-3xl font-black text-emerald-800">{{ challengeStore.myChallenges.length }}</span>
+                <span class="text-sm text-emerald-600/80 font-medium">개</span>
               </div>
             </div>
 
             <!-- Avg Progress -->
-            <div class="bg-white p-5 rounded-3xl shadow-smooth flex flex-col items-center justify-center gap-1 border border-primary-200">
-              <span class="text-xs text-primary-600 font-bold flex items-center gap-1">
-                <Trophy :size="12" /> 평균 달성률
+            <div class="bg-blue-50/80 p-5 rounded-[1.5rem] flex flex-col items-start justify-between h-28 relative overflow-hidden group">
+               <div class="absolute right-0 top-0 opacity-10 -rotate-12 translate-x-2 -translate-y-2">
+                <Trophy :size="60" />
+              </div>
+              <span class="text-xs text-blue-600 font-bold flex items-center gap-1 bg-white/60 px-2 py-0.5 rounded-full backdrop-blur-sm z-10">
+                <Trophy :size="10" /> 평균 달성
               </span>
-              <div class="flex items-baseline gap-1 mt-1">
-                <span class="text-2xl font-black text-slate-800">{{ averageProgress }}</span>
-                <span class="text-xs text-gray-400">%</span>
+              <div class="flex items-baseline gap-1 z-10">
+                <span class="text-3xl font-black text-blue-800">{{ averageProgress }}</span>
+                <span class="text-sm text-blue-600/80 font-medium">%</span>
               </div>
             </div>
 
             <!-- Total Success -->
-            <div class="bg-white p-5 rounded-3xl shadow-smooth flex flex-col items-center justify-center gap-1 border border-primary-300">
-              <span class="text-xs text-primary-700 font-bold flex items-center gap-1">
-                <CheckCircle2 :size="12" /> 총 성공
+            <div class="bg-indigo-50/80 p-5 rounded-[1.5rem] flex flex-col items-start justify-between h-28 relative overflow-hidden group">
+               <div class="absolute right-0 top-0 opacity-10 -rotate-12 translate-x-2 -translate-y-2">
+                <CheckCircle2 :size="60" />
+              </div>
+              <span class="text-xs text-indigo-600 font-bold flex items-center gap-1 bg-white/60 px-2 py-0.5 rounded-full backdrop-blur-sm z-10">
+                <CheckCircle2 :size="10" /> 총 성공
               </span>
-              <div class="flex items-baseline gap-1 mt-1">
-                <span class="text-2xl font-black text-slate-800">{{ totalSuccessCount }}</span>
-                <span class="text-xs text-gray-400">회</span>
+              <div class="flex items-baseline gap-1 z-10">
+                <span class="text-3xl font-black text-indigo-800">{{ totalSuccessCount }}</span>
+                <span class="text-sm text-indigo-600/80 font-medium">회</span>
               </div>
             </div>
 
             <!-- Max Streak -->
-            <div class="bg-white p-5 rounded-3xl shadow-smooth flex flex-col items-center justify-center gap-1 border border-yellow-100">
-              <span class="text-xs text-yellow-500 font-bold flex items-center gap-1">
-                <Flame :size="12" /> 최장 연속
+            <div class="bg-orange-50/80 p-5 rounded-[1.5rem] flex flex-col items-start justify-between h-28 relative overflow-hidden group">
+               <div class="absolute right-0 top-0 opacity-10 -rotate-12 translate-x-2 -translate-y-2">
+                <Flame :size="60" />
+              </div>
+              <span class="text-xs text-orange-600 font-bold flex items-center gap-1 bg-white/60 px-2 py-0.5 rounded-full backdrop-blur-sm z-10">
+                <Flame :size="10" /> 최장 연속
               </span>
-              <div class="flex items-baseline gap-1 mt-1">
-                <span class="text-2xl font-black text-slate-800">{{ maxStreak }}</span>
-                <span class="text-xs text-gray-400">일</span>
+              <div class="flex items-baseline gap-1 z-10">
+                <span class="text-3xl font-black text-orange-800">{{ maxStreak }}</span>
+                <span class="text-sm text-orange-600/80 font-medium">일</span>
               </div>
             </div>
           </div>
@@ -321,18 +368,20 @@ onUnmounted(() => {
           <div
             v-else
             @click="router.push('/challenge')"
-            class="bg-white border-2 border-dashed border-gray-200 p-8 rounded-3xl text-center cursor-pointer hover:border-primary-300 hover:bg-primary-50/30 transition group"
+            class="bg-white border-2 border-dashed border-slate-200 p-8 rounded-[2rem] text-center cursor-pointer hover:border-primary-300 hover:bg-primary-50/30 transition group"
           >
-            <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-400 group-hover:bg-white group-hover:text-primary-500 transition">
-                <PlusCircle :size="24" />
+            <div class="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400 group-hover:bg-white group-hover:text-primary-500 transition shadow-sm">
+                <PlusCircle :size="28" />
             </div>
-            <p class="text-sm text-gray-500 font-medium mb-1">참여 중인 챌린지가 없어요</p>
-            <span class="text-primary-600 font-bold text-xs">새로운 도전 시작하기</span>
+            <p class="text-sm text-slate-500 font-medium mb-1">참여 중인 챌린지가 없어요</p>
+            <span class="text-primary-600 font-bold text-xs bg-primary-50 px-3 py-1 rounded-full mt-2 inline-block">새로운 도전 시작하기</span>
           </div>
         </div>
       </div>
 
       <BottomNav />
+      
+
 
       <!-- Edit Modal -->
       <div
@@ -370,6 +419,12 @@ onUnmounted(() => {
 
       <!-- Ranking Modal (Absolute positioned in phone frame) -->
       <RankingModal :show="showRankingModal" @close="showRankingModal = false" />
+      
+      <!-- Onboarding Modal -->
+      <OnboardingModal 
+        :is-open="showOnboarding" 
+        @close="handleCloseOnboarding" 
+      />
     </div>
   </div>
 </template>
@@ -400,6 +455,25 @@ onUnmounted(() => {
   }
   to {
     opacity: 1;
+  }
+}
+
+.animate-celebrate-card {
+  animation: celebrateCard 2s infinite ease-in-out;
+}
+
+@keyframes celebrateCard {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Original shadow-lg */
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 25px rgba(251, 191, 36, 0.6), 0 0 50px rgba(251, 191, 36, 0.3); /* Golden Glow */
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
 }
 </style>
