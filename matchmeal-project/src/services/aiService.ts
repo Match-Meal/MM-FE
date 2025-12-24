@@ -195,13 +195,25 @@ export const getPeriodFeedback = async (startDate: string, endDate: string, onCh
   }, onChunk)
 }
 
+export interface IntakeSummary {
+  calories: number
+  sodium: number
+  sugar: number
+}
+
 export const getMenuRecommendation = async (
   mealType: string,
   flavors: string[] = [],
+  currentIntake: IntakeSummary | null = null,
   onChunk?: (chunk: string) => void
 ): Promise<string> => {
   // Use snake_case for meal_type to match RecommendRequest DTO
-  return streamRequest('/ai/recommend', { meal_type: mealType, flavors, user_profile: getUserProfile(), current_intake: null }, onChunk)
+  return streamRequest('/ai/recommend', { 
+    meal_type: mealType, 
+    flavors, 
+    user_profile: getUserProfile(), 
+    current_intake: currentIntake 
+  }, onChunk)
 }
 
 export const chatWithAi = async (message: string, persona: string = 'coach', onChunk?: (chunk: string) => void): Promise<string> => {

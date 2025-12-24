@@ -1,0 +1,7 @@
+
+C:\pagoda\MM-FE\matchmeal-project\src\views\AiChatbotView.vue
+  673:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  675:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 2 problems (2 errors, 0 warnings)
+

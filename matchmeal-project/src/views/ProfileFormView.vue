@@ -157,10 +157,7 @@ const submitProfile = async () => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
-    <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
-    >
+  <div class="flex-1 flex flex-col relative overflow-hidden bg-white">
       <header
         class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 sticky top-0"
       >
@@ -224,7 +221,7 @@ const submitProfile = async () => {
                 <input
                   v-model="form.userName"
                   type="text"
-                  class="input-field"
+                  class="w-full h-12 border border-slate-200 rounded-xl px-4 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition placeholder-slate-400 text-slate-800 text-sm"
                   placeholder="사용하실 닉네임"
                   required
                 />
@@ -244,7 +241,7 @@ const submitProfile = async () => {
 
               <div>
                 <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">생년월일</label>
-                <input type="date" v-model="form.birthDate" class="input-field" />
+                <input type="date" v-model="form.birthDate" class="w-full h-12 border border-slate-200 rounded-xl px-4 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition placeholder-slate-400 text-slate-800 text-sm" />
               </div>
 
               <div>
@@ -281,7 +278,7 @@ const submitProfile = async () => {
                       type="number"
                       step="0.1"
                       v-model="form.heightCm"
-                      class="input-field text-center font-bold text-slate-800"
+                      class="w-full h-12 border border-slate-200 rounded-xl px-4 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition placeholder-slate-400 text-slate-800 text-sm text-center font-bold text-slate-800"
                       placeholder="175"
                     />
                     <Ruler
@@ -299,7 +296,7 @@ const submitProfile = async () => {
                       type="number"
                       step="0.1"
                       v-model="form.weightKg"
-                      class="input-field text-center font-bold text-slate-800"
+                      class="w-full h-12 border border-slate-200 rounded-xl px-4 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition placeholder-slate-400 text-slate-800 text-sm text-center font-bold text-slate-800"
                       placeholder="70"
                     />
                     <Weight
@@ -347,7 +344,7 @@ const submitProfile = async () => {
                   v-model="customDisease"
                   @keyup.enter="addCustomDisease"
                   placeholder="직접 입력 (예: 허리디스크)"
-                  class="input-field h-11 text-sm"
+                  class="w-full h-12 border border-slate-200 rounded-xl px-4 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition placeholder-slate-400 text-slate-800 text-sm h-11 text-sm"
                 />
                 <button
                   type="button"
@@ -410,7 +407,7 @@ const submitProfile = async () => {
                   v-model="customAllergy"
                   @keyup.enter="addCustomAllergy"
                   placeholder="기타 알레르기 입력 (예: 오이)"
-                  class="input-field h-11 text-sm"
+                  class="w-full h-12 border border-slate-200 rounded-xl px-4 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition placeholder-slate-400 text-slate-800 text-sm h-11 text-sm"
                 />
                 <button
                   type="button"
@@ -459,14 +456,10 @@ const submitProfile = async () => {
           </div>
         </form>
       </main>
-    </div>
   </div>
 </template>
 
 <style scoped>
-.input-field {
-  @apply w-full h-12 border border-slate-200 rounded-xl px-4 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition placeholder-slate-400 text-slate-800 text-sm;
-}
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }

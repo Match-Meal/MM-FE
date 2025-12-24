@@ -54,15 +54,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
-    <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col items-center justify-center"
-    >
+  <div class="flex-1 flex flex-col items-center justify-center bg-white relative overflow-hidden">
       <div class="text-center flex flex-col items-center">
         <Loader2 class="text-primary-600 animate-spin mb-4" :size="48" />
         <h2 class="text-xl font-bold text-slate-800 mb-2">로그인 처리 중...</h2>
         <p class="text-slate-500 text-sm">잠시만 기다려 주세요.</p>
       </div>
-    </div>
   </div>
 </template>

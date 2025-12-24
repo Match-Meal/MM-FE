@@ -26,7 +26,8 @@ import {
   CheckCircle2, 
   Flame, 
   PlusCircle, 
-  X
+  X,
+  Wheat
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
@@ -178,12 +179,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
-    <div
-      id="mobile-frame"
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
-    >
-      <div class="flex-1 overflow-y-auto scrollbar-hide bg-slate-50 pb-6">
+  <div class="flex-1 flex flex-col relative overflow-hidden bg-white">
+    <main class="flex-1 overflow-y-auto scrollbar-hide bg-slate-50 pb-20">
         <!-- Header Section -->
         <div class="bg-gradient-to-br from-primary-500 to-primary-700 p-6 pb-12 text-white rounded-b-[2.5rem] shadow-lg relative transition-all duration-500 custom-card">
             <!-- Background Decoration Container (Clipped) -->
@@ -192,13 +189,13 @@ onUnmounted(() => {
             </div>
             
           <div class="flex justify-between items-start mb-8 relative z-20">
-            <div class="flex items-center gap-2">
-              <div class="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
-                <Utensils :size="24" class="text-white" />
+            <div class="flex items-center gap-3">
+              <div class="bg-white w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
+                <Wheat :size="20" class="text-primary-600" />
               </div>
-              <span class="font-extrabold text-2xl tracking-tight text-white">
-                Match Meal
-              </span>
+              <h1 class="text-2xl font-extrabold tracking-tight text-white focus:outline-none">
+                Match<span class="text-primary-200">Meal</span>
+              </h1>
             </div>
 
             <div class="flex items-center gap-2">
@@ -375,9 +372,9 @@ onUnmounted(() => {
             </div>
             <p class="text-sm text-slate-500 font-medium mb-1">참여 중인 챌린지가 없어요</p>
             <span class="text-primary-600 font-bold text-xs bg-primary-50 px-3 py-1 rounded-full mt-2 inline-block">새로운 도전 시작하기</span>
-          </div>
         </div>
       </div>
+    </main>
 
       <BottomNav />
       
@@ -426,7 +423,6 @@ onUnmounted(() => {
         @close="handleCloseOnboarding" 
       />
     </div>
-  </div>
 </template>
 
 <style scoped>

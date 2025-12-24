@@ -1,9 +1,5 @@
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
-    <div
-      id="mobile-frame"
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
-    >
+  <div class="flex-1 flex flex-col relative overflow-hidden bg-white">
       <!-- Header -->
       <header class="bg-white border-b border-slate-100 sticky top-0 z-10">
         <div class="relative h-14 flex items-center px-4">
@@ -39,11 +35,12 @@
       </header>
 
       <!-- Content Area -->
-      <div class="flex-1 overflow-hidden relative bg-slate-50 flex flex-col">
+      <div class="flex-1 overflow-hidden relative flex flex-col">
         <!-- 1. Period Feedback Tab -->
         <div
           v-if="currentTab === 'feedback'"
-          class="flex-1 overflow-y-auto p-4 pb-20 scrollbar-hide space-y-6"
+          ref="feedbackContainer"
+          class="flex-1 overflow-y-auto p-4 pb-20 scrollbar-hide space-y-6 bg-slate-50"
         >
           <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
             <h2 class="text-lg font-bold mb-2 text-slate-800 flex items-center gap-2">
@@ -155,7 +152,8 @@
         <!-- 2. Menu Recommendation Tab -->
         <div
           v-if="currentTab === 'recommend'"
-          class="flex-1 overflow-y-auto p-4 pb-20 scrollbar-hide space-y-6"
+          ref="recommendContainer"
+          class="flex-1 overflow-y-auto p-4 pb-20 scrollbar-hide space-y-6 bg-slate-50"
         >
           <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
             <h2 class="text-lg font-bold mb-2 text-slate-800 flex items-center gap-2">
@@ -288,7 +286,7 @@
              </button>
           </div>
 
-          <div ref="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
+          <div ref="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
             <!-- Welcome -->
             <div
               v-if="chatMessages.length === 0"
@@ -397,7 +395,7 @@
         <!-- 3. History Tab -->
         <div
           v-if="currentTab === 'history'"
-          class="flex-1 overflow-y-auto p-4 pb-20 scrollbar-hide space-y-4"
+          class="flex-1 overflow-y-auto p-4 pb-20 scrollbar-hide space-y-4 bg-slate-50"
         >
           <div v-if="historyLoading" class="flex justify-center py-8">
             <Loader2 class="animate-spin text-primary-500" :size="32" />
@@ -474,7 +472,6 @@
         @confirm="handlePeriodMealPlan"
       />
     </div>
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -483,6 +480,8 @@ import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import { getDailyDiets, type DailyDietResponseItem, type DailyDietListResponse } from '@/services/dietService'
+import dayjs from 'dayjs'
 import {
   getPeriodFeedback,
   getMenuRecommendation,
@@ -490,6 +489,7 @@ import {
   getPeriodMealPlan,
   chatWithAi,
   type AiResponse,
+  type IntakeSummary,
 } from '@/services/aiService'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
@@ -545,6 +545,10 @@ const isPeriodModalOpen = ref(false)
 const mealPlanLoading = ref(false)
 const isFeedbackExpanded = ref(false)
 const isRecommendExpanded = ref(false)
+
+const feedbackContainer = ref<HTMLElement | null>(null)
+const recommendContainer = ref<HTMLElement | null>(null)
+const chatContainer = ref<HTMLElement | null>(null)
 
 // Expanded Messages State
 const expandedMessages = ref(new Set<string>())
@@ -624,6 +628,7 @@ const reqFeedback = async () => {
   try {
     await getPeriodFeedback(feedbackDate.value.start, feedbackDate.value.end, (chunk) => {
       feedbackResult.value += chunk
+      scrollToBottom()
     })
   } catch (e) {
     console.error(e)
@@ -653,8 +658,31 @@ const reqRecommend = async () => {
   recommendResult.value = ''
 
   try {
-    await getMenuRecommendation(selectedMealType.value, selectedFlavors.value, (chunk) => {
+    // 오늘 섭취량 계산
+    const today = dayjs().format('YYYY-MM-DD')
+    const diets = await getDailyDiets(today)
+    
+    const currentIntake: IntakeSummary = { calories: 0, sodium: 0, sugar: 0 }
+    
+    if (Array.isArray(diets)) {
+        diets.forEach((d: DailyDietResponseItem) => {
+            currentIntake.calories += d.totalCalories || 0
+            currentIntake.sodium += d.totalSodium || 0
+            currentIntake.sugar += d.totalSugars || 0
+        })
+    } else if (diets && 'diets' in diets) {
+        // DailyDietListResponse case
+        const list = (diets as DailyDietListResponse).diets
+        list.forEach((d) => {
+            currentIntake.calories += d.totalCalories || 0
+            currentIntake.sodium += d.totalSodium || 0
+            currentIntake.sugar += d.totalSugars || 0
+        })
+    }
+
+    await getMenuRecommendation(selectedMealType.value, selectedFlavors.value, currentIntake, (chunk: string) => {
         recommendResult.value += chunk
+        scrollToBottom()
     })
     // 추론 완료 후 취향 초기화
     selectedFlavors.value = []
@@ -688,7 +716,6 @@ const goToChat = () => {
 
 // Chat Logic
 const chatLoading = ref(false)
-const chatContainer = ref<HTMLElement | null>(null)
 
 interface ChatItem {
   id: string
@@ -804,8 +831,8 @@ const handleSendMessage = async () => {
             const current = chatMessages.value[aiMsgIndex].answer || ''
             chatMessages.value[aiMsgIndex].answer = current + chunk
             
-            // Scroll to bottom periodically or on large chunks?
-            // scrollToBottom() // Maybe too frequent, but okay for now
+            // Scroll to bottom periodically or on large chunks
+            scrollToBottom()
         }
     })
     
@@ -822,11 +849,18 @@ const handleSendMessage = async () => {
 }
 
 const scrollToBottom = () => {
-  setTimeout(() => {
-    if (chatContainer.value) {
-      chatContainer.value.scrollTop = chatContainer.value.scrollHeight
-    }
-  }, 100)
+  nextTick(() => {
+    setTimeout(() => {
+      let target: HTMLElement | null = null
+      if (currentTab.value === 'chat') target = chatContainer.value
+      else if (currentTab.value === 'feedback') target = feedbackContainer.value
+      else if (currentTab.value === 'recommend') target = recommendContainer.value
+
+      if (target) {
+        target.scrollTop = target.scrollHeight
+      }
+    }, 50)
+  })
 }
 
 // History

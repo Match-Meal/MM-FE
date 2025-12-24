@@ -123,11 +123,7 @@ const handleCodeSubmit = async (code: string) => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center text-slate-800">
-    <div
-      id="mobile-frame"
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
-    >
+  <div class="flex-1 flex flex-col relative overflow-hidden bg-white">
       <!-- Header -->
       <header class="relative bg-white border-b border-slate-100 h-14 flex items-center px-4 sticky top-0 z-20 shrink-0 justify-between">
         <div class="z-10 relative">
@@ -270,7 +266,7 @@ const handleCodeSubmit = async (code: string) => {
 
       <button
         @click="showCreateModal = true"
-        class="absolute bottom-24 right-5 w-14 h-14 bg-accent text-slate-900 rounded-2xl shadow-float flex items-center justify-center z-30 hover:brightness-105 transition-all active:scale-95 group"
+        class="absolute bottom-24 right-6 w-14 h-14 bg-accent text-slate-900 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.3)] flex items-center justify-center z-30 hover:brightness-105 hover:scale-105 transition-all duration-300 active:scale-95 group"
       >
         <Plus :size="28" stroke-width="2.5" class="group-hover:rotate-90 transition-transform duration-300" />
       </button>
@@ -282,7 +278,6 @@ const handleCodeSubmit = async (code: string) => {
         @updated="challengeStore.fetchMyInvitations"
       />
     </div>
-  </div>
 </template>
 
 <style scoped>

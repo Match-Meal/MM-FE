@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { ArrowLeft, Github } from 'lucide-vue-next'
+import { ArrowLeft, Github, Wheat } from 'lucide-vue-next'
 
 const router = useRouter()
 
@@ -29,11 +29,7 @@ const developers = [
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
-    <div
-      id="mobile-frame"
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col"
-    >
+  <div class="flex-1 flex flex-col relative overflow-hidden bg-white">
       <header class="relative bg-white border-b border-slate-100 h-14 flex items-center px-4 sticky top-0 z-10 shrink-0">
         <button
           @click="goBack"
@@ -49,11 +45,13 @@ const developers = [
       <main class="flex-1 overflow-y-auto p-6 no-scrollbar bg-slate-50">
         <div class="text-center mb-8 mt-4">
           <div
-            class="w-20 h-20 bg-white rounded-3xl mx-auto mb-4 shadow-md flex items-center justify-center text-4xl border border-slate-100"
+            class="w-20 h-20 bg-white rounded-3xl mx-auto mb-4 shadow-float flex items-center justify-center border border-slate-100"
           >
-            🥗
+            <Wheat :size="40" class="text-primary-600" />
           </div>
-          <h2 class="text-2xl font-bold text-slate-800 mb-1">MatchMeal</h2>
+          <h1 class="text-4xl font-extrabold text-slate-800 mb-2 tracking-tight">
+            Match<span class="text-primary-600">Meal</span>
+          </h1>
           <p
             class="text-xs font-bold text-primary-600 bg-primary-50 inline-block px-3 py-1 rounded-full mb-3"
           >
@@ -62,7 +60,7 @@ const developers = [
           <p class="text-sm text-slate-500 leading-relaxed break-keep px-4">
             "무엇을 먹었는지"만 기록하세요.<br />
             영양 분석과 건강 관리는<br />
-            <strong>MatchMeal AI</strong>가 도와드립니다.
+            <strong>Match<span class="text-primary-600">Meal</span> AI</strong>가 도와드립니다.
           </p>
         </div>
 
@@ -75,8 +73,8 @@ const developers = [
             <div
               class="w-16 h-16 bg-slate-100 rounded-full mb-3 flex items-center justify-center text-2xl shadow-inner border border-white"
             >
-              <span v-if="index === 0">👨‍💻</span>
-              <span v-else>📱</span>
+              <img v-if="index === 0" src="/public/jiwoo.JPG" alt="jiwoo" class="w-full h-full object-cover rounded-full" />
+              <img v-else src="/public/seho.jpg" alt="seho" class="w-full h-full object-cover rounded-full" />
             </div>
             <h3 class="font-bold text-lg text-slate-800">{{ dev.name }}</h3>
             <span
@@ -113,7 +111,6 @@ const developers = [
         </div>
       </main>
     </div>
-  </div>
 </template>
 
 <style scoped>
@@ -123,5 +120,10 @@ const developers = [
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Shadow Utility matching SplashView */
+.shadow-float {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04), 0 4px 10px rgba(0, 0, 0, 0.02);
 }
 </style>

@@ -1,6 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+  <div class="flex-1 flex flex-col items-center justify-center bg-white relative overflow-hidden p-6">
       <!-- Header Image / Icon -->
       <div class="bg-yellow-400 p-8 flex justify-center items-center">
         <svg
@@ -88,7 +87,6 @@
           <span v-else class="loader"></span>
         </button>
       </div>
-    </div>
   </div>
 </template>
 

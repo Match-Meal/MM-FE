@@ -34,10 +34,7 @@ const handleCancel = () => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center font-sans text-slate-800">
-    <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-slate-850 flex flex-col items-center justify-center p-8 text-center"
-    >
+  <div class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white relative overflow-hidden">
       <div class="mb-6 w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 animate-bounce-slow">
          <UserCheck :size="48" />
       </div>
@@ -78,7 +75,6 @@ const handleCancel = () => {
           아니요, 로그인하지 않을래요
         </button>
       </div>
-    </div>
   </div>
 </template>
 

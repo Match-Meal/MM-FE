@@ -155,24 +155,45 @@ export const useChallengeStore = defineStore('challenge', () => {
 
       if (!diets) return
 
-      // 일별 그룹핑 및 칼로리 계산
-      const dailyMap: Record<string, number> = {}
+      // 일별 데이터 가공을 위한 맵 (영양소 누적, 기록 횟수, 특정 조건 충족 여부 등)
+      const dailyMap: Record<
+        string,
+        { totalCalories: number; count: number; hasTimedMorning: boolean }
+      > = {}
+
       diets.forEach((d) => {
         const date = d.eatDate
-        dailyMap[date] = (dailyMap[date] || 0) + d.totalCalories
+        if (!dailyMap[date]) {
+          dailyMap[date] = { totalCalories: 0, count: 0, hasTimedMorning: false }
+        }
+
+        const stats = dailyMap[date]
+        stats.totalCalories += d.totalCalories || 0
+        stats.count += 1
+
+        // TIME_RANGE 판정: 아침 식사 마감 시간 (targetValue)
+        if (challengeRef.type === 'TIME_RANGE' && d.mealType === 'BREAKFAST' && d.eatTime) {
+          const hour = parseInt((d.eatTime ?? '0:0').split(':')[0] ?? '0')
+          // targetValue시 미만이면 인정 (예: 7시 목표 시 6시 59분까지)
+          if (hour < (challengeRef.targetValue || 0)) {
+            stats.hasTimedMorning = true
+          }
+        }
       })
 
       let successCount = 0
-      const goal = challengeRef.targetValue
+      const targetVal = challengeRef.targetValue || 0
 
-      if (challengeRef.type === 'CALORIE_LIMIT') {
-        Object.values(dailyMap).forEach((cal) => {
-          if (cal <= goal) successCount++
-        })
-      } else {
-        // RECORD_FREQUENCY, TIME_RANGE 등은 단순히 기록 유무로 판단 (임시)
-        successCount = Object.keys(dailyMap).length
-      }
+      // 유형별 성공 일수 계산
+      Object.values(dailyMap).forEach((stats) => {
+        if (challengeRef.type === 'CALORIE_LIMIT') {
+          if (stats.totalCalories <= targetVal) successCount++
+        } else if (challengeRef.type === 'RECORD_FREQUENCY') {
+          if (stats.count >= targetVal) successCount++
+        } else if (challengeRef.type === 'TIME_RANGE') {
+          if (stats.hasTimedMorning) successCount++
+        }
+      })
 
       // 상태 업데이트
       challengeRef.currentCount = successCount
@@ -190,8 +211,8 @@ export const useChallengeStore = defineStore('challenge', () => {
 
       // 만약 currentChallenge도 같은 ID라면 동기화
       if (currentChallenge.value?.challengeId === challengeId && target) {
-        currentChallenge.value.currentCount = target.currentCount
-        currentChallenge.value.progressPercent = target.progressPercent
+        currentChallenge.value.currentCount = challengeRef.currentCount
+        currentChallenge.value.progressPercent = challengeRef.progressPercent
       }
 
       // [Added] participants 리스트 내의 내 정보도 업데이트 (상세 페이지 리스트 반영용)
