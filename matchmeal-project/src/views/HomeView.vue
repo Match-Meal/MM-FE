@@ -10,6 +10,9 @@ import { getDailyDiets } from '@/services/dietService'
 import dayjs from 'dayjs'
 import BottomNav from '@/components/common/BottomNav.vue'
 import NotificationDropdown from '@/components/common/NotificationDropdown.vue'
+import RankingTicker from '@/components/home/RankingTicker.vue'
+import RankingModal from '@/components/home/RankingModal.vue'
+import { useRankingStore } from '@/stores/rankingStore'
 import { 
   LogOut, 
   Edit3, 
@@ -31,6 +34,7 @@ const toastStore = useToastStore()
 const challengeStore = useChallengeStore()
 const confirmStore = useConfirmStore()
 const notificationStore = useNotificationStore()
+const rankingStore = useRankingStore()
 const router = useRouter()
 
 const todayCalories = ref(0)
@@ -39,6 +43,9 @@ const targetCalories = ref(2000)
 // 목표 수정 모달 상태
 const showTargetModal = ref(false)
 const editingTarget = ref(2000)
+
+// 랭킹 모달 상태
+const showRankingModal = ref(false)
 
 onMounted(async () => {
   // 유저 정보 로드
@@ -139,6 +146,7 @@ const isGoalAchieved = computed(() => {
 
 onUnmounted(() => {
   notificationStore.disconnect()
+  rankingStore.disconnect()
 })
 </script>
 
@@ -249,6 +257,11 @@ onUnmounted(() => {
               <span class="font-bold text-xs text-slate-600 group-hover:text-slate-800 relative z-10">음식 사전</span>
             </div>
           </div>
+        </div>
+
+        <!-- Ranking Section -->
+        <div class="px-6 -mt-4 mb-4 relative z-10">
+          <RankingTicker @open="showRankingModal = true" />
         </div>
 
         <!-- Challenge Section -->
@@ -376,6 +389,9 @@ onUnmounted(() => {
           </button>
         </div>
       </div>
+
+      <!-- Ranking Modal (Absolute positioned in phone frame) -->
+      <RankingModal :show="showRankingModal" @close="showRankingModal = false" />
     </div>
   </div>
 </template>
