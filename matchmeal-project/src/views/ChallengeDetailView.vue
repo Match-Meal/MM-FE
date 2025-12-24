@@ -35,6 +35,8 @@ import {
   Flame,
   User as UserIcon,
   ChevronRight,
+  Key, // Added
+  Lock, // Added
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -268,16 +270,21 @@ const handleJoin = async () => {
       <template v-else>
         <!-- Standard Header -->
         <header
-          class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0"
+          class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0 relative"
         >
           <button
             @click="router.back()"
-            class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+            class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600 z-10"
           >
             <ArrowLeft :size="24" />
           </button>
-          <h1 class="font-bold text-lg truncate text-slate-800">챌린지 상세</h1>
-          <div class="flex gap-2 relative">
+          
+          <div class="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+            <Lock v-if="!challenge.isPublic" :size="16" class="text-slate-400" />
+            <h1 class="font-bold text-lg truncate text-slate-800 break-keep max-w-[200px]">챌린지 상세</h1>
+          </div>
+          
+          <div class="flex gap-2 relative z-10">
             <button
               @click="showInviteModal = true"
               class="p-2 rounded-full hover:bg-slate-50 transition text-slate-600"
@@ -384,6 +391,25 @@ const handleJoin = async () => {
           </div>
 
           <div>
+            <!-- [Added] Invitation Code for Owner -->
+            <div
+              v-if="isOwner && challenge.invitationCode"
+              class="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-between"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-indigo-500 shadow-sm">
+                  <Key :size="20" />
+                </div>
+                <div>
+                  <div class="text-xs text-indigo-400 font-bold mb-0.5">참여 코드</div>
+                  <div class="text-lg font-black text-indigo-700 tracking-wider">{{ challenge.invitationCode }}</div>
+                </div>
+              </div>
+              <div class="text-[10px] text-indigo-400 font-medium px-2 py-1 bg-white/50 rounded-lg">
+                방장에게만 보여요
+              </div>
+            </div>
+
             <h3 class="text-sm font-bold text-slate-800 mb-2">챌린지 소개</h3>
             <p
               class="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl min-h-[80px] border border-slate-100 font-medium"

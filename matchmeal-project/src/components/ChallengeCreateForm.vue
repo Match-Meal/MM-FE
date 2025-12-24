@@ -202,15 +202,19 @@ const handleSubmit = () => {
           </div>
         </div>
 
-        <div class="flex items-center justify-between bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+        <div class="flex items-center justify-between bg-white border border-slate-200 p-4 rounded-2xl shadow-sm transition-colors duration-300" :class="form.isPublic ? 'border-slate-200' : 'border-rose-200 bg-rose-50/50'">
           <div class="flex flex-col">
-            <span class="text-sm font-bold text-slate-700">공개 챌린지</span>
-            <span class="text-[10px] text-slate-400">누구나 검색하고 참여할 수 있어요</span>
+            <span class="text-sm font-bold transition-colors" :class="form.isPublic ? 'text-slate-700' : 'text-rose-600'">
+              {{ form.isPublic ? '공개 챌린지' : '비공개 챌린지' }}
+            </span>
+            <span class="text-[10px] transition-colors" :class="form.isPublic ? 'text-slate-400' : 'text-rose-400'">
+              {{ form.isPublic ? '누구나 검색하고 참여할 수 있어요' : '초대 코드나 링크로만 참여 가능해요' }}
+            </span>
           </div>
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" v-model="form.isPublic" class="sr-only peer" />
             <div
-              class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"
+              class="w-11 h-6 bg-rose-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"
             ></div>
           </label>
         </div>

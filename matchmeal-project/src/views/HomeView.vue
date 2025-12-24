@@ -12,6 +12,7 @@ import BottomNav from '@/components/common/BottomNav.vue'
 import NotificationDropdown from '@/components/common/NotificationDropdown.vue'
 import RankingTicker from '@/components/home/RankingTicker.vue'
 import RankingModal from '@/components/home/RankingModal.vue'
+import OnboardingModal from '@/components/common/OnboardingModal.vue'
 import { useRankingStore } from '@/stores/rankingStore'
 import { 
   LogOut, 
@@ -46,12 +47,36 @@ const editingTarget = ref(2000)
 
 // 랭킹 모달 상태
 const showRankingModal = ref(false)
+// 온보딩 모달 상태
+const showOnboarding = ref(false)
+
+const checkOnboarding = () => {
+  const userId = authStore.user?.id || 'guest'
+  const hasSeen = localStorage.getItem(`hasSeenOnboarding_${userId}`)
+  console.log('[HomeView] Onboarding Check:', { userId, hasSeen })
+  
+  if (!hasSeen || hasSeen !== 'true') {
+    console.log('[HomeView] Showing Onboarding Modal')
+    showOnboarding.value = true
+  } else {
+    console.log('[HomeView] Onboarding already seen')
+  }
+}
+
+const handleCloseOnboarding = () => {
+  showOnboarding.value = false
+  const userId = authStore.user?.id || 'guest'
+  localStorage.setItem(`hasSeenOnboarding_${userId}`, 'true')
+  console.log('[HomeView] Onboarding Closed & Saved')
+}
 
 onMounted(async () => {
   // 유저 정보 로드
   if (authStore.token && !authStore.user) {
     await authStore.fetchUser()
   }
+
+  rankingStore.connect() // 랭킹 웹소켓 연결
 
   // 알림 초기화
   if (authStore.user) {
@@ -64,6 +89,9 @@ onMounted(async () => {
   if (savedTarget) {
     targetCalories.value = Number(savedTarget)
   }
+
+  // 온보딩 체크
+  checkOnboarding()
 
   // 데이터 로드 병렬 처리 (오늘 칼로리 + 내 챌린지 목록)
   await Promise.all([
@@ -392,6 +420,12 @@ onUnmounted(() => {
 
       <!-- Ranking Modal (Absolute positioned in phone frame) -->
       <RankingModal :show="showRankingModal" @close="showRankingModal = false" />
+      
+      <!-- Onboarding Modal -->
+      <OnboardingModal 
+        :is-open="showOnboarding" 
+        @close="handleCloseOnboarding" 
+      />
     </div>
   </div>
 </template>
