@@ -26,7 +26,6 @@ import {
   CheckCircle2, 
   Flame, 
   PlusCircle, 
-  Megaphone,
   X
 } from 'lucide-vue-next'
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { ArrowLeft, Github, Linkedin, Mail } from 'lucide-vue-next'
+import { ArrowLeft, Github } from 'lucide-vue-next'
 
 const router = useRouter()
 

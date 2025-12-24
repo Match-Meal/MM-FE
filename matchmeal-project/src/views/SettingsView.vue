@@ -54,7 +54,6 @@ onMounted(async () => {
   }
 })
 
-const goBack = () => router.back()
 
 // 구독 정보 갱신 (해지 후 호출)
 const handleSubscriptionCancelled = async () => {

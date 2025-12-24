@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { X, Bell, Utensils, MessageCircle, Megaphone, Heart, Users, Trophy } from 'lucide-vue-next'
+import { X, Bell, Utensils, Megaphone, Heart, Users, Trophy } from 'lucide-vue-next'
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean
 }>()
 

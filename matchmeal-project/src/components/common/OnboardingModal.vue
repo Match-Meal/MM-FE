@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Utensils, Bot, Apple, Flame, ChevronRight, X, PieChart, MessageCircle } from 'lucide-vue-next'
+import { Utensils, Bot, ChevronRight, X, PieChart, MessageCircle } from 'lucide-vue-next'
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean
 }>()
 
