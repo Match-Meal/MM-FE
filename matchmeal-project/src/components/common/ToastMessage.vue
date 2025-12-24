@@ -27,23 +27,21 @@ const typeClasses = {
 </script>
 
 <template>
-  <Teleport to="#mobile-frame">
-    <Transition name="toast">
-      <div
-        v-if="toastStore.isVisible"
-        class="absolute bottom-24 left-1/2 -translate-x-1/2 px-5 py-3.5 rounded-full shadow-float z-[9999] flex items-center gap-3 backdrop-blur-md transition-all duration-300 min-w-[300px] justify-center"
-        :class="typeClasses[toastStore.type] || typeClasses.info"
-      >
-        <component
-          :is="icons[toastStore.type] || icons.info"
-          :size="20"
-          stroke-width="2.5"
-          class="shrink-0"
-        />
-        <span class="text-sm font-bold tracking-wide">{{ toastStore.message }}</span>
-      </div>
-    </Transition>
-  </Teleport>
+  <Transition name="toast">
+    <div
+      v-if="toastStore.isVisible"
+      class="absolute bottom-24 left-1/2 -translate-x-1/2 px-5 py-3.5 rounded-full shadow-float z-[9999] flex items-center gap-3 backdrop-blur-md transition-all duration-300 min-w-[300px] justify-center"
+      :class="typeClasses[toastStore.type] || typeClasses.info"
+    >
+      <component
+        :is="icons[toastStore.type] || icons.info"
+        :size="20"
+        stroke-width="2.5"
+        class="shrink-0"
+      />
+      <span class="text-sm font-bold tracking-wide">{{ toastStore.message }}</span>
+    </div>
+  </Transition>
 </template>
 
 <style scoped>

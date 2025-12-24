@@ -341,7 +341,7 @@ const bmiPercent = computed(() => {
                   <Scale :size="16" class="text-primary-500" /> 나의 BMI 지수
                 </h3>
                 <div class="flex items-center gap-2">
-                  <span class="text-3xl font-extrabold text-slate-800 tracking-tight">{{
+                  <span class="text-2xl font-extrabold text-slate-800 tracking-tight">{{
                     bmi
                   }}</span>
                   <span

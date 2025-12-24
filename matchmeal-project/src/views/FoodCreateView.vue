@@ -146,7 +146,7 @@ const goBack = () => {
               type="text"
               id="foodName"
               placeholder="예: 닭가슴살 볶음밥"
-              class="input-field"
+              class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               required
             />
           </div>
@@ -162,7 +162,7 @@ const goBack = () => {
                 id="category"
                 placeholder="카테고리 검색 또는 선택"
                 autocomplete="off"
-                class="input-field"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
                 @focus="isCategoryDropdownOpen = true"
                 />
                 <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -210,7 +210,7 @@ const goBack = () => {
                 type="text"
                 id="unit"
                 placeholder="g, ml, 개 등"
-                class="input-field"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
           </div>
