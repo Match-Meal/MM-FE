@@ -13,7 +13,7 @@ const developers = [
     name: '박지우',
     role: 'Project Leader / Full Stack',
     image: '',
-    github: 'https://github.com/kimseho',
+    github: 'https://github.com/PNoahKR',
     description:
       '음식 데이터 관리 및 식단 기록, AI VQA, 커뮤니티, 알림, 랭킹 서비스를 구현했습니다.',
   },

@@ -342,7 +342,7 @@ const submitProfile = async () => {
               <div class="flex gap-2 mb-3 mt-3">
                 <input
                   v-model="customDisease"
-                  @keyup.enter="addCustomDisease"
+                  @keydown.enter.prevent="addCustomDisease"
                   placeholder="직접 입력 (예: 허리디스크)"
                   class="w-full h-12 border border-slate-200 rounded-xl px-4 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition placeholder-slate-400 text-slate-800 text-sm h-11 text-sm"
                 />
@@ -405,7 +405,7 @@ const submitProfile = async () => {
               <div class="flex gap-2">
                 <input
                   v-model="customAllergy"
-                  @keyup.enter="addCustomAllergy"
+                  @keydown.enter.prevent="addCustomAllergy"
                   placeholder="기타 알레르기 입력 (예: 오이)"
                   class="w-full h-12 border border-slate-200 rounded-xl px-4 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition placeholder-slate-400 text-slate-800 text-sm h-11 text-sm"
                 />

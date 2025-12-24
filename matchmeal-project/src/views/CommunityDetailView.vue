@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
+import { saveLikeStatus, getLikeStatus } from '@/utils/likeStorage'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
@@ -91,6 +92,29 @@ const initData = async () => {
   try {
     isLoading.value = true
     post.value = await getPostDetail(postId)
+    
+    // [보정 로직] 백엔드에서 isLiked를 false로 줘도, 로컬에 기록이 있으면 true로 설정
+    if (post.value) {
+      if (getLikeStatus('POST', postId)) {
+        post.value.isLiked = true
+      }
+      
+      // 댓글 보정
+      if (post.value.comments) {
+        post.value.comments.forEach(comment => {
+          if (getLikeStatus('COMMENT', comment.commentId)) {
+            comment.isLiked = true
+          }
+          if (comment.children) {
+            comment.children.forEach(child => {
+              if (getLikeStatus('COMMENT', child.commentId)) {
+                child.isLiked = true
+              }
+            })
+          }
+        })
+      }
+    }
   } catch (e) {
     console.error(e)
     toastStore.show('게시글을 불러오지 못했습니다.')
@@ -145,6 +169,9 @@ const handleLikePost = async () => {
     const isLiked = await togglePostLike(postId)
     post.value.isLiked = isLiked
     post.value.likeCount += isLiked ? 1 : -1
+    
+    // 로컬 스토리지에 상태 저장
+    saveLikeStatus('POST', postId, isLiked)
   } catch (e) {
     console.error(e)
   }
@@ -201,6 +228,9 @@ const handleLikeComment = async (comment: Comment) => {
     const isLiked = await toggleCommentLike(comment.commentId)
     comment.isLiked = isLiked
     comment.likeCount += isLiked ? 1 : -1
+
+    // 로컬 스토리지에 상태 저장
+    saveLikeStatus('COMMENT', comment.commentId, isLiked)
   } catch (e) {
     console.error(e)
   }
