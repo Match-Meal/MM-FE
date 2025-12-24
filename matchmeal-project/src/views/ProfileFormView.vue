@@ -3,6 +3,18 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useToastStore } from '@/stores/toast'
+import {
+  ArrowLeft,
+  Camera,
+  User,
+  Ruler,
+  Weight,
+  AlertCircle,
+  X,
+  Plus,
+  Loader2,
+  Activity,
+} from 'lucide-vue-next'
 import axios from 'axios'
 
 const router = useRouter()
@@ -22,7 +34,7 @@ const form = ref({
   userName: '',
   gender: 'M',
   birthDate: '',
-  heightCm: '' as number | string, // 빈 값 처리를 위해 타입 유연하게
+  heightCm: '' as number | string,
   weightKg: '' as number | string,
   statusMessage: '',
   allergies: [] as string[],
@@ -30,6 +42,7 @@ const form = ref({
 })
 
 const customAllergy = ref('')
+const customDisease = ref('') // [Added]
 
 // [핵심 수정] 마운트 시 기존 유저 정보 불러와서 폼에 채워넣기
 onMounted(async () => {
@@ -89,13 +102,21 @@ const addCustomAllergy = () => {
   }
 }
 
+const addCustomDisease = () => {
+  const val = customDisease.value.trim()
+  if (val && !form.value.diseases.includes(val)) {
+    form.value.diseases.push(val)
+    customDisease.value = ''
+  }
+}
+
 const goBack = () => {
   router.back()
 }
 
 const submitProfile = async () => {
   if (!form.value.userName) return toastStore.show('닉네임을 입력해주세요.', 'warning')
-  if (!form.value.birthDate) return toastStore.show('생년월일을 입력해주세요.', 'warning')
+  // if (!form.value.birthDate) return toastStore.show('생년월일을 입력해주세요.', 'warning')
 
   try {
     isLoading.value = true
@@ -124,7 +145,7 @@ const submitProfile = async () => {
     // 수정 후 최신 정보 다시 가져오기
     await authStore.fetchUser()
 
-    toastStore.show('프로필이 저장되었습니다! 🎉', 'success')
+    toastStore.show('프로필이 저장되었습니다.', 'success')
     router.replace('/profile') // 수정 완료 후 마이페이지로 이동
   } catch (e) {
     console.error(e)
@@ -136,17 +157,17 @@ const submitProfile = async () => {
 </script>
 
 <template>
-  <div class="bg-gray-200 min-h-screen flex items-center justify-center font-sans text-gray-800">
-    <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-800 flex flex-col"
-    >
+  <div class="flex-1 flex flex-col relative overflow-hidden bg-white">
       <header
-        class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 sticky top-0"
+        class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 sticky top-0"
       >
-        <button @click="goBack" class="text-2xl w-8 text-gray-600 hover:text-gray-900 transition">
-          ←
+        <button
+          @click="goBack"
+          class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600"
+        >
+          <ArrowLeft :size="24" />
         </button>
-        <h1 class="font-bold text-lg truncate text-gray-800">프로필 설정</h1>
+        <h1 class="font-bold text-lg truncate text-slate-800">프로필 설정</h1>
         <div class="w-8"></div>
       </header>
 
@@ -155,26 +176,26 @@ const submitProfile = async () => {
           <div class="flex justify-center mb-6">
             <div class="w-28 h-28 relative">
               <div
-                class="w-full h-full bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-gray-50 shadow-inner cursor-pointer"
+                class="w-full h-full bg-slate-50 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg cursor-pointer group"
                 @click="triggerFileUpload"
               >
                 <!-- 이미지 미리보기 -->
                 <img
                   v-if="previewImage"
                   :src="previewImage"
-                  class="w-full h-full object-cover"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   alt="Profile Preview"
                 />
-                <span v-else class="text-4xl">😎</span>
+                <User v-else :size="48" class="text-slate-300" />
               </div>
 
               <!-- 카메라 아이콘 -->
               <button
                 type="button"
                 @click="triggerFileUpload"
-                class="absolute bottom-0 right-0 w-9 h-9 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white hover:bg-black transition"
+                class="absolute bottom-0 right-0 w-9 h-9 bg-slate-800 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white hover:bg-black transition"
               >
-                📷
+                <Camera :size="16" />
               </button>
 
               <!-- 숨겨진 File Input -->
@@ -189,105 +210,115 @@ const submitProfile = async () => {
           </div>
 
           <section>
-            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-              <span class="w-1 h-5 bg-blue-600 rounded-full"></span>
+            <h3 class="text-sm font-bold mb-4 flex items-center gap-2 text-slate-800">
+              <div class="w-1 h-4 bg-primary-600 rounded-full"></div>
               기본 정보
             </h3>
 
             <div class="space-y-4">
               <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">닉네임</label>
+                <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">닉네임</label>
                 <input
                   v-model="form.userName"
                   type="text"
-                  class="input-field"
+                  class="w-full h-12 border border-slate-200 rounded-xl px-4 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition placeholder-slate-400 text-slate-800 text-sm"
                   placeholder="사용하실 닉네임"
                   required
                 />
               </div>
 
               <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1"
+                <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1"
                   >상태 메시지 (다짐)</label
                 >
                 <textarea
                   v-model="form.statusMessage"
                   rows="2"
-                  class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:outline-none focus:border-blue-500 focus:bg-white transition resize-none text-sm"
-                  placeholder="예: 이번 달 3kg 감량 목표! 🔥"
+                  class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition resize-none text-sm placeholder-slate-400"
+                  placeholder="예: 이번 달 3kg 감량 목표!"
                 ></textarea>
               </div>
 
               <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">생년월일</label>
-                <input type="date" v-model="form.birthDate" class="input-field" required />
+                <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">생년월일</label>
+                <input type="date" v-model="form.birthDate" class="w-full h-12 border border-slate-200 rounded-xl px-4 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition placeholder-slate-400 text-slate-800 text-sm" />
               </div>
 
               <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">성별</label>
+                <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">성별</label>
                 <div class="flex gap-3">
                   <button
                     type="button"
-                    class="flex-1 h-12 rounded-xl border-2 font-bold transition flex items-center justify-center gap-2"
-                    :class="
-                      form.gender === 'M'
-                        ? 'bg-blue-50 border-blue-500 text-blue-600'
-                        : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
-                    "
+                    class="flex-1 h-12 rounded-xl border border-slate-200 font-bold transition flex items-center justify-center gap-2 text-sm bg-slate-50 text-slate-400 hover:bg-slate-100"
+                    :class="{
+                      '!bg-blue-50 !border-blue-500 !text-blue-600 shadow-sm': form.gender === 'M',
+                    }"
                     @click="form.gender = 'M'"
                   >
-                    <span class="text-lg">👨</span> 남성
+                    남성
                   </button>
                   <button
                     type="button"
-                    class="flex-1 h-12 rounded-xl border-2 font-bold transition flex items-center justify-center gap-2"
-                    :class="
-                      form.gender === 'F'
-                        ? 'bg-pink-50 border-pink-500 text-pink-600'
-                        : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
-                    "
+                    class="flex-1 h-12 rounded-xl border border-slate-200 font-bold transition flex items-center justify-center gap-2 text-sm bg-slate-50 text-slate-400 hover:bg-slate-100"
+                    :class="{
+                      '!bg-rose-50 !border-rose-500 !text-rose-600 shadow-sm': form.gender === 'F',
+                    }"
                     @click="form.gender = 'F'"
                   >
-                    <span class="text-lg">👩</span> 여성
+                    여성
                   </button>
                 </div>
               </div>
 
               <div class="flex gap-3">
                 <div class="flex-1">
-                  <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">키 (cm)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    v-model="form.heightCm"
-                    class="input-field text-center font-bold text-gray-800"
-                    placeholder="175"
-                  />
+                  <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">키 (cm)</label>
+                  <div class="relative">
+                    <input
+                      type="number"
+                      step="0.1"
+                      v-model="form.heightCm"
+                      class="w-full h-12 border border-slate-200 rounded-xl px-4 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition placeholder-slate-400 text-slate-800 text-sm text-center font-bold text-slate-800"
+                      placeholder="175"
+                    />
+                    <Ruler
+                      :size="14"
+                      class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                  </div>
                 </div>
                 <div class="flex-1">
-                  <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">체중 (kg)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    v-model="form.weightKg"
-                    class="input-field text-center font-bold text-gray-800"
-                    placeholder="70"
-                  />
+                  <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1"
+                    >체중 (kg)</label
+                  >
+                  <div class="relative">
+                    <input
+                      type="number"
+                      step="0.1"
+                      v-model="form.weightKg"
+                      class="w-full h-12 border border-slate-200 rounded-xl px-4 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition placeholder-slate-400 text-slate-800 text-sm text-center font-bold text-slate-800"
+                      placeholder="70"
+                    />
+                    <Weight
+                      :size="14"
+                      class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </section>
 
-          <hr class="border-gray-100 my-2" />
+          <div class="h-px bg-slate-100 my-2"></div>
 
           <section>
-            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-              <span class="w-1 h-5 bg-green-500 rounded-full"></span>
+            <h3 class="text-sm font-bold mb-4 flex items-center gap-2 text-slate-800">
+              <div class="w-1 h-4 bg-emerald-500 rounded-full"></div>
               건강 정보
             </h3>
 
             <div class="mb-6">
-              <label class="block text-xs font-bold text-gray-500 mb-2 ml-1"
+              <label class="block text-xs font-bold text-slate-500 mb-2 ml-1"
                 >건강 고민 / 질병</label
               >
               <div class="flex flex-wrap gap-2">
@@ -296,20 +327,62 @@ const submitProfile = async () => {
                   :key="item"
                   type="button"
                   @click="toggleItem(form.diseases, item)"
-                  class="px-4 py-2 rounded-full text-xs font-bold border transition shadow-sm hover:shadow-md"
+                  class="px-4 py-2 rounded-xl text-xs font-bold border transition shadow-sm hover:shadow-md active:scale-95"
                   :class="
                     form.diseases.includes(item)
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-500 border-gray-200 hover:border-blue-300'
+                      ? 'bg-emerald-600 text-white border-emerald-600'
+                      : 'bg-white text-slate-500 border-slate-200 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700'
                   "
                 >
                   {{ item }}
                 </button>
               </div>
+
+              <!-- [Added] Custom Disease Input -->
+              <div class="flex gap-2 mb-3 mt-3">
+                <input
+                  v-model="customDisease"
+                  @keydown.enter.prevent="addCustomDisease"
+                  placeholder="직접 입력 (예: 허리디스크)"
+                  class="w-full h-12 border border-slate-200 rounded-xl px-4 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition placeholder-slate-400 text-slate-800 text-sm h-11 text-sm"
+                />
+                <button
+                  type="button"
+                  @click="addCustomDisease"
+                  class="w-14 h-11 bg-slate-800 text-white rounded-xl text-sm font-bold shadow-md hover:bg-slate-900 active:scale-95 transition flex items-center justify-center"
+                >
+                  <Plus :size="20" />
+                </button>
+              </div>
+
+              <!-- [Added] Selected Disease Tags -->
+              <div
+                v-if="form.diseases.length > 0"
+                class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex flex-wrap gap-2"
+              >
+                <div
+                  class="w-full text-[10px] text-emerald-600 font-bold mb-1 flex items-center gap-1"
+                >
+                  <Activity :size="12" /> 선택된 건강 정보
+                </div>
+                <span
+                  v-for="tag in form.diseases"
+                  :key="tag"
+                  class="text-xs bg-white border border-emerald-200 px-2 py-1.5 rounded-lg text-emerald-600 font-bold shadow-sm flex items-center gap-1"
+                >
+                  {{ tag }}
+                  <button
+                    @click="toggleItem(form.diseases, tag)"
+                    class="hover:bg-emerald-100 rounded-full p-0.5 transition"
+                  >
+                    <X :size="12" />
+                  </button>
+                </span>
+              </div>
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-gray-500 mb-2 ml-1"
+              <label class="block text-xs font-bold text-slate-500 mb-2 ml-1"
                 >알레르기 / 기피 음식</label
               >
               <div class="flex flex-wrap gap-2 mb-3">
@@ -318,11 +391,11 @@ const submitProfile = async () => {
                   :key="item"
                   type="button"
                   @click="toggleItem(form.allergies, item)"
-                  class="px-4 py-2 rounded-full text-xs font-bold border transition shadow-sm hover:shadow-md"
+                  class="px-4 py-2 rounded-xl text-xs font-bold border transition shadow-sm hover:shadow-md active:scale-95"
                   :class="
                     form.allergies.includes(item)
-                      ? 'bg-red-500 text-white border-red-500'
-                      : 'bg-white text-gray-500 border-gray-200 hover:border-red-300'
+                      ? 'bg-rose-500 text-white border-rose-500'
+                      : 'bg-white text-slate-500 border-slate-200 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700'
                   "
                 >
                   {{ item }}
@@ -332,34 +405,40 @@ const submitProfile = async () => {
               <div class="flex gap-2">
                 <input
                   v-model="customAllergy"
-                  @keyup.enter="addCustomAllergy"
+                  @keydown.enter.prevent="addCustomAllergy"
                   placeholder="기타 알레르기 입력 (예: 오이)"
-                  class="input-field h-10 text-sm"
+                  class="w-full h-12 border border-slate-200 rounded-xl px-4 bg-slate-50 focus:outline-none focus:border-primary-500 focus:bg-white transition placeholder-slate-400 text-slate-800 text-sm h-11 text-sm"
                 />
                 <button
                   type="button"
                   @click="addCustomAllergy"
-                  class="w-14 h-10 bg-gray-800 text-white rounded-lg text-sm font-bold shadow-md active:scale-95 transition"
+                  class="w-14 h-11 bg-slate-800 text-white rounded-xl text-sm font-bold shadow-md hover:bg-slate-900 active:scale-95 transition flex items-center justify-center"
                 >
-                  추가
+                  <Plus :size="20" />
                 </button>
               </div>
 
               <div
                 v-if="form.allergies.length > 0"
-                class="mt-3 p-3 bg-gray-50 rounded-xl border border-gray-100 flex flex-wrap gap-2"
+                class="mt-3 p-3 bg-rose-50 rounded-xl border border-rose-100 flex flex-wrap gap-2"
               >
+                <div
+                  class="w-full text-[10px] text-rose-500 font-bold mb-1 flex items-center gap-1"
+                >
+                  <AlertCircle :size="12" /> 선택된 알레르기
+                </div>
                 <span
                   v-for="tag in form.allergies"
                   :key="tag"
-                  class="text-xs bg-white border border-gray-200 px-2 py-1.5 rounded-md text-red-500 font-bold shadow-sm flex items-center gap-1"
+                  class="text-xs bg-white border border-rose-200 px-2 py-1.5 rounded-lg text-rose-600 font-bold shadow-sm flex items-center gap-1"
                 >
-                  🚫 {{ tag }}
-                  <span
+                  {{ tag }}
+                  <button
                     @click="toggleItem(form.allergies, tag)"
-                    class="cursor-pointer hover:text-red-700 ml-1"
-                    >×</span
+                    class="hover:bg-rose-100 rounded-full p-0.5 transition"
                   >
+                    <X :size="12" />
+                  </button>
                 </span>
               </div>
             </div>
@@ -369,24 +448,18 @@ const submitProfile = async () => {
             <button
               type="submit"
               :disabled="isLoading"
-              class="btn-primary w-full h-14 text-lg shadow-lg hover:shadow-xl transform transition hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-full h-14 bg-primary-600 text-white font-bold rounded-2xl shadow-lg shadow-primary-200 hover:bg-primary-700 transition flex items-center justify-center gap-2 transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
             >
+              <Loader2 v-if="isLoading" class="animate-spin" :size="20" />
               {{ isLoading ? '저장 중...' : '완료' }}
             </button>
           </div>
         </form>
       </main>
-    </div>
   </div>
 </template>
 
 <style scoped>
-.input-field {
-  @apply w-full h-12 border border-gray-300 rounded-xl px-4 bg-gray-50 focus:outline-none focus:border-blue-500 focus:bg-white transition;
-}
-.btn-primary {
-  @apply bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center transition;
-}
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }

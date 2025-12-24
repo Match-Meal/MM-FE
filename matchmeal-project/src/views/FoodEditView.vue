@@ -8,6 +8,7 @@ import {
   type UpdateFoodPayload,
 } from '@/services/foodService'
 import { useToastStore } from '@/stores/toast'
+import { ArrowLeft, Loader2 } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -41,7 +42,6 @@ onMounted(async () => {
     return
   }
   try {
-    // API 응답에 isMine 대신 mine이 포함될 수 있으므로 변환합니다.
     const existingFood = (await getFoodDetail(foodId)) as FoodDetail & {
       mine?: boolean
     }
@@ -50,16 +50,14 @@ onMounted(async () => {
       delete existingFood.mine
     }
 
-    // isMine이 false이면 수정 권한이 없으므로 되돌려 보냄
     if (!existingFood.isMine) {
       toastStore.show('수정 권한이 없습니다.', 'error')
       router.back()
       return
     }
-    // 원본 데이터 전체를 저장
+    
     originalFoodDetail.value = existingFood
 
-    // 폼 데이터(foodData)에는 UpdateFoodPayload에 해당하는 필드만 매핑
     foodData.value = {
       foodName: existingFood.foodName,
       category: existingFood.category,
@@ -95,10 +93,8 @@ const handleSubmit = async () => {
       throw new Error('원본 데이터가 없습니다.')
     }
 
-    // Create a mutable copy for processing
     const processedData = { ...foodData.value }
 
-    // 1. Convert empty strings in numeric fields to undefined for consistency
     const numericKeys: (keyof UpdateFoodPayload)[] = [
       'servingSize',
       'calories',
@@ -114,8 +110,6 @@ const handleSubmit = async () => {
       }
     })
 
-    // 2. Compare with original data to build the final payload
-    // Define keys that are part of the update payload to ensure type safety.
     const updateKeys: (keyof UpdateFoodPayload)[] = [
       'foodName',
       'category',
@@ -132,7 +126,6 @@ const handleSubmit = async () => {
       const originalValue = originalFoodDetail.value![key]
       const processedValue = processedData[key]
 
-      // Treat null and undefined as the same to avoid unnecessary updates.
       if (
         !(originalValue === processedValue || (originalValue == null && processedValue == null))
       ) {
@@ -141,16 +134,12 @@ const handleSubmit = async () => {
       return acc
     }, {} as Partial<UpdateFoodPayload>)
 
-    // Do not submit if there are no changes
     if (Object.keys(payload).length === 0) {
-      // Optionally, inform the user that no changes were made.
-      // alert('변경된 내용이 없습니다.');
-      router.replace(`/food-db/${foodId}`) // Go back to detail page
+      router.replace(`/food-db/${foodId}`)
       return
     }
 
     await updateFood(foodId, payload as Partial<UpdateFoodPayload>)
-    // 성공 시 이전 페이지(상세 페이지)로 이동
     toastStore.show('음식이 수정되었습니다.')
     router.back()
   } catch (err) {
@@ -167,54 +156,60 @@ const goBack = () => {
 </script>
 
 <template>
-  <div class="bg-gray-200 min-h-screen flex items-center justify-center font-sans text-gray-800">
-    <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-800 flex flex-col"
-    >
+  <div class="flex-1 flex flex-col relative overflow-hidden bg-white">
       <!-- Header -->
-      <header class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 shrink-0">
-        <button @click="goBack" class="text-2xl w-8">←</button>
-        <h1 class="font-bold text-lg truncate">음식 정보 수정</h1>
+      <header class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0">
+        <button @click="goBack" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+            <ArrowLeft :size="24" />
+        </button>
+        <h1 class="font-bold text-lg truncate text-slate-800">음식 정보 수정</h1>
         <div class="w-8"></div>
       </header>
 
       <!-- Main Form Content -->
-      <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
-        <div v-if="isLoading" class="text-center text-gray-500 py-20">
-          <p>데이터를 불러오는 중입니다...</p>
+      <main class="flex-1 overflow-y-auto p-6 bg-slate-50 no-scrollbar">
+        <div v-if="isLoading" class="flex flex-col items-center justify-center py-20 text-slate-400 gap-2">
+           <Loader2 class="animate-spin text-primary-500" :size="32" />
+           <span class="text-xs">데이터를 불러오는 중...</span>
         </div>
-        <div v-else-if="error" class="text-center text-red-500 py-20">
-          <p>{{ error }}</p>
+        
+        <div v-else-if="error" class="bg-rose-50 text-rose-500 text-xs px-4 py-3 rounded-xl flex items-center gap-2 mb-4">
+             <div class="w-4 h-4 rounded-full bg-rose-200 flex items-center justify-center text-[10px] font-bold">!</div>
+            {{ error }}
         </div>
-        <form v-else @submit.prevent="handleSubmit" class="space-y-4">
+        
+        <form v-else @submit.prevent="handleSubmit" class="space-y-5">
           <div>
-            <label for="foodName" class="block text-sm font-bold text-gray-600 mb-1"
-              >음식 이름 <span class="text-red-500">*</span></label
+            <label for="foodName" class="block text-xs font-bold text-slate-500 mb-1.5"
+              >음식 이름 <span class="text-rose-500">*</span></label
             >
             <input
               v-model="foodData.foodName"
               type="text"
               id="foodName"
-              class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+              class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               required
             />
           </div>
 
           <div>
-            <label for="category" class="block text-sm font-bold text-gray-600 mb-1"
-              >카테고리</label
-            >
+             <label for="category" class="block text-xs font-bold text-slate-500 mb-1.5"
+                >카테고리</label
+              >
             <input
               v-model="foodData.category"
               type="text"
               id="category"
-              class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+              class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
+              readonly
+              disabled
             />
+            <p class="text-[10px] text-slate-400 mt-1 pl-1">카테고리는 수정할 수 없습니다.</p>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label for="servingSize" class="block text-sm font-bold text-gray-600 mb-1"
+              <label for="servingSize" class="block text-xs font-bold text-slate-500 mb-1.5"
                 >1회 제공량</label
               >
               <input
@@ -222,25 +217,25 @@ const goBack = () => {
                 type="number"
                 step="0.1"
                 id="servingSize"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
             <div>
-              <label for="unit" class="block text-sm font-bold text-gray-600 mb-1">단위</label>
+              <label for="unit" class="block text-xs font-bold text-slate-500 mb-1.5">단위</label>
               <input
                 v-model="foodData.unit"
                 type="text"
                 id="unit"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
           </div>
 
-          <hr class="my-6" />
+          <div class="h-px bg-slate-200 my-6"></div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label for="calories" class="block text-sm font-bold text-gray-600 mb-1"
+              <label for="calories" class="block text-xs font-bold text-slate-500 mb-1.5"
                 >칼로리 (kcal)</label
               >
               <input
@@ -248,11 +243,11 @@ const goBack = () => {
                 type="number"
                 step="0.1"
                 id="calories"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
             <div>
-              <label for="carbohydrate" class="block text-sm font-bold text-gray-600 mb-1"
+              <label for="carbohydrate" class="block text-xs font-bold text-slate-500 mb-1.5"
                 >탄수화물 (g)</label
               >
               <input
@@ -260,11 +255,11 @@ const goBack = () => {
                 type="number"
                 step="0.1"
                 id="carbohydrate"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
             <div>
-              <label for="protein" class="block text-sm font-bold text-gray-600 mb-1"
+              <label for="protein" class="block text-xs font-bold text-slate-500 mb-1.5"
                 >단백질 (g)</label
               >
               <input
@@ -272,23 +267,23 @@ const goBack = () => {
                 type="number"
                 step="0.1"
                 id="protein"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
             <div>
-              <label for="fat" class="block text-sm font-bold text-gray-600 mb-1">지방 (g)</label>
+              <label for="fat" class="block text-xs font-bold text-slate-500 mb-1.5">지방 (g)</label>
               <input
                 v-model.number="foodData.fat"
                 type="number"
                 step="0.1"
                 id="fat"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-4 mt-4">
+          <div class="grid grid-cols-2 gap-3 mt-1">
             <div>
-              <label for="sugars" class="block text-sm font-bold text-gray-600 mb-1"
+              <label for="sugars" class="block text-xs font-bold text-slate-500 mb-1.5"
                 >총 당류 (g)</label
               >
               <input
@@ -296,11 +291,11 @@ const goBack = () => {
                 type="number"
                 step="0.1"
                 id="sugars"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
             <div>
-              <label for="sodium" class="block text-sm font-bold text-gray-600 mb-1"
+              <label for="sodium" class="block text-xs font-bold text-slate-500 mb-1.5"
                 >나트륨 (mg)</label
               >
               <input
@@ -308,27 +303,32 @@ const goBack = () => {
                 type="number"
                 step="0.1"
                 id="sodium"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
           </div>
 
-          <div v-if="error" class="text-red-500 text-sm mt-2">
-            {{ error }}
-          </div>
-
-          <div class="pt-4">
+          <div class="pt-6">
             <button
               type="submit"
               :disabled="isSubmitting || isLoading"
-              class="w-full h-12 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition flex items-center justify-center disabled:bg-gray-400"
+              class="w-full h-12 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition flex items-center justify-center disabled:bg-slate-300 disabled:cursor-not-allowed shadow-lg shadow-blue-200"
             >
-              <span v-if="isSubmitting">수정 중...</span>
+              <Loader2 v-if="isSubmitting" class="animate-spin mr-2" :size="20" />
               <span v-else>수정하기</span>
             </button>
           </div>
         </form>
       </main>
     </div>
-  </div>
 </template>
+
+<style scoped>
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>

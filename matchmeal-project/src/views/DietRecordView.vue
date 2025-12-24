@@ -16,19 +16,34 @@ import { createFood, type CreateFoodPayload } from '@/services/foodService'
 import { storeToRefs } from 'pinia'
 import { useChallengeStore } from '@/stores/challenge'
 import { useToastStore } from '@/stores/toast'
-import { useConfirmStore } from '@/stores/confirm' // Added
+import { useConfirmStore } from '@/stores/confirm'
+import { 
+  ArrowLeft, 
+  Camera, 
+  Search, 
+  PenLine, 
+  X, 
+  Check, 
+  Trash2, 
+  Sparkles, 
+  Scan,
+  ChevronDown,
+  Loader2,
+  Calendar,
+  Clock,
+  Utensils
+} from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
 const dietStore = useDietStore()
 const challengeStore = useChallengeStore()
 const toastStore = useToastStore()
-const confirmStore = useConfirmStore() // Added
+const confirmStore = useConfirmStore()
 const { currentDiet } = storeToRefs(dietStore)
 
 const isEditMode = computed(() => !!route.params.id)
 const isLoading = ref(false)
-// const isDeleteModalOpen = ref(false) // Removed
 
 // AI Analysis State
 const isAnalyzing = ref(false)
@@ -76,7 +91,6 @@ const compressImage = async (file: File): Promise<File> => {
         canvas.toBlob(
           (blob) => {
             if (blob) {
-              // 원본 파일명을 유지하며 파일 생성
               const compressedFile = new File([blob], file.name, {
                 type: 'image/jpeg',
                 lastModified: Date.now(),
@@ -88,7 +102,7 @@ const compressImage = async (file: File): Promise<File> => {
           },
           'image/jpeg',
           0.7,
-        ) // 품질 0.7 설정
+        )
       }
       img.onerror = (err) => reject(err)
     }
@@ -102,11 +116,9 @@ const handleFileChange = async (event: Event) => {
     const file = target.files[0]
     if (file) {
       try {
-        // 이미지 압축 적용
         const compressedFile = await compressImage(file)
         currentDiet.value.imageFile = compressedFile
 
-        // 메모리 누수 방지 및 미리보기 업데이트 (분석 전에 수행)
         if (
           currentDiet.value.previewImageUrl &&
           currentDiet.value.previewImageUrl.startsWith('blob:')
@@ -115,21 +127,17 @@ const handleFileChange = async (event: Event) => {
         }
         currentDiet.value.previewImageUrl = URL.createObjectURL(compressedFile)
 
-        // AI 분석 호출
         isAnalyzing.value = true
-        showAnalysisModal.value = true // Show modal immediately for scanning effect
+        showAnalysisModal.value = true
 
         try {
           const result = await analyzeDietImage(compressedFile)
 
-          // 분석 완료 시점이더라도 사용자가 취소했으면 결과 무시
           if (!isAnalyzing.value) return
 
           analysisResult.value = result
-          // showAnalysisModal.value = true; // Already shown
         } catch (e) {
           console.error('AI Analysis failed:', e)
-          // 취소된 상태면 에러 토스트 띄우지 않음 (선택적)
           if (isAnalyzing.value) {
             toastStore.show('음식 분석에 실패했습니다. 직접 입력해주세요.')
             showAnalysisModal.value = false
@@ -141,7 +149,6 @@ const handleFileChange = async (event: Event) => {
         console.error('Image compression failed:', e)
         toastStore.show('이미지 처리에 실패했습니다. 원본을 사용합니다.', 'error')
 
-        // 실패 시 원본 사용 (fallback)
         currentDiet.value.imageFile = file
         if (
           currentDiet.value.previewImageUrl &&
@@ -155,23 +162,18 @@ const handleFileChange = async (event: Event) => {
   }
 }
 
-// 초기 데이터 로드 (수정 모드일 경우)
 const initData = async () => {
   if (isEditMode.value) {
-    // 이미 스토어에 데이터가 있다면 (FoodDB에서 돌아온 경우), 덮어쓰지 않음
-    // 단, 새로 진입했을 때만 로드해야 함.
     if (currentDiet.value.dietId !== Number(route.params.id)) {
       try {
         isLoading.value = true
         const data = await getDietDetail(Number(route.params.id))
-        // response.data 가 실제 데이터라고 가정 (DietDetailView와 동일)
         const detail = data.data || data
 
-        // API 응답을 Store 형식으로 변환
         currentDiet.value = {
           dietId: detail.dietId,
           eatDate: detail.eatDate,
-          eatTime: detail.eatTime.substring(0, 5), // HH:mm:ss -> HH:mm
+          eatTime: detail.eatTime.substring(0, 5),
           mealType: detail.mealType,
           memo: detail.memo,
           foods: detail.details.map((d: DietDetailItem) => ({
@@ -188,10 +190,6 @@ const initData = async () => {
           })),
         }
 
-        // 기존 이미지가 있다면 (API 응답에 imageUrl 필드가 있다고 가정하거나, 추후 추가)
-        // 현재는 API 응답에 imageUrl이 명시되어 있지 않아 생략,
-        // 만약 detail에 imageUrl이 있다면:
-        // detail은 이제 dietImgUrl을 포함하는 DailyDietResponseItem (API 구조 확장됨)
         if (detail.dietImgUrl) {
           currentDiet.value.previewImageUrl = detail.dietImgUrl
         }
@@ -204,8 +202,6 @@ const initData = async () => {
       }
     }
   } else {
-    // 생성 모드: MainView에서 들어올 때 resetCurrentDiet를 호출했으므로 여기선 패스.
-    // 하지만 새로고침 등으로 들어왔을 때 초기화가 안되어 있을 수 있으니 체크
     if (!currentDiet.value.eatDate) {
       dietStore.resetCurrentDiet()
     }
@@ -234,7 +230,6 @@ const saveDiet = async () => {
     return
   }
 
-  // 백엔드 LocalTime 형식(HH:mm:ss)에 맞추기 위해 초 단위 추가
   const payload = {
     ...currentDiet.value,
     eatTime:
@@ -251,12 +246,9 @@ const saveDiet = async () => {
       await createDiet(payload, currentDiet.value.imageFile || undefined)
       toastStore.show('저장되었습니다.')
     }
-    // [Added] 챌린지 진행률 갱신을 위해 내 챌린지 목록 다시 불러오기
-    await challengeStore.fetchMyChallenges() // 기본 로드
-    await challengeStore.updateAllMyChallengesProgress() // 로컬 재계산 (최신 반영)
+    await challengeStore.fetchMyChallenges()
+    await challengeStore.updateAllMyChallengesProgress()
 
-    // 저장 후 리스트로 이동 -> 상세 기능이 생겼지만, 저장은 보통 리스트로 가거나 상세로 감.
-    // 여기선 리스트로 이동하도록 유지.
     router.replace('/diet')
   } catch (e) {
     console.error(e)
@@ -280,7 +272,6 @@ const handleDeleteClick = async () => {
   }
 }
 
-// 총 칼로리 계산
 const totalCalories = computed(() => {
   return currentDiet.value.foods.reduce((acc: number, cur: DietFoodItem) => acc + cur.calories, 0)
 })
@@ -309,8 +300,8 @@ const manualFood = ref({
   fat: undefined as number | undefined,
   sugars: undefined as number | undefined,
   sodium: undefined as number | undefined,
-  quantity: 1, // 기본 1인분 or 1개
-  unit: 'g', // Default unit changed to 'g'
+  quantity: 1,
+  unit: 'g',
   saveToDictionary: false,
 })
 
@@ -324,10 +315,9 @@ const openManualInput = () => {
     sugars: undefined,
     sodium: undefined,
     quantity: 1,
-    unit: 'g', // Default unit changed to 'g'
+    unit: 'g',
     saveToDictionary: false,
   }
-  // Logic check: openManualInput sets showManualInput = true in original code.
   showManualInput.value = true
 }
 
@@ -350,12 +340,11 @@ const addManualFood = async () => {
 
   let foodId: number | undefined = undefined
 
-  // 음식 사전에 저장하기 체크 시
   if (manualFood.value.saveToDictionary) {
     try {
       const payload: CreateFoodPayload = {
         foodName: manualFood.value.foodName,
-        category: '기타', // 직접 입력은 기타로 분류
+        category: '기타',
         servingSize: manualFood.value.quantity,
         unit: manualFood.value.unit,
         calories: calories,
@@ -396,8 +385,8 @@ const selectAnalyzedFood = (food: MatchedFoodItem) => {
   dietStore.addFoodToDiet({
     foodId: food.foodId,
     foodName: food.foodName,
-    quantity: food.servingSize || 1, // Use API servingSize or default
-    unit: food.unit || 'g', // Use API unit or default to 'g'
+    quantity: food.servingSize || 1,
+    unit: food.unit || 'g',
     calories: food.calories,
     carbohydrate: food.carbohydrate,
     protein: food.protein,
@@ -416,20 +405,21 @@ const cancelAnalysis = () => {
 </script>
 
 <template>
-  <div class="bg-gray-200 min-h-screen flex items-center justify-center font-sans text-gray-800">
-    <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-800 flex flex-col"
-    >
+  <div class="flex-1 flex flex-col relative overflow-hidden bg-white">
       <!-- Header -->
-      <header class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 shrink-0">
-        <button @click="goBack" class="text-2xl w-8">←</button>
-        <h1 class="font-bold text-lg truncate">{{ isEditMode ? '식단 수정' : '식단 기록' }}</h1>
+      <header class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0">
+        <button @click="goBack" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+            <ArrowLeft :size="24" />
+        </button>
+        <h1 class="font-bold text-lg truncate text-slate-800">{{ isEditMode ? '식단 수정' : '식단 기록' }}</h1>
         <div class="w-8"></div>
       </header>
-
+    
       <!-- Main Content -->
-      <main class="flex-1 overflow-y-auto bg-white pb-20 p-6 space-y-6">
-        <div v-if="isLoading" class="text-center py-10">Loading...</div>
+      <main class="flex-1 overflow-y-auto bg-white pb-20 p-6 space-y-6 no-scrollbar">
+        <div v-if="isLoading" class="flex items-center justify-center py-10">
+            <Loader2 class="animate-spin text-primary-500" :size="32" />
+        </div>
         <template v-else>
           <!-- Image Upload / Analysis Placeholder -->
           <div class="flex justify-center">
@@ -441,7 +431,7 @@ const cancelAnalysis = () => {
               @change="handleFileChange"
             />
             <div
-              class="w-full h-64 bg-gray-100 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-gray-300 text-gray-400 gap-2 relative overflow-hidden cursor-pointer hover:border-blue-400 transition"
+              class="w-full h-64 bg-slate-50 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-slate-300 text-slate-400 gap-2 relative overflow-hidden cursor-pointer hover:border-primary-400 hover:text-primary-500 transition-colors group"
               @click="triggerFileInput"
             >
               <img
@@ -451,16 +441,18 @@ const cancelAnalysis = () => {
               />
 
               <template v-else>
-                <span class="text-3xl">📷</span>
-                <span class="text-xs">사진을 등록하면 AI가 분석해요</span>
+                <div class="p-4 bg-white rounded-full shadow-sm mb-1 group-hover:scale-110 transition-transform">
+                    <Camera :size="28" />
+                </div>
+                <span class="text-xs font-bold">사진을 등록하면 AI가 분석해요</span>
               </template>
 
               <div
                 v-if="currentDiet.previewImageUrl"
-                class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition"
+                class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition backdrop-blur-[1px]"
               >
-                <span class="text-white font-bold bg-black/50 px-3 py-1 rounded-full text-sm"
-                  >사진 변경</span
+                <span class="text-white font-bold bg-white/20 backdrop-blur-md border border-white/50 px-4 py-2 rounded-full text-sm flex items-center gap-2"
+                  ><Camera :size="16" /> 사진 변경</span
                 >
               </div>
             </div>
@@ -469,48 +461,55 @@ const cancelAnalysis = () => {
           <!-- Date & Time & MealType -->
           <div class="flex gap-3">
             <div class="flex-1">
-              <label class="text-xs font-bold text-gray-500 mb-1 block">날짜</label>
-              <input type="date" v-model="currentDiet.eatDate" class="input-field text-sm" />
+              <label class="text-xs font-bold text-slate-500 mb-1.5 flex items-center gap-1"><Calendar :size="12" /> 날짜</label>
+              <input type="date" v-model="currentDiet.eatDate" class="input-field text-sm font-medium" />
             </div>
             <div class="flex-1">
-              <label class="text-xs font-bold text-gray-500 mb-1 block">시간</label>
-              <input type="time" v-model="currentDiet.eatTime" class="input-field text-sm" />
+              <label class="text-xs font-bold text-slate-500 mb-1.5 flex items-center gap-1"><Clock :size="12" /> 시간</label>
+              <input type="time" v-model="currentDiet.eatTime" class="input-field text-sm font-medium" />
             </div>
           </div>
 
           <div>
-            <label class="text-xs font-bold text-gray-500 mb-1 block">식사 구분</label>
-            <select v-model="currentDiet.mealType" class="input-field text-sm bg-white">
-              <option value="BREAKFAST">아침</option>
-              <option value="LUNCH">점심</option>
-              <option value="DINNER">저녁</option>
-              <option value="SNACK">간식</option>
-            </select>
+            <label class="text-xs font-bold text-slate-500 mb-1.5 flex items-center gap-1"><Utensils :size="12" /> 식사 구분</label>
+            <div class="relative">
+                <select v-model="currentDiet.mealType" class="input-field text-sm font-medium bg-white appearance-none">
+                  <option value="BREAKFAST">아침</option>
+                  <option value="LUNCH">점심</option>
+                  <option value="DINNER">저녁</option>
+                  <option value="SNACK">간식</option>
+                </select>
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <ChevronDown :size="16" />
+                </div>
+            </div>
           </div>
 
           <!-- Food List -->
           <div>
             <div class="flex justify-between items-center mb-2">
-              <label class="text-xs font-bold text-gray-500 block">메뉴 목록</label>
-              <button
-                @click="goFoodSearch"
-                class="text-xs text-blue-600 font-bold px-2 py-1 hover:bg-blue-50 rounded"
-              >
-                + 메뉴 검색
-              </button>
-              <button
-                @click="openManualInput"
-                class="text-xs text-gray-500 font-bold px-2 py-1 hover:bg-gray-100 rounded border border-gray-200 ml-2"
-              >
-                ✏️ 직접 입력
-              </button>
+              <label class="text-xs font-bold text-slate-500 block">메뉴 목록</label>
+              <div class="flex gap-2">
+                  <button
+                    @click="goFoodSearch"
+                    class="text-xs text-primary-600 font-bold px-2 py-1 hover:bg-primary-50 rounded flex items-center gap-1 transition"
+                  >
+                    <Search :size="12" /> 메뉴 검색
+                  </button>
+                  <button
+                    @click="openManualInput"
+                    class="text-xs text-slate-500 font-bold px-2 py-1 hover:bg-slate-100 rounded border border-slate-200 flex items-center gap-1 transition"
+                  >
+                    <PenLine :size="12" /> 직접 입력
+                  </button>
+              </div>
             </div>
 
             <div class="space-y-3">
               <div
                 v-for="(food, index) in currentDiet.foods"
                 :key="index"
-                class="p-3 border rounded-xl bg-gray-50 mb-3 animate-fade-in-up relative"
+                class="p-4 border border-slate-100 rounded-2xl bg-white shadow-sm animate-fade-in-up relative group hover:border-primary-100 transition-colors"
               >
                 <!-- Line 1: Name and Delete -->
                 <div class="flex justify-between items-start mb-2">
@@ -518,44 +517,35 @@ const cancelAnalysis = () => {
                     <input
                       type="text"
                       v-model="food.foodName"
-                      class="input-field h-10 bg-white"
+                      class="w-full font-bold text-slate-800 placeholder-slate-300 focus:outline-none bg-transparent"
                       placeholder="음식명"
                     />
                   </div>
-                  <button @click="removeFood(index)" class="text-gray-400 hover:text-red-500 p-1">
-                    ×
+                  <button @click="removeFood(index)" class="text-slate-300 hover:text-rose-500 p-1 transition-colors">
+                    <X :size="16" />
                   </button>
                 </div>
 
                 <!-- Line 2: Quantity and Calories -->
-                <div class="flex items-center gap-3" v-if="food">
-                  <div class="flex-[2] relative">
-                    <input
-                      type="number"
-                      v-model.number="food.quantity"
-                      @change="updateQuantity(index, food.quantity)"
-                      class="input-field h-10 pr-8 text-right bg-white"
-                    />
-                    <span class="absolute right-3 top-2.5 text-xs text-gray-500">{{
-                      food.unit
-                    }}</span>
-                  </div>
-                  <div class="flex-1 text-right flex flex-col justify-center">
-                    <span class="text-sm font-bold text-gray-800"
-                      >{{ Math.round(food.calories || 0) }} kcal</span
-                    >
-                    <div class="text-[10px] text-gray-400">
-                      탄{{ Math.round(food.carbohydrate || 0) }}/단{{
-                        Math.round(food.protein || 0)
-                      }}/지{{ Math.round(food.fat || 0) }}
+                <div class="flex items-center gap-4" v-if="food">
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg px-2 py-1 border border-slate-100">
+                        <input
+                          type="number"
+                          v-model.number="food.quantity"
+                          @change="updateQuantity(index, food.quantity)"
+                          class="w-12 text-right bg-transparent text-sm font-bold focus:outline-none"
+                        />
+                        <span class="text-xs text-slate-400 font-medium">{{ food.unit }}</span>
                     </div>
-                    <div
-                      class="text-[10px] text-gray-400 mt-0.5"
-                      v-if="food.sugars !== undefined || food.sodium !== undefined"
+
+                  <div class="flex-1 text-right flex flex-col justify-center">
+                    <span class="text-sm font-bold text-slate-800"
+                      >{{ Math.round(food.calories || 0) }} <span class="text-xs font-normal text-slate-400">kcal</span></span
                     >
-                      당{{ food.sugars ? Math.round(food.sugars) : '-' }}/나{{
-                        food.sodium ? Math.round(food.sodium) : '-'
-                      }}
+                    <div class="text-[10px] text-slate-400 mt-1">
+                      탄{{ Math.round(food.carbohydrate || 0) }} / 단{{
+                        Math.round(food.protein || 0)
+                      }} / 지{{ Math.round(food.fat || 0) }}
                     </div>
                   </div>
                 </div>
@@ -563,149 +553,159 @@ const cancelAnalysis = () => {
 
               <div
                 v-if="currentDiet.foods.length === 0"
-                class="text-center py-6 bg-gray-50 rounded-xl text-xs text-gray-400"
+                class="flex flex-col items-center justify-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400 gap-2"
               >
-                추가된 음식이 없습니다.
+                <div class="p-2 bg-white rounded-full shadow-sm">
+                    <Utensils :size="20" class="text-slate-300" />
+                </div>
+                <span class="text-xs font-medium">추가된 음식이 없습니다.</span>
               </div>
             </div>
           </div>
 
           <!-- Memo -->
           <div>
-            <label class="text-xs font-bold text-gray-500 mb-1 block">메모</label>
+            <label class="text-xs font-bold text-slate-500 mb-1.5 block">메모</label>
             <textarea
               v-model="currentDiet.memo"
-              class="input-field h-20 py-2"
+              class="input-field h-24 py-3 resize-none bg-slate-50"
               placeholder="오늘 식사는 어땠나요?"
             ></textarea>
           </div>
 
           <!-- Display Total -->
-          <div class="bg-blue-50 p-4 rounded-xl flex justify-between items-center">
-            <span class="text-sm font-bold text-blue-800">총 섭취 칼로리</span>
-            <span class="text-xl font-bold text-blue-600"
-              >{{ Math.round(totalCalories) }} kcal</span
+          <div class="bg-primary-50 p-5 rounded-2xl flex justify-between items-center shadow-inner">
+            <span class="text-sm font-bold text-primary-800">총 섭취 칼로리</span>
+            <span class="text-xl font-bold text-primary-600"
+              >{{ Math.round(totalCalories) }} <span class="text-sm font-normal text-primary-400">kcal</span></span
             >
           </div>
         </template>
       </main>
 
       <!-- Footer Actions -->
-      <div class="p-4 border-t bg-white flex gap-3">
+      <div class="p-4 border-t border-slate-100 bg-white flex gap-3 z-10">
         <button
           v-if="isEditMode"
           @click="handleDeleteClick"
-          class="flex-1 h-12 border-2 border-red-100 text-red-500 font-bold rounded-xl hover:bg-red-50"
+          class="flex-1 h-12 border border-rose-100 text-rose-500 font-bold rounded-2xl hover:bg-rose-50 transition flex items-center justify-center gap-1.5"
         >
-          삭제
+          <Trash2 :size="18" /> 삭제
         </button>
         <button
           @click="saveDiet"
-          class="flex-[2] h-12 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg"
+          class="flex-[2] h-12 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-bold rounded-2xl hover:brightness-110 shadow-lg shadow-primary-200 transition active:scale-[0.98]"
         >
           저장하기
         </button>
       </div>
-    </div>
+
 
     <!-- 직접 입력 모달 -->
     <div
       v-if="showManualInput"
-      class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
+      class="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
     >
-      <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-scale-up">
-        <h3 class="font-bold text-lg mb-4">음식 직접 입력</h3>
+      <div class="bg-white rounded-3xl w-full max-w-sm max-h-[80%] overflow-y-auto no-scrollbar p-6 shadow-float animate-scale-up">
+        <h3 class="font-bold text-lg mb-6 flex items-center gap-2">
+            <PenLine :size="20" class="text-primary-500" /> 음식 직접 입력
+        </h3>
 
-        <div class="space-y-3">
+        <div class="space-y-4">
           <div>
-            <label class="text-xs font-bold text-gray-500 mb-1 block"
-              >음식 이름 <span class="text-red-500">*</span></label
+            <label class="text-xs font-bold text-slate-500 mb-1 block"
+              >음식 이름 <span class="text-rose-500">*</span></label
             >
             <input
               type="text"
               v-model="manualFood.foodName"
-              class="input-field h-10"
+              class="input-field h-11"
               placeholder="예: 엄마표 김치찌개"
             />
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="text-xs font-bold text-gray-500 mb-1 block">섭취량</label>
-              <input type="number" v-model.number="manualFood.quantity" class="input-field h-10" />
+              <label class="text-xs font-bold text-slate-500 mb-1 block">섭취량</label>
+              <input type="number" v-model.number="manualFood.quantity" class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm" />
             </div>
             <div>
-              <label class="text-xs font-bold text-gray-500 mb-1 block">단위</label>
-              <select v-model="manualFood.unit" class="input-field h-10 bg-white">
-                <option value="g">g</option>
-                <option value="ml">ml</option>
-              </select>
+              <label class="text-xs font-bold text-slate-500 mb-1 block">단위</label>
+              <div class="relative">
+                  <select v-model="manualFood.unit" class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm bg-white appearance-none">
+                    <option value="g">g</option>
+                    <option value="ml">ml</option>
+                  </select>
+                   <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <ChevronDown :size="16" />
+                    </div>
+              </div>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="text-xs font-bold text-gray-500 mb-1 block">칼로리 (kcal)</label>
-              <input type="number" v-model.number="manualFood.calories" class="input-field h-10" />
+              <label class="text-xs font-bold text-slate-500 mb-1 block">칼로리 (kcal)</label>
+              <input type="number" v-model.number="manualFood.calories" class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm" />
             </div>
             <div>
-              <label class="text-xs font-bold text-gray-500 mb-1 block">탄수화물 (g)</label>
+              <label class="text-xs font-bold text-slate-500 mb-1 block">탄수화물 (g)</label>
               <input
                 type="number"
                 v-model.number="manualFood.carbohydrate"
-                class="input-field h-10"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
             <div>
-              <label class="text-xs font-bold text-gray-500 mb-1 block">단백질 (g)</label>
-              <input type="number" v-model.number="manualFood.protein" class="input-field h-10" />
+              <label class="text-xs font-bold text-slate-500 mb-1 block">단백질 (g)</label>
+              <input type="number" v-model.number="manualFood.protein" class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm" />
             </div>
             <div>
-              <label class="text-xs font-bold text-gray-500 mb-1 block">지방 (g)</label>
-              <input type="number" v-model.number="manualFood.fat" class="input-field h-10" />
+              <label class="text-xs font-bold text-slate-500 mb-1 block">지방 (g)</label>
+              <input type="number" v-model.number="manualFood.fat" class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm" />
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3 mt-3">
+          <div class="grid grid-cols-2 gap-3 mt-1">
             <div>
-              <label class="text-xs font-bold text-gray-500 mb-1 block">당류 (g)</label>
-              <input type="number" v-model.number="manualFood.sugars" class="input-field h-10" />
+              <label class="text-xs font-bold text-slate-500 mb-1 block">당류 (g)</label>
+              <input type="number" v-model.number="manualFood.sugars" class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm" />
             </div>
             <div>
-              <label class="text-xs font-bold text-gray-500 mb-1 block">나트륨 (mg)</label>
-              <input type="number" v-model.number="manualFood.sodium" class="input-field h-10" />
+              <label class="text-xs font-bold text-slate-500 mb-1 block">나트륨 (mg)</label>
+              <input type="number" v-model.number="manualFood.sodium" class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm" />
             </div>
           </div>
 
           <div
-            class="flex items-center gap-2 pt-2 cursor-pointer"
+            class="flex items-center gap-2 pt-3 cursor-pointer group"
             @click="manualFood.saveToDictionary = !manualFood.saveToDictionary"
           >
             <div
               class="w-5 h-5 border-2 rounded flex items-center justify-center transition"
               :class="
-                manualFood.saveToDictionary ? 'bg-blue-600 border-blue-600' : 'border-gray-300'
+                manualFood.saveToDictionary ? 'bg-primary-600 border-primary-600' : 'border-slate-300 group-hover:border-primary-400'
               "
             >
-              <span v-if="manualFood.saveToDictionary" class="text-white text-xs">✔</span>
+              <Check v-if="manualFood.saveToDictionary" class="text-white" :size="14" stroke-width="3" />
             </div>
-            <span class="text-sm font-bold text-gray-700">음식 사전에 저장하기</span>
+            <span class="text-sm font-bold text-slate-700">음식 사전에 저장하기</span>
           </div>
-          <p class="text-xs text-gray-400 pl-7">
+          <p class="text-[10px] text-slate-400 pl-7 -mt-3">
             체크 시 다른 사람들도 이 음식을 검색할 수 있어요.
           </p>
         </div>
 
-        <div class="flex gap-3 mt-6">
+        <div class="flex gap-3 mt-8">
           <button
             @click="closeManualInput"
-            class="flex-1 h-11 border border-gray-300 rounded-xl font-bold text-gray-600 hover:bg-gray-50"
+            class="flex-1 h-12 border border-slate-200 rounded-2xl font-bold text-slate-600 hover:bg-slate-50 transition"
           >
             취소
           </button>
           <button
             @click="addManualFood"
-            class="flex-1 h-11 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700"
+            class="flex-1 h-12 bg-primary-600 text-white rounded-2xl font-bold hover:bg-primary-700 shadow-lg shadow-primary-200 transition"
           >
             추가하기
           </button>
@@ -716,12 +716,12 @@ const cancelAnalysis = () => {
     <!-- AI Analysis Unified Modal -->
     <div
       v-if="showAnalysisModal"
-      class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
+      class="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
     >
       <!-- Scanning State -->
       <div v-if="isAnalyzing" class="flex flex-col items-center justify-center w-full max-w-sm">
         <div
-          class="relative w-64 h-64 rounded-2xl overflow-hidden border-4 border-blue-500 shadow-2xl shadow-blue-500/50 mb-8"
+          class="relative w-64 h-64 rounded-3xl overflow-hidden border-4 border-primary-500 shadow-2xl shadow-primary-500/40 mb-8"
         >
           <!-- Background Image -->
           <img
@@ -732,24 +732,30 @@ const cancelAnalysis = () => {
 
           <!-- Scanning Line -->
           <div
-            class="absolute inset-0 bg-gradient-to-b from-transparent via-blue-400/30 to-transparent w-full h-full animate-scan"
+            class="absolute inset-0 bg-gradient-to-b from-transparent via-primary-400/30 to-transparent w-full h-full animate-scan"
           ></div>
           <div
-            class="absolute top-0 left-0 w-full h-1 bg-blue-400 shadow-[0_0_15px_rgba(59,130,246,1)] animate-scan-line"
+            class="absolute top-0 left-0 w-full h-1 bg-primary-400 shadow-[0_0_15px_rgba(59,130,246,1)] animate-scan-line"
           ></div>
 
           <!-- Grid Overlay -->
           <div
             class="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.2)_1px,transparent_1px)] bg-[size:20px_20px]"
           ></div>
+          
+           <div class="absolute inset-0 flex items-center justify-center">
+            <Scan class="text-white/80 animate-pulse" :size="48" />
+           </div>
         </div>
 
         <div class="text-center space-y-2 relative z-10">
-          <h3 class="text-2xl font-bold text-white animate-pulse">AI 음식 분석중...</h3>
-          <p class="text-blue-200 text-sm">이미지에서 영양 정보를 추출하고 있습니다</p>
+          <h3 class="text-2xl font-bold text-white animate-pulse flex items-center justify-center gap-2">
+            <Sparkles :size="24" class="text-yellow-300" /> AI 음식 분석중...
+          </h3>
+          <p class="text-primary-100 text-sm">이미지에서 영양 정보를 추출하고 있습니다</p>
           <button
             @click="cancelAnalysis"
-            class="mt-4 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-full text-sm backdrop-blur-sm transition"
+            class="mt-6 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm backdrop-blur-md transition border border-white/20 font-medium"
           >
             분석 취소
           </button>
@@ -759,19 +765,21 @@ const cancelAnalysis = () => {
       <!-- Result State -->
       <div
         v-else-if="analysisResult"
-        class="bg-white rounded-2xl w-full max-w-sm max-h-[80vh] flex flex-col shadow-2xl animate-scale-up overflow-hidden"
+        class="bg-white rounded-3xl w-full max-w-sm max-h-[80%] flex flex-col shadow-float animate-scale-up overflow-hidden"
       >
-        <div class="p-4 border-b bg-gray-50 flex justify-between items-center shrink-0">
-          <h3 class="font-bold text-lg">📷 AI 분석 결과</h3>
-          <button @click="showAnalysisModal = false" class="text-gray-400 hover:text-gray-600">
-            ✕
+        <div class="p-5 border-b border-slate-100 bg-white flex justify-between items-center shrink-0">
+          <h3 class="font-bold text-lg flex items-center gap-2 text-slate-800">
+            <Sparkles :size="20" class="text-primary-500" /> AI 분석 결과
+          </h3>
+          <button @click="showAnalysisModal = false" class="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-50 transition">
+            <X :size="24" />
           </button>
         </div>
 
-        <div class="p-4 overflow-y-auto">
-          <div class="mb-4 text-center">
+        <div class="p-5 overflow-y-auto no-scrollbar">
+          <div class="mb-6 text-center">
             <div
-              class="w-full h-40 bg-gray-100 rounded-xl mb-3 overflow-hidden border border-gray-200"
+              class="w-full h-40 bg-slate-100 rounded-2xl mb-4 overflow-hidden border border-slate-200 shadow-inner"
             >
               <img
                 v-if="currentDiet.previewImageUrl"
@@ -779,44 +787,50 @@ const cancelAnalysis = () => {
                 class="w-full h-full object-cover"
               />
             </div>
-            <p class="text-sm text-gray-500 mb-1">AI가 예측한 음식</p>
-            <p class="text-2xl font-bold text-blue-600">{{ analysisResult.predictedName }}</p>
-            <p class="text-xs text-gray-400 mt-1">
-              후보: {{ analysisResult.candidates.join(', ') }}
-            </p>
+            <p class="text-sm text-slate-500 mb-1 font-medium">AI가 예측한 음식</p>
+            <p class="text-2xl font-bold text-primary-600 mb-2">{{ analysisResult.predictedName }}</p>
+            <div class="px-3 py-1 bg-slate-50 rounded-lg inline-block">
+                <p class="text-xs text-slate-400">
+                후보: {{ analysisResult.candidates.join(', ') }}
+                </p>
+            </div>
           </div>
 
           <div class="space-y-3">
-            <p class="text-sm font-bold text-gray-700">검색된 영양 정보 선택</p>
+            <p class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                <Check :size="16" class="text-primary-500" /> 검색된 영양 정보 선택
+            </p>
             <div
               v-for="food in analysisResult.matchedFoods"
               :key="food.foodId"
               @click="selectAnalyzedFood(food)"
-              class="border rounded-xl p-3 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition relative group"
+              class="border border-slate-200 rounded-2xl p-4 hover:border-primary-500 hover:bg-primary-50 cursor-pointer transition relative group shadow-sm bg-white"
             >
               <div class="flex justify-between items-start mb-1">
-                <span class="font-bold text-gray-800">{{ food.foodName }}</span>
+                <span class="font-bold text-slate-800">{{ food.foodName }}</span>
                 <span
-                  class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full group-hover:bg-blue-200 group-hover:text-blue-700 transition"
+                  class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full group-hover:bg-primary-200 group-hover:text-primary-700 transition"
                   >선택</span
                 >
               </div>
-              <div class="text-xs text-gray-500">
-                <span class="font-medium text-gray-700">{{ food.servingSize }}{{ food.unit }}</span>
+              <div class="text-xs text-slate-500">
+                <span class="font-bold text-slate-700">{{ food.servingSize }}{{ food.unit }}</span>
                 / {{ Math.round(food.calories) }} kcal
               </div>
-              <div class="text-[10px] text-gray-400 mt-1">
-                탄{{ Math.round(food.carbohydrate) }}/단{{ Math.round(food.protein) }}/지{{
-                  Math.round(food.fat)
-                }}
+              <div class="text-[10px] text-slate-400 mt-1.5 flex gap-2">
+                <span>탄 {{ Math.round(food.carbohydrate) }}</span>
+                <span class="w-[1px] h-3 bg-slate-200"></span>
+                <span>단 {{ Math.round(food.protein) }}</span>
+                <span class="w-[1px] h-3 bg-slate-200"></span>
+                <span>지 {{ Math.round(food.fat) }}</span>
               </div>
             </div>
           </div>
 
-          <div class="mt-6 text-center">
+          <div class="mt-8 text-center border-t border-slate-100 pt-5">
             <button
               @click="showAnalysisModal = false"
-              class="text-xs text-gray-500 underline hover:text-gray-800"
+              class="text-xs text-slate-400 underline hover:text-slate-800 transition"
             >
               원하는 음식이 없나요? 직접 입력하기
             </button>
@@ -829,10 +843,10 @@ const cancelAnalysis = () => {
 
 <style scoped>
 .input-field {
-  @apply w-full h-12 border border-gray-300 rounded-lg px-4 bg-gray-50 focus:outline-none focus:border-blue-500 transition;
+  @apply w-full border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800;
 }
 .animate-fade-in-up {
-  animation: fadeInUp 0.3s ease-out;
+  animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes fadeInUp {
   from {
@@ -847,7 +861,7 @@ const cancelAnalysis = () => {
 @keyframes scaleUp {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
@@ -855,7 +869,7 @@ const cancelAnalysis = () => {
   }
 }
 .animate-scale-up {
-  animation: scaleUp 0.2s ease-out;
+  animation: scaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .animate-fade-in {
   animation: fadein 0.2s ease-out;
@@ -899,5 +913,13 @@ const cancelAnalysis = () => {
 }
 .animate-scan-line {
   animation: scanLine 2s linear infinite;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 </style>

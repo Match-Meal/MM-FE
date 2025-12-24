@@ -3,6 +3,11 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { createFood, type CreateFoodPayload, getFoodCategories } from '@/services/foodService'
 import { useToastStore } from '@/stores/toast'
+import { 
+  ArrowLeft, 
+  ChevronDown, 
+  Loader2 
+} from 'lucide-vue-next'
 
 const router = useRouter()
 const toastStore = useToastStore()
@@ -85,10 +90,8 @@ const handleSubmit = async () => {
   error.value = null
 
   try {
-    // 1. Create a mutable copy of the form data.
     const payload: Partial<CreateFoodPayload> = { ...foodData.value }
 
-    // 2. Convert empty strings in numeric fields to undefined.
     const numericKeys: (keyof CreateFoodPayload)[] = [
       'servingSize',
       'calories',
@@ -104,9 +107,7 @@ const handleSubmit = async () => {
       }
     })
 
-    // 3. Call the API with a type assertion, as we've already validated the required fields.
     await createFood(payload as CreateFoodPayload)
-    // 성공 시 이전 페이지로 이동 (음식 목록 갱신을 위해)
     toastStore.show('음식이 등록되었습니다.')
     router.back()
   } catch (err) {
@@ -123,68 +124,75 @@ const goBack = () => {
 </script>
 
 <template>
-  <div class="bg-gray-200 min-h-screen flex items-center justify-center font-sans text-gray-800">
-    <!-- 모바일 프레임 -->
-    <div
-      class="relative w-[375px] h-[812px] bg-white shadow-2xl rounded-[35px] overflow-hidden border-[8px] border-gray-800 flex flex-col"
-    >
+  <div class="flex-1 flex flex-col relative overflow-hidden bg-white">
       <!-- Header -->
-      <header class="h-14 border-b flex items-center justify-between px-4 bg-white z-20 shrink-0">
-        <button @click="goBack" class="text-2xl w-8">←</button>
-        <h1 class="font-bold text-lg truncate">새로운 음식 등록</h1>
+      <header class="h-14 border-b border-slate-100 flex items-center justify-between px-4 bg-white z-20 shrink-0">
+        <button @click="goBack" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition text-slate-600">
+            <ArrowLeft :size="24" />
+        </button>
+        <h1 class="font-bold text-lg truncate text-slate-800">새로운 음식 등록</h1>
         <div class="w-8"></div>
       </header>
 
       <!-- Main Form Content -->
-      <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
-        <form @submit.prevent="handleSubmit" class="space-y-4">
+      <main class="flex-1 overflow-y-auto p-6 bg-slate-50 no-scrollbar">
+        <form @submit.prevent="handleSubmit" class="space-y-5">
           <div>
-            <label for="foodName" class="block text-sm font-bold text-gray-600 mb-1"
-              >음식 이름 <span class="text-red-500">*</span></label
+            <label for="foodName" class="block text-xs font-bold text-slate-500 mb-1.5"
+              >음식 이름 <span class="text-rose-500">*</span></label
             >
             <input
               v-model="foodData.foodName"
               type="text"
               id="foodName"
-              class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+              placeholder="예: 닭가슴살 볶음밥"
+              class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               required
             />
           </div>
 
           <div class="relative" ref="categoryWrapper" @focusout="handleCategoryBlur">
-            <label for="category" class="block text-sm font-bold text-gray-600 mb-1"
+            <label for="category" class="block text-xs font-bold text-slate-500 mb-1.5"
               >카테고리</label
             >
-            <input
-              v-model="categorySearch"
-              type="text"
-              id="category"
-              placeholder="카테고리 검색 또는 선택"
-              autocomplete="off"
-              class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
-              @focus="isCategoryDropdownOpen = true"
-            />
-            <div
-              v-if="isCategoryDropdownOpen"
-              class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto"
-            >
-              <div
-                v-for="cat in filteredCategories"
-                :key="cat"
-                @mousedown="selectCategory(cat)"
-                class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
-              >
-                {{ cat }}
-              </div>
-              <div v-if="filteredCategories.length === 0" class="px-4 py-2 text-sm text-gray-400">
-                일치하는 카테고리가 없습니다.
-              </div>
+            <div class="relative">
+                <input
+                v-model="categorySearch"
+                type="text"
+                id="category"
+                placeholder="카테고리 검색 또는 선택"
+                autocomplete="off"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
+                @focus="isCategoryDropdownOpen = true"
+                />
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <ChevronDown :size="16" />
+                </div>
             </div>
+            
+            <transition name="fade">
+                <div
+                v-if="isCategoryDropdownOpen"
+                class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto no-scrollbar"
+                >
+                <div
+                    v-for="cat in filteredCategories"
+                    :key="cat"
+                    @mousedown="selectCategory(cat)"
+                    class="px-4 py-2.5 text-sm text-slate-700 hover:bg-primary-50 hover:text-primary-700 cursor-pointer border-b border-slate-50 last:border-0"
+                >
+                    {{ cat }}
+                </div>
+                <div v-if="filteredCategories.length === 0" class="px-4 py-3 text-sm text-slate-400 text-center">
+                    일치하는 카테고리가 없습니다.
+                </div>
+                </div>
+            </transition>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label for="servingSize" class="block text-sm font-bold text-gray-600 mb-1"
+              <label for="servingSize" class="block text-xs font-bold text-slate-500 mb-1.5"
                 >1회 제공량</label
               >
               <input
@@ -192,25 +200,26 @@ const goBack = () => {
                 type="number"
                 step="0.1"
                 id="servingSize"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
             <div>
-              <label for="unit" class="block text-sm font-bold text-gray-600 mb-1">단위</label>
+              <label for="unit" class="block text-xs font-bold text-slate-500 mb-1.5">단위</label>
               <input
                 v-model="foodData.unit"
                 type="text"
                 id="unit"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                placeholder="g, ml, 개 등"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
           </div>
 
-          <hr class="my-6" />
+          <div class="h-px bg-slate-200 my-6"></div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label for="calories" class="block text-sm font-bold text-gray-600 mb-1"
+              <label for="calories" class="block text-xs font-bold text-slate-500 mb-1.5"
                 >칼로리 (kcal)</label
               >
               <input
@@ -218,11 +227,11 @@ const goBack = () => {
                 type="number"
                 step="0.1"
                 id="calories"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
             <div>
-              <label for="carbohydrate" class="block text-sm font-bold text-gray-600 mb-1"
+              <label for="carbohydrate" class="block text-xs font-bold text-slate-500 mb-1.5"
                 >탄수화물 (g)</label
               >
               <input
@@ -230,11 +239,11 @@ const goBack = () => {
                 type="number"
                 step="0.1"
                 id="carbohydrate"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
             <div>
-              <label for="protein" class="block text-sm font-bold text-gray-600 mb-1"
+              <label for="protein" class="block text-xs font-bold text-slate-500 mb-1.5"
                 >단백질 (g)</label
               >
               <input
@@ -242,23 +251,23 @@ const goBack = () => {
                 type="number"
                 step="0.1"
                 id="protein"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
             <div>
-              <label for="fat" class="block text-sm font-bold text-gray-600 mb-1">지방 (g)</label>
+              <label for="fat" class="block text-xs font-bold text-slate-500 mb-1.5">지방 (g)</label>
               <input
                 v-model.number="foodData.fat"
                 type="number"
                 step="0.1"
                 id="fat"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-4 mt-4">
+          <div class="grid grid-cols-2 gap-3 mt-1">
             <div>
-              <label for="sugars" class="block text-sm font-bold text-gray-600 mb-1"
+              <label for="sugars" class="block text-xs font-bold text-slate-500 mb-1.5"
                 >총 당류 (g)</label
               >
               <input
@@ -266,11 +275,11 @@ const goBack = () => {
                 type="number"
                 step="0.1"
                 id="sugars"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
             <div>
-              <label for="sodium" class="block text-sm font-bold text-gray-600 mb-1"
+              <label for="sodium" class="block text-xs font-bold text-slate-500 mb-1.5"
                 >나트륨 (mg)</label
               >
               <input
@@ -278,27 +287,45 @@ const goBack = () => {
                 type="number"
                 step="0.1"
                 id="sodium"
-                class="w-full h-11 border border-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500"
+                class="w-full h-11 border border-slate-300 rounded-xl px-4 bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-300 text-slate-800 text-sm"
               />
             </div>
           </div>
 
-          <div v-if="error" class="text-red-500 text-sm mt-2">
+          <div v-if="error" class="bg-rose-50 text-rose-500 text-xs px-4 py-3 rounded-xl flex items-center gap-2">
+            <div class="w-4 h-4 rounded-full bg-rose-200 flex items-center justify-center text-[10px] font-bold">!</div>
             {{ error }}
           </div>
 
-          <div class="pt-4">
+          <div class="pt-6">
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="w-full h-12 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition flex items-center justify-center disabled:bg-gray-400"
+              class="w-full h-12 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-bold rounded-2xl hover:brightness-110 transition flex items-center justify-center disabled:bg-slate-300 disabled:cursor-not-allowed shadow-lg shadow-primary-200"
             >
-              <span v-if="isSubmitting">저장 중...</span>
+              <Loader2 v-if="isSubmitting" class="animate-spin mr-2" :size="20" />
               <span v-else>저장하기</span>
             </button>
           </div>
         </form>
       </main>
-    </div>
   </div>
 </template>
+
+<style scoped>
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

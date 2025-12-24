@@ -163,6 +163,7 @@ const router = createRouter({
       path: '/challenge',
       name: 'challenge',
       component: ChallengeView,
+      meta: { requiresAuth: true },
     },
     // [추가] 상세 페이지 (Dynamic Route)
     {
@@ -170,6 +171,7 @@ const router = createRouter({
       name: 'challenge-detail',
       component: ChallengeDetailView,
       props: true, // id 파라미터를 props로 전달
+      meta: { requiresAuth: true },
     },
     {
       path: '/recovery',
@@ -180,6 +182,25 @@ const router = createRouter({
       path: '/ai-chatbot',
       name: 'ai-chatbot',
       component: () => import('@/views/AiChatbotView.vue'),
+      meta: { requiresAuth: true },
+    },
+
+    {
+      path: '/payment/success',
+      name: 'payment-success',
+      component: () => import('@/views/payment/PaymentSuccessView.vue'),
+      meta: { requiresAuth: true }, // 로그인 상태에서만 접근 가능하도록 설정
+    },
+    {
+      path: '/terms',
+      name: 'terms',
+      component: () => import('@/views/TermsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/about',
+      name: 'about',
+      component: () => import('@/views/AboutView.vue'),
       meta: { requiresAuth: true },
     },
   ],
