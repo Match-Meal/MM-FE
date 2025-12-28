@@ -9,7 +9,7 @@ import PostListModal from '@/components/PostListModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { getPosts, type PostListItem, type PostUser } from '@/services/communityService'
 import { useToastStore } from '@/stores/toast'
-import BottomNav from '@/components/common/BottomNav.vue'
+
 import {
   ArrowLeft,
   User as UserIcon,
@@ -522,7 +522,7 @@ const goBack = () => router.back()
         </template>
       </main>
 
-      <BottomNav />
+
 
       <!-- 모달 컴포넌트 -->
       <FollowListModal

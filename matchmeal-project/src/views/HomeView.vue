@@ -8,7 +8,7 @@ import { useNotificationStore } from '@/stores/notification'
 import { useRouter } from 'vue-router'
 import { getDailyDiets } from '@/services/dietService'
 import dayjs from 'dayjs'
-import BottomNav from '@/components/common/BottomNav.vue'
+
 import NotificationDropdown from '@/components/common/NotificationDropdown.vue'
 import RankingTicker from '@/components/home/RankingTicker.vue'
 import RankingModal from '@/components/home/RankingModal.vue'
@@ -376,7 +376,7 @@ onUnmounted(() => {
       </div>
     </main>
 
-      <BottomNav />
+
       
 
 

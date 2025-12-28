@@ -55,7 +55,7 @@ const router = createRouter({
       path: '/home',
       name: 'home',
       component: HomeView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, showBottomNav: true },
     },
     {
       path: '/food-db',
@@ -85,13 +85,13 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: ProfileView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, showBottomNav: true },
     },
     {
       path: '/user/:id',
       name: 'user-profile',
       component: UserProfileView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, showBottomNav: true },
     },
     {
       path: '/settings',
@@ -103,7 +103,7 @@ const router = createRouter({
       path: '/diet',
       name: 'diet-main',
       component: DietMainView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, showBottomNav: true },
     },
     {
       path: '/diet/record',
@@ -133,7 +133,7 @@ const router = createRouter({
       path: '/community',
       name: 'community-main',
       component: CommunityMainView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, showBottomNav: true },
     },
     {
       path: '/community/write',
@@ -157,13 +157,7 @@ const router = createRouter({
       path: '/challenge',
       name: 'challenge',
       component: ChallengeView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/challenge',
-      name: 'challenge',
-      component: ChallengeView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, showBottomNav: true },
     },
     // [추가] 상세 페이지 (Dynamic Route)
     {
@@ -182,7 +176,7 @@ const router = createRouter({
       path: '/ai-chatbot',
       name: 'ai-chatbot',
       component: () => import('@/views/AiChatbotView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, showBottomNav: true },
     },
 
     {
