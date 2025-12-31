@@ -10,7 +10,7 @@ import {
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/ko'
-import BottomNav from '@/components/common/BottomNav.vue'
+
 import { 
   ArrowLeft, 
   Search, 
@@ -390,13 +390,12 @@ onBeforeRouteLeave((to, from, next) => {
       <!-- FAB (Write Button) -->
       <button
         @click="goWrite"
-        class="absolute bottom-24 right-6 w-14 h-14 bg-accent text-slate-900 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.3)] flex items-center justify-center z-30 hover:brightness-105 hover:scale-105 transition-all duration-300 active:scale-95 group"
+        class="absolute bottom-5 right-6 w-14 h-14 bg-accent text-slate-900 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.3)] flex items-center justify-center z-30 hover:brightness-105 hover:scale-105 transition-all duration-300 active:scale-95 group"
       >
         <PenSquare :size="24" class="group-hover:-rotate-12 transition-transform duration-300" />
       </button>
 
-      <!-- Bottom Nav -->
-      <BottomNav />
+
     </div>
 </template>
 

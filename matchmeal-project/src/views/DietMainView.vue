@@ -8,7 +8,7 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/ko'
 import weekday from 'dayjs/plugin/weekday'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
-import BottomNav from '@/components/common/BottomNav.vue'
+
 import { 
   ArrowLeft, 
   BarChart2, 
@@ -346,12 +346,12 @@ const getMealIconInfo = (type: string) => {
 
       <button
         @click="goRecord"
-        class="absolute bottom-24 right-6 w-14 h-14 bg-accent text-slate-900 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.3)] flex items-center justify-center z-30 hover:brightness-105 hover:scale-105 transition-all duration-300 active:scale-95 group"
+        class="absolute bottom-5 right-6 w-14 h-14 bg-accent text-slate-900 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.3)] flex items-center justify-center z-30 hover:brightness-105 hover:scale-105 transition-all duration-300 active:scale-95 group"
       >
         <Plus :size="28" stroke-width="2.5" class="group-hover:rotate-90 transition-transform duration-300" />
       </button>
 
-      <BottomNav />
+
   </div>
 </template>
 

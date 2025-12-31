@@ -8,7 +8,7 @@ import FollowListModal, { type FollowUser } from '@/components/FollowListModal.v
 import UserInfoModal from '@/components/UserInfoModal.vue'
 import PostListModal from '@/components/PostListModal.vue'
 import { getPosts, type PostListItem, type PostUser } from '@/services/communityService'
-import BottomNav from '@/components/common/BottomNav.vue'
+
 import {
   ArrowLeft,
   Settings,
@@ -430,7 +430,7 @@ const bmiPercent = computed(() => {
         </div>
       </main>
 
-      <BottomNav />
+
 
       <!-- 모달 컴포넌트 사용 -->
       <FollowListModal

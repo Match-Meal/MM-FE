@@ -507,7 +507,7 @@
       </div>
     </div>
 
-    <BottomNav />
+
 
     <!-- 구독 유도 모달 -->
     <SubscriptionRequiredModal
@@ -549,7 +549,7 @@ import {
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { useAiStore } from '@/stores/aiStore'
-import BottomNav from '@/components/common/BottomNav.vue'
+
 import SubscriptionRequiredModal from '@/components/common/SubscriptionRequiredModal.vue'
 import PeriodMealPlanModal from '@/components/ai/PeriodMealPlanModal.vue'
 import {

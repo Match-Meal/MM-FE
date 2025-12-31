@@ -19,7 +19,7 @@ import {
 const router = useRouter()
 
 // 컴포넌트 임포트
-import BottomNav from '@/components/common/BottomNav.vue'
+
 import PrivateCodeModal from '@/components/PrivateCodeModal.vue'
 import ChallengeCreateForm from '@/components/ChallengeCreateForm.vue'
 import ChallengeCard from '@/components/ChallengeCard.vue'
@@ -250,7 +250,7 @@ const handleCodeSubmit = async (code: string) => {
         </template>
       </div>
 
-      <BottomNav />
+
 
       <ChallengeCreateForm
         v-if="showCreateModal"
@@ -266,7 +266,7 @@ const handleCodeSubmit = async (code: string) => {
 
       <button
         @click="showCreateModal = true"
-        class="absolute bottom-24 right-6 w-14 h-14 bg-accent text-slate-900 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.3)] flex items-center justify-center z-30 hover:brightness-105 hover:scale-105 transition-all duration-300 active:scale-95 group"
+        class="absolute bottom-5 right-6 w-14 h-14 bg-accent text-slate-900 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.3)] flex items-center justify-center z-30 hover:brightness-105 hover:scale-105 transition-all duration-300 active:scale-95 group"
       >
         <Plus :size="28" stroke-width="2.5" class="group-hover:rotate-90 transition-transform duration-300" />
       </button>
